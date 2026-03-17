@@ -315,6 +315,7 @@
       <h2>Criar conta</h2>
       <p>Crie sua conta gratuita para se conectar com seus vizinhos.</p>
       <div class="ig"><label>Seu nome completo</label><input type="text" id="inp-nome" placeholder="Ex: Maria Silva"/></div>
+      <div class="ig"><label>Como quer ser chamado(a) no app</label><input type="text" id="inp-apelido" placeholder="Ex: Mari, Dona Lúcia, Vizinho do 42"/><div style="font-size:11px;color:var(--texto-muted);margin-top:4px;">Este é o nome que seus vizinhos vão ver. Seu nome completo nunca é exibido.</div></div>
       <div class="ig"><label>E-mail</label><input type="email" id="inp-email" placeholder="Ex: maria@email.com"/></div>
       <div class="ig"><label>Senha</label><input type="password" id="inp-senha" placeholder="Mínimo 6 caracteres"/></div>
       <div class="ig"><label>CEP</label><input type="tel" id="inp-cep" placeholder="Ex: 87010-000" maxlength="9" oninput="formataCEP(this)"/></div>
@@ -634,7 +635,7 @@ function fazerLogin(){
   if(!saved){toast('Conta não encontrada. Crie uma conta!');return;}
   const user=JSON.parse(saved);
   if(user.email!==email||user.senha!==senha){toast('Email ou senha incorretos.');return;}
-  E.nome=user.nome; E.bairro=user.bairro; E.cidade=user.cidade; E.uf=user.uf;
+  E.nome=user.apelido||user.nome; E.bairro=user.bairro; E.cidade=user.cidade; E.uf=user.uf;
   document.getElementById('fsub').textContent=`${E.cidade} · raio de ${E.raio}m`;
   document.getElementById('fav').textContent=E.nome.charAt(0).toUpperCase();
   render(); irTela('t-feed');
@@ -645,15 +646,16 @@ function irRaio(){
   const senha=document.getElementById('inp-senha').value;
   const cep=document.getElementById('inp-cep').value.replace(/[^0-9]/g,'');
   const num=document.getElementById('inp-num').value.trim();
-  if(!n){toast('Digite seu nome!');return;}
+  const apelido=document.getElementById('inp-apelido').value.trim();
+  if(!n){toast('Digite seu nome completo!');return;}
+  if(!apelido){toast('Digite como quer ser chamado(a)!');return;}
   if(!email||!email.includes('@')){toast('Digite um email válido!');return;}
   if(!senha||senha.length<6){toast('Senha deve ter pelo menos 6 caracteres!');return;}
   if(cep.length!==8){toast('Digite um CEP válido!');return;}
   if(!E.bairro){toast('Aguarde o CEP ser validado...');return;}
   if(!num){toast('Digite o número da sua casa!');return;}
-  // salva localmente (simulando banco)
-  localStorage.setItem('vc_user', JSON.stringify({nome:n,email,senha,bairro:E.bairro,cidade:E.cidade,uf:E.uf}));
-  E.nome=n;
+  localStorage.setItem('vc_user', JSON.stringify({nome:n,apelido,email,senha,bairro:E.bairro,cidade:E.cidade,uf:E.uf}));
+  E.nome=apelido;
   irTela('t-raio');
 }
 function irFeed(){
