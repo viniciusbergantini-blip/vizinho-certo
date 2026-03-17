@@ -914,25 +914,18 @@ async function anunFinalizar(){
   const btn=document.querySelector('#as4 .anun-next');
   btn.textContent='Abrindo pagamento...'; btn.disabled=true;
   try{
-    const planos={10:'Plano Rua 10 dias',20:'Plano Bairro 20 dias',30:'Plano Cidade 30 dias'};
     const retorno=window.location.href.split('?')[0];
-    const body={
-      items:[{title:planos[anunState.dias]+' — '+anunState.nome,quantity:1,unit_price:anunState.preco/100,currency_id:'BRL'}],
-      back_urls:{
-        success:retorno+'?pg=ok&nome='+encodeURIComponent(anunState.nome)+'&tipo='+encodeURIComponent(anunState.tipo)+'&desc='+encodeURIComponent(anunState.desc)+'&tel='+encodeURIComponent(anunState.tel)+'&icon='+encodeURIComponent(anunState.icon)+'&dias='+anunState.dias,
-        failure:retorno+'?pg=err',
-        pending:retorno+'?pg=pend'
-      },
-      auto_return:'approved',
-      statement_descriptor:'VIZINHO CERTO'
-    };
-    const resp=await fetch('https://api.mercadopago.com/checkout/preferences',{
+    const resp=await fetch('/api/checkout',{
       method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer APP_USR-95732e0f-10fe-4753-bc22-017a6be967b4'},
-      body:JSON.stringify(body)
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        nome:anunState.nome, tipo:anunState.tipo, dias:anunState.dias,
+        preco:anunState.preco, icon:anunState.icon, desc:anunState.desc,
+        tel:anunState.tel, retorno
+      })
     });
     const data=await resp.json();
-    if(data.init_point){window.location.href=data.init_point;}
+    if(data.url){window.location.href=data.url;}
     else{throw new Error('sem link de pagamento');}
   }catch(e){
     btn.disabled=false; btn.textContent='Pagar e publicar →';
