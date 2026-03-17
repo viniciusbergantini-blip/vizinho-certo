@@ -1,2 +1,944 @@
-# vizinho-certo
-App de vizinhança hiperlocal
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vizinho Certo</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --verde:#2D6A4F; --verde-claro:#52B788; --verde-bg:#D8F3DC;
+    --laranja:#E76F51; --creme:#FEFAE0; --creme-escuro:#F0E9D2;
+    --texto:#1B1B1B; --texto-muted:#6B6B6B; --borda:#D9D0BE;
+    --branco:#FFFFFF; --radius:16px; --radius-sm:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--creme);color:var(--texto);min-height:100vh;}
+  .tela{display:none;min-height:100vh;}
+  .tela.ativa{display:flex;flex-direction:column;}
+
+  /* BOAS VINDAS */
+  #t-bv{background:var(--verde);align-items:center;justify-content:center;padding:2rem;text-align:center;position:relative;overflow:hidden;}
+  #t-bv::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:rgba(82,183,136,0.15);top:-100px;right:-150px;}
+  #t-bv::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(231,111,81,0.12);bottom:-50px;left:-80px;}
+  .bv-inner{position:relative;z-index:1;width:100%;max-width:380px;}
+  .logo{font-family:'Fraunces',serif;font-size:44px;color:var(--creme);line-height:1.1;margin-bottom:8px;}
+  .logo span{color:var(--verde-claro);}
+  .tagline{font-size:15px;color:rgba(254,250,224,0.7);margin-bottom:40px;}
+  .card{background:var(--creme);border-radius:var(--radius);padding:1.75rem;}
+  .card h2{font-family:'Fraunces',serif;font-size:21px;color:var(--verde);margin-bottom:6px;}
+  .card p{font-size:14px;color:var(--texto-muted);margin-bottom:18px;line-height:1.6;}
+  .ig{margin-bottom:12px;}
+  .ig label{font-size:11px;font-weight:500;color:var(--texto-muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
+  .ig input{width:100%;padding:11px 14px;border:1.5px solid var(--borda);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;background:var(--branco);color:var(--texto);outline:none;transition:border-color .2s;}
+  .ig input:focus{border-color:var(--verde-claro);}
+  .btnp{width:100%;padding:13px;background:var(--verde);color:var(--creme);border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:background .2s;}
+  .btnp:hover{background:#1B4D37;}
+  .disclaimer{font-size:11px;color:rgba(254,250,224,0.45);margin-top:16px;}
+
+  /* RAIO */
+  #t-raio{background:var(--creme);}
+  .rh{background:var(--verde);padding:2rem 1.5rem 3rem;position:relative;overflow:hidden;}
+  .rh::after{content:'';position:absolute;bottom:-20px;left:0;right:0;height:40px;background:var(--creme);border-radius:40px 40px 0 0;}
+  .rh h2{font-family:'Fraunces',serif;font-size:26px;color:var(--creme);margin-bottom:4px;}
+  .rh p{font-size:14px;color:rgba(254,250,224,.7);}
+  .rb{padding:1.5rem;flex:1;}
+  .rv{background:var(--branco);border-radius:var(--radius);border:1.5px solid var(--borda);padding:1.5rem;margin-bottom:1.5rem;text-align:center;}
+  .mc{position:relative;width:220px;height:220px;margin:0 auto 1rem;}
+  .mf{width:100%;height:100%;border-radius:50%;background:#E8F5E9;position:relative;overflow:hidden;border:2px solid var(--borda);}
+  .mg{position:absolute;inset:0;background-image:linear-gradient(rgba(0,0,0,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(0,0,0,.05) 1px,transparent 1px);background-size:22px 22px;}
+  .rc2{position:absolute;border-radius:50%;border:2px solid var(--verde-claro);background:rgba(82,183,136,.12);top:50%;left:50%;transform:translate(-50%,-50%);transition:all .3s;}
+  .ep{position:absolute;width:14px;height:14px;background:var(--verde);border-radius:50%;border:3px solid white;top:50%;left:50%;transform:translate(-50%,-50%);z-index:3;box-shadow:0 0 0 4px rgba(45,106,79,.2);}
+  .vp{position:absolute;width:10px;height:10px;background:var(--laranja);border-radius:50%;border:2px solid white;z-index:2;transform:translate(-50%,-50%);transition:opacity .3s;}
+  .vn{position:absolute;font-size:9px;font-weight:500;color:var(--verde);white-space:nowrap;z-index:2;background:rgba(255,255,255,.85);padding:1px 4px;border-radius:4px;transform:translate(-50%,-200%);transition:opacity .3s;}
+  .riv{font-family:'Fraunces',serif;font-size:36px;color:var(--verde);line-height:1;}
+  .rid{font-size:13px;color:var(--texto-muted);margin-top:2px;}
+  .rvc{display:inline-block;background:var(--verde-bg);color:var(--verde);font-size:13px;font-weight:500;padding:4px 12px;border-radius:20px;margin-top:8px;}
+  .sw{margin:1rem 0 .5rem;}
+  input[type=range]{width:100%;-webkit-appearance:none;height:6px;border-radius:3px;background:linear-gradient(to right,var(--verde-claro) 0%,var(--verde-claro) 30%,var(--creme-escuro) 30%);outline:none;cursor:pointer;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--verde);border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.2);cursor:pointer;}
+  .sl{display:flex;justify-content:space-between;font-size:11px;color:var(--texto-muted);margin-top:6px;}
+  .ro{display:flex;gap:8px;flex-wrap:wrap;}
+  .rc3{padding:6px 14px;border-radius:20px;border:1.5px solid var(--borda);background:var(--branco);font-size:13px;font-weight:500;color:var(--texto-muted);cursor:pointer;transition:all .15s;}
+  .rc3.ativo{background:var(--verde);color:var(--creme);border-color:var(--verde);}
+
+  /* FEED */
+  #t-feed{background:var(--creme);}
+  .fh{background:var(--verde);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+  .fh h1{font-family:'Fraunces',serif;font-size:20px;color:var(--creme);}
+  .fh p{font-size:12px;color:rgba(254,250,224,.65);margin-top:1px;}
+  .fav{width:38px;height:38px;border-radius:50%;background:var(--verde-claro);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:16px;color:var(--verde);font-weight:600;border:2px solid rgba(254,250,224,.3);}
+  .ft{display:flex;background:var(--branco);border-bottom:1px solid var(--borda);overflow-x:auto;scrollbar-width:none;}
+  .ft::-webkit-scrollbar{display:none;}
+  .ftab{padding:12px 16px;font-size:13px;font-weight:500;color:var(--texto-muted);white-space:nowrap;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
+  .ftab.ativo{color:var(--verde);border-bottom-color:var(--verde);}
+  .fb{padding:1rem 1rem 5rem;flex:1;}
+
+  /* POST */
+  .pc{background:var(--branco);border-radius:var(--radius);border:1px solid var(--borda);margin-bottom:12px;animation:fu .3s ease;overflow:hidden;}
+  @keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+  .pm{padding:1rem 1.25rem;}
+  .ph{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .pav{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:14px;font-weight:600;flex-shrink:0;}
+  .pnome{font-size:14px;font-weight:500;color:var(--texto);}
+  .pdist{font-size:12px;color:var(--texto-muted);}
+  .ptag{font-size:11px;font-weight:500;padding:3px 8px;border-radius:20px;}
+  .t-pr{background:#FFE8D6;color:#BF4A1C;}
+  .t-av{background:#FFF3CD;color:#856404;}
+  .t-aj{background:var(--verde-bg);color:var(--verde);}
+  .t-in{background:#E3F2FD;color:#1565C0;}
+  .ptxt{font-size:14px;color:var(--texto);line-height:1.65;margin-bottom:12px;}
+  .pac{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+
+  /* BOTÕES AÇÕES */
+  .bapoiar{display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;border:1.5px solid var(--verde-claro);background:transparent;color:var(--verde);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;}
+  .bapoiar:hover{background:var(--verde-bg);}
+  .bapoiar.ap{background:var(--verde);color:var(--creme);border-color:var(--verde);}
+  .boq{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;border:1.5px solid #C8EEDD;background:#F0FBF4;color:var(--verde);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+  .bcom{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;border:1.5px solid var(--borda);background:transparent;color:var(--texto-muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;margin-left:auto;}
+  .bcom:hover{background:var(--creme-escuro);}
+  .bia{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1.5px solid var(--borda);background:transparent;color:var(--texto-muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+
+  /* O QUE FAZER */
+  .oqf{background:#F0FBF4;border-top:1px solid #C8EEDD;padding:12px 1.25rem;display:none;}
+  .oqf.vis{display:block;}
+  .oqlbl{font-size:11px;font-weight:500;color:var(--verde);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+  .oqi{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px;}
+  .oqi:last-child{margin-bottom:0;}
+  .oqic{font-size:18px;flex-shrink:0;margin-top:1px;}
+  .oqtx{font-size:13px;color:var(--texto);line-height:1.55;}
+  .oqtx strong{font-weight:500;color:var(--verde);}
+  .btntel{display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:var(--verde);color:var(--creme);font-size:12px;font-weight:500;padding:5px 12px;border-radius:20px;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;}
+
+  /* COMENTÁRIOS */
+  .carea{border-top:1px solid var(--borda);}
+  .clista{padding:0 1.25rem;}
+  .com{display:flex;gap:8px;padding:10px 0;border-bottom:1px solid var(--creme-escuro);}
+  .com:last-child{border-bottom:none;}
+  .cav{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;font-family:'Fraunces',serif;flex-shrink:0;}
+  .cnome{font-size:12px;font-weight:500;color:var(--texto);}
+  .cdist{font-size:11px;color:var(--texto-muted);}
+  .ctxt{font-size:13px;color:var(--texto);line-height:1.5;margin-top:2px;}
+  .cform{display:flex;gap:8px;padding:10px 1.25rem;background:var(--creme);border-top:1px solid var(--borda);align-items:flex-end;}
+  .cinput{flex:1;padding:8px 12px;border:1.5px solid var(--borda);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--texto);background:var(--branco);outline:none;resize:none;}
+  .cinput:focus{border-color:var(--verde-claro);}
+  .cenv{padding:8px 14px;background:var(--verde);color:var(--creme);border:none;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
+
+  /* MODAIS */
+  .moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center;}
+  .moverlay.ab{display:flex;}
+  .msheet{background:var(--creme);border-radius:24px 24px 0 0;padding:1.5rem;width:100%;max-width:480px;animation:su .3s ease;}
+  @keyframes su{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .mhandle{width:40px;height:4px;background:var(--borda);border-radius:2px;margin:0 auto 1.25rem;}
+  .mtitle{font-family:'Fraunces',serif;font-size:20px;color:var(--verde);margin-bottom:1rem;}
+  .tsel{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;}
+  .tbtn{padding:6px 14px;border-radius:20px;border:1.5px solid var(--borda);background:var(--branco);font-size:13px;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;color:var(--texto-muted);}
+  .tbtn.at{border-color:var(--verde);color:var(--verde);background:var(--verde-bg);font-weight:500;}
+  .mta{width:100%;min-height:100px;padding:12px 16px;border:1.5px solid var(--borda);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--texto);background:var(--branco);resize:none;outline:none;line-height:1.6;margin-bottom:12px;}
+  .mta:focus{border-color:var(--verde-claro);}
+  .mac{display:flex;gap:10px;}
+  .bcanc{flex:1;padding:12px;border:1.5px solid var(--borda);border-radius:var(--radius-sm);background:transparent;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--texto-muted);cursor:pointer;}
+  .bpost{flex:2;padding:12px;background:var(--verde);color:var(--creme);border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;}
+
+  /* IA MODAL */
+  .iam{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center;padding:1.5rem;}
+  .iam.ab{display:flex;}
+  .iac{background:var(--creme);border-radius:var(--radius);padding:1.5rem;width:100%;max-width:400px;animation:fu .3s ease;}
+  .iah{display:flex;align-items:center;gap:10px;margin-bottom:1rem;}
+  .iatit{font-family:'Fraunces',serif;font-size:18px;color:var(--verde);}
+  .iatx{background:var(--branco);border:1px solid var(--borda);border-radius:var(--radius-sm);padding:1rem;font-size:13px;color:var(--texto);line-height:1.7;margin-bottom:1rem;min-height:120px;}
+  .ial{display:flex;gap:6px;align-items:center;justify-content:center;padding:2rem;}
+  .iad{width:8px;height:8px;border-radius:50%;background:var(--verde-claro);animation:pp 1.2s infinite;}
+  .iad:nth-child(2){animation-delay:.2s} .iad:nth-child(3){animation-delay:.4s}
+  @keyframes pp{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+  .iaa{display:flex;gap:8px;}
+  .bcop{flex:1;padding:10px;background:var(--verde);color:var(--creme);border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;}
+  .bfch{padding:10px 16px;border:1.5px solid var(--borda);border-radius:var(--radius-sm);background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--texto-muted);cursor:pointer;}
+
+  /* FAB + NAV */
+  .fab{position:fixed;bottom:74px;right:24px;width:56px;height:56px;border-radius:50%;background:var(--laranja);color:white;border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(231,111,81,.4);display:flex;align-items:center;justify-content:center;transition:transform .2s;z-index:100;}
+  .fab:hover{transform:scale(1.08);}
+  .bnav{background:var(--branco);border-top:1px solid var(--borda);display:flex;position:sticky;bottom:0;}
+  .nitem{flex:1;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--texto-muted);cursor:pointer;}
+  .nitem.at{color:var(--verde);}
+  .nitem svg{width:22px;height:22px;}
+  .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--texto);color:var(--creme);padding:10px 20px;border-radius:20px;font-size:13px;opacity:0;transition:all .3s;z-index:500;white-space:nowrap;}
+  .toast.vis{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  /* SERVIÇOS */
+  .srv-header{background:linear-gradient(135deg,#2D6A4F,#52B788);padding:1.25rem;margin-bottom:1rem;border-radius:var(--radius);}
+  .srv-header h2{font-family:"Fraunces",serif;font-size:20px;color:white;margin-bottom:4px;}
+  .srv-header p{font-size:12px;color:rgba(255,255,255,.7);}
+  .srv-cats{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-bottom:1rem;}
+  .srv-cats::-webkit-scrollbar{display:none;}
+  .srv-cat{padding:6px 14px;border-radius:20px;border:1.5px solid var(--borda);background:var(--branco);font-size:12px;font-weight:500;color:var(--texto-muted);cursor:pointer;white-space:nowrap;transition:all .15s;}
+  .srv-cat.at{background:#2D6A4F;color:white;border-color:#2D6A4F;}
+  .srv-grid{display:flex;flex-direction:column;gap:10px;}
+  .srv-card{background:var(--branco);border-radius:var(--radius);border:1px solid var(--borda);overflow:hidden;}
+  .srv-card.destaque{border:2px solid #E9C46A;}
+  .srv-destaque-label{background:#E9C46A;color:#7D5A00;font-size:10px;font-weight:500;padding:3px 10px;text-align:center;letter-spacing:.5px;}
+  .srv-body{padding:1rem 1.25rem;}
+  .srv-top{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;}
+  .srv-logo{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .srv-info{flex:1;}
+  .srv-nome{font-size:15px;font-weight:500;color:var(--texto);}
+  .srv-tipo{font-size:11px;color:var(--texto-muted);margin-top:1px;}
+  .srv-dist{font-size:11px;font-weight:500;color:#2D6A4F;margin-top:1px;}
+  .srv-desc{font-size:13px;color:var(--texto-muted);line-height:1.55;margin-bottom:10px;}
+  .srv-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+  .srv-tag{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--verde-bg);color:#2D6A4F;}
+  .srv-acoes{display:flex;gap:8px;}
+  .srv-btn-wa{flex:1;padding:9px;background:#25D366;color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .srv-btn-tel{flex:1;padding:9px;background:var(--verde);color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
+  .srv-anunciar{background:var(--creme-escuro);border:2px dashed var(--borda);border-radius:var(--radius);padding:1.25rem;text-align:center;margin-top:10px;}
+  .srv-anunciar p{font-size:13px;color:var(--texto-muted);margin-bottom:10px;line-height:1.5;}
+  .srv-anunciar strong{color:var(--texto);font-weight:500;}
+  .srv-btn-anunciar{padding:10px 20px;background:#2D6A4F;color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
+  /* card patrocinado no feed */
+  .feed-ad{background:var(--branco);border-radius:var(--radius);border:1px solid #E9C46A;margin-bottom:12px;overflow:hidden;}
+  .feed-ad-label{background:#FFFBEA;padding:5px 1.25rem;font-size:10px;color:#7D5A00;font-weight:500;letter-spacing:.5px;border-bottom:1px solid #F5E9A0;}
+  .feed-ad-body{padding:.9rem 1.25rem;display:flex;gap:12px;align-items:center;}
+  .feed-ad-logo{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .feed-ad-info{flex:1;}
+  .feed-ad-nome{font-size:14px;font-weight:500;color:var(--texto);}
+  .feed-ad-desc{font-size:12px;color:var(--texto-muted);margin-top:2px;}
+  .feed-ad-btn{padding:7px 14px;background:#2D6A4F;color:white;border:none;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;white-space:nowrap;}
+
+  /* FLUXO ANUNCIANTE */
+  .anun-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:flex-end;justify-content:center;}
+  .anun-overlay.ab{display:flex;}
+  .anun-sheet{background:var(--creme);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;animation:su .3s ease;}
+  .anun-handle{width:40px;height:4px;background:var(--borda);border-radius:2px;margin:0 auto 1.25rem;}
+  .anun-step{display:none;padding:1.5rem;}
+  .anun-step.ab{display:block;}
+  .anun-titulo{font-family:'Fraunces',serif;font-size:22px;color:#2D6A4F;margin-bottom:6px;}
+  .anun-sub{font-size:14px;color:var(--texto-muted);margin-bottom:1.5rem;line-height:1.5;}
+  .anun-progress{display:flex;gap:6px;margin-bottom:1.5rem;}
+  .anun-dot{height:4px;flex:1;border-radius:2px;background:var(--borda);transition:background .3s;}
+  .anun-dot.done{background:#2D6A4F;}
+  /* tipo selector */
+  .tipo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.5rem;}
+  .tipo-card{padding:1rem;border-radius:var(--radius-sm);border:1.5px solid var(--borda);background:var(--branco);cursor:pointer;text-align:center;transition:all .15s;}
+  .tipo-card:hover{border-color:var(--verde-claro);}
+  .tipo-card.sel{border:2px solid #2D6A4F;background:var(--verde-bg);}
+  .tipo-card-icon{font-size:24px;margin-bottom:6px;}
+  .tipo-card-label{font-size:13px;font-weight:500;color:var(--texto);}
+  /* form fields */
+  .anun-field{margin-bottom:14px;}
+  .anun-field label{font-size:11px;font-weight:500;color:var(--texto-muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
+  .anun-field input,.anun-field textarea,.anun-field select{width:100%;padding:11px 14px;border:1.5px solid var(--borda);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--texto);background:var(--branco);outline:none;transition:border-color .2s;}
+  .anun-field input:focus,.anun-field textarea:focus,.anun-field select:focus{border-color:var(--verde-claro);}
+  .anun-field textarea{resize:none;min-height:80px;line-height:1.5;}
+  /* planos */
+  .planos-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:1.5rem;}
+  .plano-card{padding:1rem 1.25rem;border-radius:var(--radius-sm);border:1.5px solid var(--borda);background:var(--branco);cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .15s;}
+  .plano-card:hover{border-color:var(--verde-claro);}
+  .plano-card.sel{border:2px solid #2D6A4F;background:var(--verde-bg);}
+  .plano-card.popular{border-color:#E9C46A;}
+  .plano-card.popular.sel{border-color:#2D6A4F;}
+  .plano-popular-badge{font-size:10px;font-weight:500;background:#E9C46A;color:#7D5A00;padding:2px 8px;border-radius:20px;margin-bottom:4px;display:inline-block;}
+  .plano-info{flex:1;}
+  .plano-nome{font-size:14px;font-weight:500;color:var(--texto);}
+  .plano-desc{font-size:12px;color:var(--texto-muted);margin-top:2px;}
+  .plano-preco{font-size:18px;font-weight:500;color:#2D6A4F;white-space:nowrap;}
+  .plano-preco small{font-size:11px;color:var(--texto-muted);font-weight:400;}
+  .plano-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--borda);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+  .plano-card.sel .plano-radio{border-color:#2D6A4F;background:#2D6A4F;}
+  .plano-card.sel .plano-radio::after{content:'';width:6px;height:6px;border-radius:50%;background:white;}
+  /* resumo */
+  .resumo-box{background:var(--verde-bg);border-radius:var(--radius-sm);padding:1rem 1.25rem;margin-bottom:1.5rem;}
+  .resumo-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:.5px solid rgba(45,106,79,.15);}
+  .resumo-row:last-child{border-bottom:none;font-weight:500;font-size:14px;padding-top:8px;}
+  .resumo-row span:first-child{color:#1B4D37;}
+  .resumo-row span:last-child{color:#2D6A4F;font-weight:500;}
+  /* pagamento */
+  .pgto-metodos{display:flex;gap:8px;margin-bottom:1rem;}
+  .pgto-btn{flex:1;padding:10px;border-radius:var(--radius-sm);border:1.5px solid var(--borda);background:var(--branco);font-size:13px;font-weight:500;cursor:pointer;text-align:center;transition:all .15s;font-family:'DM Sans',sans-serif;color:var(--texto-muted);}
+  .pgto-btn.sel{border-color:#2D6A4F;color:#2D6A4F;background:var(--verde-bg);}
+  .pix-box{background:var(--branco);border:1.5px solid var(--borda);border-radius:var(--radius-sm);padding:1.25rem;text-align:center;margin-bottom:1rem;}
+  .pix-qr{width:140px;height:140px;background:#F5F5F5;border-radius:8px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:60px;}
+  .pix-chave{font-size:12px;color:var(--texto-muted);margin-bottom:8px;}
+  .pix-copiar{padding:7px 16px;background:#2D6A4F;color:white;border:none;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  /* sucesso */
+  .sucesso-box{text-align:center;padding:1rem 0;}
+  .sucesso-icon{font-size:56px;margin-bottom:16px;}
+  .sucesso-titulo{font-family:'Fraunces',serif;font-size:24px;color:#2D6A4F;margin-bottom:8px;}
+  .sucesso-desc{font-size:14px;color:var(--texto-muted);line-height:1.6;margin-bottom:1.5rem;}
+  /* botões nav */
+  .anun-nav{display:flex;gap:10px;margin-top:6px;}
+  .anun-back{flex:1;padding:12px;border:1.5px solid var(--borda);border-radius:var(--radius-sm);background:transparent;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--texto-muted);cursor:pointer;}
+  .anun-next{flex:2;padding:12px;background:#2D6A4F;color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .2s;}
+  .anun-next:hover{background:#1B4D37;}
+  .anun-next:disabled{background:var(--borda);cursor:not-allowed;}
+  @media(min-width:480px){.tela{max-width:420px;margin:0 auto}body{background:#E8E0CC}.fab{right:calc(50% - 210px + 24px)}.panico-fab{left:calc(50% - 210px + 16px)!important;right:auto!important}}
+
+  /* BOTÃO DE PÂNICO */
+  .panico-fab{position:fixed;bottom:74px;left:16px;width:52px;height:52px;border-radius:50%;background:#C0392B;color:white;border:3px solid #922B21;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(192,57,43,.5);display:none;align-items:center;justify-content:center;z-index:100;animation:panicoIdle 2.5s infinite;}
+  .panico-fab.visivel{display:flex;}
+  @keyframes panicoIdle{0%,100%{box-shadow:0 4px 16px rgba(192,57,43,.5)}50%{box-shadow:0 4px 24px rgba(192,57,43,.8)}}
+
+  /* MODAL PÂNICO */
+  .panico-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:flex-end;justify-content:center;}
+  .panico-overlay.ab{display:flex;}
+  .panico-sheet{background:#1C1C1C;border-radius:24px 24px 0 0;padding:1.5rem;width:100%;max-width:480px;animation:su .25s ease;}
+  .panico-topo{display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;}
+  .panico-icone{width:48px;height:48px;border-radius:50%;background:#C0392B;display:flex;align-items:center;justify-content:center;font-size:22px;animation:pulseRed 1s infinite;}
+  @keyframes pulseRed{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+  .panico-titulo{font-family:'Fraunces',serif;font-size:22px;color:#FFFFFF;}
+  .panico-sub{font-size:13px;color:rgba(255,255,255,.55);margin-top:2px;}
+  .panico-alerta-btn{width:100%;padding:16px;background:#C0392B;color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:16px;font-weight:500;cursor:pointer;margin-bottom:1rem;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .2s;}
+  .panico-alerta-btn:hover{background:#A93226;}
+  .panico-alerta-btn.enviado{background:#1D6A3A;}
+  .nums-title{font-size:11px;font-weight:500;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
+  .num-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.06);border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:background .15s;}
+  .num-item:hover{background:rgba(255,255,255,.1);}
+  .num-item:last-child{margin-bottom:0;}
+  .num-icone{font-size:20px;width:32px;text-align:center;flex-shrink:0;}
+  .num-info{flex:1;}
+  .num-nome{font-size:14px;font-weight:500;color:#FFFFFF;}
+  .num-desc{font-size:12px;color:rgba(255,255,255,.45);margin-top:1px;}
+  .num-tel{font-size:18px;font-weight:500;color:#52B788;margin-left:auto;}
+  .panico-fechar{width:100%;padding:12px;background:transparent;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:1rem;}
+  .panico-fechar:hover{color:rgba(255,255,255,.7);}
+  .alerta-confirmacao{background:rgba(82,183,136,.15);border:1px solid rgba(82,183,136,.3);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:#52B788;text-align:center;margin-bottom:1rem;display:none;}
+  .alerta-confirmacao.vis{display:block;}
+</style>
+</head>
+<body>
+
+<!-- TELA 1: CADASTRO -->
+<div class="tela ativa" id="t-bv">
+  <div class="bv-inner" style="position:relative;z-index:1;width:100%;max-width:380px;">
+    <div class="logo">Vizinho<br><span>Certo</span></div>
+    <div class="tagline">Sua rua. Seus vizinhos. Do seu jeito.</div>
+    <div class="card" id="card-cadastro">
+      <h2>Criar conta</h2>
+      <p>Crie sua conta gratuita para se conectar com seus vizinhos.</p>
+      <div class="ig"><label>Seu nome completo</label><input type="text" id="inp-nome" placeholder="Ex: Maria Silva"/></div>
+      <div class="ig"><label>E-mail</label><input type="email" id="inp-email" placeholder="Ex: maria@email.com"/></div>
+      <div class="ig"><label>Senha</label><input type="password" id="inp-senha" placeholder="Mínimo 6 caracteres"/></div>
+      <div class="ig"><label>CEP</label><input type="tel" id="inp-cep" placeholder="Ex: 87010-000" maxlength="9" oninput="formataCEP(this)"/></div>
+      <div class="ig" id="cep-resultado" style="display:none;">
+        <label>Rua encontrada</label>
+        <input type="text" id="inp-cep-addr" readonly style="background:#F0FBF4;color:#2D6A4F;font-weight:500;"/>
+      </div>
+      <div class="ig" id="num-wrap" style="display:none;">
+        <label>Número da sua casa</label>
+        <input type="tel" id="inp-num" placeholder="Ex: 142"/>
+      </div>
+      <button class="btnp" onclick="irRaio()">Criar conta →</button>
+      <div style="text-align:center;margin-top:12px;">
+        <span style="font-size:13px;color:var(--texto-muted);">Já tem conta? </span>
+        <span style="font-size:13px;color:#2D6A4F;font-weight:500;cursor:pointer;" onclick="mostrarLogin()">Entrar</span>
+      </div>
+    </div>
+
+    <div class="card" id="card-login" style="display:none;">
+      <h2>Entrar</h2>
+      <p>Bem-vindo de volta!</p>
+      <div class="ig"><label>E-mail</label><input type="email" id="login-email" placeholder="seu@email.com"/></div>
+      <div class="ig"><label>Senha</label><input type="password" id="login-senha" placeholder="Sua senha"/></div>
+      <button class="btnp" onclick="fazerLogin()">Entrar →</button>
+      <div style="text-align:center;margin-top:12px;">
+        <span style="font-size:13px;color:var(--texto-muted);">Não tem conta? </span>
+        <span style="font-size:13px;color:#2D6A4F;font-weight:500;cursor:pointer;" onclick="mostrarCadastro()">Criar conta</span>
+      </div>
+    </div>
+    <div class="disclaimer" style="background:rgba(82,183,136,0.15);border:1px solid rgba(82,183,136,0.3);border-radius:10px;padding:10px 14px;margin-top:16px;position:relative;z-index:1;display:flex;align-items:center;gap:8px;max-width:380px;"><span style="font-size:18px;">🔒</span><span style="font-size:13px;color:rgba(254,250,224,0.9);line-height:1.5;"><strong style="color:white;">Seu endereço exato nunca é mostrado</strong> a outros usuários. Só calculamos a distância entre vizinhos.</span></div>
+  </div>
+</div>
+
+<!-- TELA 2: RAIO -->
+<div class="tela" id="t-raio">
+  <div class="rh"><h2>Defina seu raio</h2><p>Quanto de vizinhança você quer acompanhar?</p></div>
+  <div class="rb">
+    <div class="rv">
+      <div class="mc"><div class="mf"><div class="mg"></div>
+        <div class="rc2" id="rc" style="width:80px;height:80px;"></div>
+        <div class="ep"></div>
+        <div class="vp" id="vp1" style="top:38%;left:40%;"></div><div class="vn" id="vn1" style="top:38%;left:40%;">Ana</div>
+        <div class="vp" id="vp2" style="top:62%;left:60%;"></div><div class="vn" id="vn2" style="top:62%;left:60%;">Carlos</div>
+        <div class="vp" id="vp3" style="top:30%;left:65%;"></div><div class="vn" id="vn3" style="top:30%;left:65%;">D. Lúcia</div>
+        <div class="vp" id="vp4" style="top:70%;left:32%;"></div><div class="vn" id="vn4" style="top:70%;left:32%;">João</div>
+        <div class="vp" id="vp5" style="top:18%;left:28%;"></div><div class="vn" id="vn5" style="top:18%;left:28%;">Pedro</div>
+        <div class="vp" id="vp6" style="top:80%;left:68%;"></div><div class="vn" id="vn6" style="top:80%;left:68%;">Fernanda</div>
+      </div></div>
+      <div class="riv" id="rv">150m</div>
+      <div class="rid" id="rd">~2 quadras ao redor</div>
+      <div class="rvc" id="rvc">3 vizinhos no seu raio</div>
+    </div>
+    <div class="sw"><input type="range" min="50" max="500" step="50" value="150" id="rs" oninput="atuRaio(this.value)"><div class="sl"><span>50m</span><span>250m</span><span>500m</span></div></div>
+    <div class="ro" style="margin:1rem 0 1.5rem;">
+      <div class="rc3 ativo" onclick="setR(100,this)">Minha calçada</div>
+      <div class="rc3" onclick="setR(200,this)">Minha rua</div>
+      <div class="rc3" onclick="setR(350,this)">Meu quarteirão</div>
+      <div class="rc3" onclick="setR(500,this)">Meu bairro</div>
+    </div>
+    <button class="btnp" onclick="irFeed()">Entrar na vizinhança →</button>
+  </div>
+</div>
+
+<!-- TELA 3: FEED -->
+<div class="tela" id="t-feed">
+  <div class="fh">
+    <div><h1>Vizinho Certo</h1><p id="fsub">Zona 07 · 150m</p></div>
+    <div class="fav" id="fav">M</div>
+  </div>
+  <div class="ft" id="feed-tabs">
+    <div class="ftab ativo" onclick="filtrar('tudo',this)">Tudo</div>
+    <div class="ftab" onclick="filtrar('problema',this)">🚧 Problemas</div>
+    <div class="ftab" onclick="filtrar('aviso',this)">⚠️ Avisos</div>
+    <div class="ftab" onclick="filtrar('ajuda',this)">🤝 Ajuda</div>
+  </div>
+  <div class="fb" id="feed"></div>
+  <div id="servicos-tab" style="display:none;padding:1rem 1rem 5rem;"></div>
+  <div class="bnav">
+    <div class="nitem at" id="nav-feed" onclick="navTab('feed',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Feed</div>
+    <div class="nitem" id="nav-servicos" onclick="navTab('servicos',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Serviços</div>
+    <div class="nitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Vizinhos</div>
+    <div class="nitem"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Perfil</div>
+  </div>
+  <button class="fab" onclick="abrirM()">+</button>
+  <button class="panico-fab visivel" id="panico-fab" onclick="abrirPanico()" title="Emergência">🆘</button>
+</div>
+
+
+<!-- MODAL ANUNCIANTE -->
+<div class="anun-overlay" id="manun">
+  <div class="anun-sheet">
+    <div style="padding:1rem 1.5rem 0;"><div class="anun-handle"></div>
+      <div class="anun-progress" id="anun-prog">
+        <div class="anun-dot done" id="ap1"></div>
+        <div class="anun-dot" id="ap2"></div>
+        <div class="anun-dot" id="ap3"></div>
+        <div class="anun-dot" id="ap4"></div>
+      </div>
+    </div>
+
+    <!-- STEP 1: TIPO -->
+    <div class="anun-step ab" id="as1">
+      <div class="anun-titulo">Você é...</div>
+      <div class="anun-sub">Escolha a categoria do seu serviço ou negócio.</div>
+      <div class="tipo-grid">
+        <div class="tipo-card" onclick="selTipoAnun('🔧','Encanador',this)"><div class="tipo-card-icon">🔧</div><div class="tipo-card-label">Encanador</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('⚡','Eletricista',this)"><div class="tipo-card-icon">⚡</div><div class="tipo-card-label">Eletricista</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🧹','Diarista',this)"><div class="tipo-card-icon">🧹</div><div class="tipo-card-label">Diarista</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🍕','Comércio',this)"><div class="tipo-card-icon">🍕</div><div class="tipo-card-label">Comércio local</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('👶','Cuidadora',this)"><div class="tipo-card-icon">👶</div><div class="tipo-card-label">Cuidadora / Babá</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🏠','Imobiliária',this)"><div class="tipo-card-icon">🏠</div><div class="tipo-card-label">Imobiliária</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🏗️','Pedreiro',this)"><div class="tipo-card-icon">🏗️</div><div class="tipo-card-label">Pedreiro / Pintor</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('✂️','Outro',this)"><div class="tipo-card-icon">✂️</div><div class="tipo-card-label">Outro serviço</div></div>
+      </div>
+      <div class="anun-nav"><button class="anun-back" onclick="fecharAnun()">Cancelar</button><button class="anun-next" id="anun-n1" onclick="anunStep(2)" disabled>Continuar →</button></div>
+    </div>
+
+    <!-- STEP 2: DADOS -->
+    <div class="anun-step" id="as2">
+      <div class="anun-titulo">Seu anúncio</div>
+      <div class="anun-sub">Essas informações aparecem para os vizinhos no seu raio.</div>
+      <div class="anun-field"><label>Nome do negócio ou seu nome</label><input type="text" id="anun-nome" placeholder="Ex: Hidráulica do Zé"/></div>
+      <div class="anun-field"><label>Descrição curta</label><textarea id="anun-desc" placeholder="Ex: Consertos e instalações. Atendo emergências no mesmo dia."></textarea></div>
+      <div class="anun-field"><label>Telefone / WhatsApp</label><input type="tel" id="anun-tel" placeholder="(44) 99999-0000"/></div>
+      <div class="anun-nav"><button class="anun-back" onclick="anunStep(1)">← Voltar</button><button class="anun-next" onclick="anunValidaDados()">Continuar →</button></div>
+    </div>
+
+    <!-- STEP 3: PLANO -->
+    <div class="anun-step" id="as3">
+      <div class="anun-titulo">Escolha o plano</div>
+      <div class="anun-sub">Seu anúncio aparece no feed e na aba Serviços para vizinhos no raio escolhido.</div>
+      <div class="planos-grid">
+        <div class="plano-card" onclick="selPlano(10,990,this)">
+          <div class="plano-radio"></div>
+          <div class="plano-info"><div class="plano-nome">Plano Rua · 10 dias</div><div class="plano-desc">Raio 1,5km · Feed + aba Serviços</div></div>
+          <div class="plano-preco">R$ 9,90</div>
+        </div>
+        <div class="plano-card popular" onclick="selPlano(20,1990,this)">
+          <div class="plano-radio"></div>
+          <div class="plano-info"><div class="plano-popular-badge">★ Mais escolhido</div><div class="plano-nome">Plano Bairro · 20 dias</div><div class="plano-desc">Raio 3km · Feed + Serviços + badge ✓</div></div>
+          <div class="plano-preco">R$ 19,90</div>
+        </div>
+        <div class="plano-card" onclick="selPlano(30,2790,this)">
+          <div class="plano-radio"></div>
+          <div class="plano-info"><div class="plano-nome">Plano Cidade · 30 dias</div><div class="plano-desc">Raio 5km · Tudo + topo da busca 🔥</div></div>
+          <div class="plano-preco">R$ 27,90</div>
+        </div>
+      </div>
+      <div class="anun-nav"><button class="anun-back" onclick="anunStep(2)">← Voltar</button><button class="anun-next" id="anun-n3" onclick="anunStep(4)" disabled>Ver resumo →</button></div>
+    </div>
+
+    <!-- STEP 4: PAGAMENTO -->
+    <div class="anun-step" id="as4">
+      <div class="anun-titulo">Pagamento</div>
+      <div class="anun-sub">Após o pagamento seu anúncio entra no ar automaticamente.</div>
+      <div class="resumo-box" id="anun-resumo"></div>
+      <div class="pgto-metodos">
+        <button class="pgto-btn sel" onclick="selPgto('pix',this)">📱 Pix</button>
+        <button class="pgto-btn" onclick="selPgto('cartao',this)">💳 Cartão</button>
+        <button class="pgto-btn" onclick="selPgto('boleto',this)">📄 Boleto</button>
+      </div>
+      <div id="pgto-area"></div>
+      <div class="anun-nav"><button class="anun-back" onclick="anunStep(3)">← Voltar</button><button class="anun-next" onclick="anunFinalizar()">Pagar e publicar →</button></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL PÂNICO -->
+<div class="panico-overlay" id="mpanico">
+  <div class="panico-sheet">
+    <div class="panico-topo">
+      <div class="panico-icone">🆘</div>
+      <div><div class="panico-titulo">Emergência</div><div class="panico-sub">Alertar vizinhos e acionar ajuda</div></div>
+    </div>
+    <div class="alerta-confirmacao" id="alerta-conf">✓ Alerta enviado para <span id="alerta-count">0</span> vizinhos no seu raio!</div>
+    <button class="panico-alerta-btn" id="btn-alertar" onclick="enviarAlerta()">📣 Alertar todos os vizinhos do raio</button>
+    <div class="nums-title">Números de emergência</div>
+    <div class="num-item" onclick="ligar('190')"><div class="num-icone">🚔</div><div class="num-info"><div class="num-nome">Polícia Militar</div><div class="num-desc">Crimes, ameaças, situações de risco</div></div><div class="num-tel">190</div></div>
+    <div class="num-item" onclick="ligar('192')"><div class="num-icone">🚑</div><div class="num-info"><div class="num-nome">SAMU</div><div class="num-desc">Emergências médicas</div></div><div class="num-tel">192</div></div>
+    <div class="num-item" onclick="ligar('193')"><div class="num-icone">🚒</div><div class="num-info"><div class="num-nome">Bombeiros</div><div class="num-desc">Incêndio, resgate, acidentes</div></div><div class="num-tel">193</div></div>
+    <div class="num-item" onclick="ligar('153')"><div class="num-icone">🛡️</div><div class="num-info"><div class="num-nome">Guarda Municipal</div><div class="num-desc">Segurança urbana — Maringá</div></div><div class="num-tel">153</div></div>
+    <div class="num-item" onclick="ligar('180')"><div class="num-icone">🤝</div><div class="num-info"><div class="num-nome">Central da Mulher</div><div class="num-desc">Violência doméstica — 24h gratuito</div></div><div class="num-tel">180</div></div>
+    <div class="num-item" onclick="ligar('100')"><div class="num-icone">👶</div><div class="num-info"><div class="num-nome">Disque Direitos Humanos</div><div class="num-desc">Crianças, idosos, vulneráveis</div></div><div class="num-tel">100</div></div>
+    <button class="panico-fechar" onclick="fecharPanico()">Fechar</button>
+  </div>
+</div>
+
+<!-- MODAL POST -->
+<div class="moverlay" id="mpost">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mtitle">Contar pra vizinhança</div>
+    <div class="tsel">
+      <div class="tbtn at" onclick="selTipo('problema',this)">🚧 Problema</div>
+      <div class="tbtn" onclick="selTipo('aviso',this)">⚠️ Aviso</div>
+      <div class="tbtn" onclick="selTipo('ajuda',this)">🤝 Ajuda</div>
+      <div class="tbtn" onclick="selTipo('info',this)">💬 Info</div>
+    </div>
+    <textarea class="mta" id="ptxt" placeholder="O que está acontecendo na sua rua?"></textarea>
+    <div class="mac"><button class="bcanc" onclick="fecharM()">Cancelar</button><button class="bpost" onclick="postar()">Publicar →</button></div>
+  </div>
+</div>
+
+<!-- MODAL IA -->
+<div class="iam" id="mia">
+  <div class="iac">
+    <div class="iah"><div style="font-size:24px;">🤖</div><div class="iatit" id="iatit">Gerando pedido...</div></div>
+    <div class="iatx" id="iatx"><div class="ial"><div class="iad"></div><div class="iad"></div><div class="iad"></div></div></div>
+    <div class="iaa"><button class="bcop" onclick="copiarIA()">📋 Copiar texto</button><button class="bfch" onclick="fecharIA()">Fechar</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const PALAVROES=['idiota','burro','imbecil','merda','fdp','filho da','viado','vadia','puta','vagabundo','cretino','otário','lixo'];
+const E={nome:'',bairro:'',raio:150,tipo:'problema',filtro:'tudo',abCom:new Set(),abOq:new Set(),
+posts:[
+  {id:1,nome:'Carlos Mendes',dist:'80m',tipo:'problema',txt:'A calçada da Rua Pioneiros está toda esburacada perto do número 230. Já faz 2 meses. Alguém mais caiu aí?',ap:12,apd:false,av:'C',cor:'#5E60CE',coms:[
+    {nome:'Ana Paula',dist:'120m',txt:'Passei ontem, tá terrível mesmo. Tropecei duas vezes!',av:'A',cor:'#E76F51'},
+    {nome:'João F.',dist:'200m',txt:'Minha mãe caiu aí semana passada. Precisamos resolver isso.',av:'J',cor:'#2D6A4F'}
+  ]},
+  {id:2,nome:'Ana Paula',dist:'120m',tipo:'aviso',txt:'Tem um cachorro grande solto na Rua das Acácias desde ontem. Parece manso mas está assustando as crianças. Alguém conhece o dono?',ap:7,apd:false,av:'A',cor:'#E76F51',coms:[
+    {nome:'D. Lúcia',dist:'95m',txt:'Acho que é do vizinho do 145. Vou perguntar pra ele.',av:'L',cor:'#2D6A4F'}
+  ]},
+  {id:3,nome:'Dona Lúcia',dist:'95m',tipo:'ajuda',txt:'Alguém pode indicar um eletricista de confiança aqui perto? Preciso urgente consertar uma tomada.',ap:3,apd:false,av:'L',cor:'#2D6A4F',coms:[]},
+  {id:4,nome:'João Ferreira',dist:'200m',tipo:'info',txt:'Semana que vem tem feira de trocas de mudas na praça — sábado das 8h ao meio dia. Traga suas plantas!',ap:18,apd:false,av:'J',cor:'#E9C46A',coms:[]}
+]};
+
+const OQ={
+  calcada:{titulo:'Calçada danificada',acoes:[
+    {i:'📞',t:'<strong>156 — Central da Prefeitura:</strong> Ligue e registre com o endereço exato. Anote o número do protocolo.',tel:'156'},
+    {i:'📱',t:'<strong>App 156 ou e-Cidadão:</strong> Registre com foto para ter comprovante digital e histórico.'},
+    {i:'✊',t:'<strong>Abaixo-assinado:</strong> Quanto mais vizinhos apoiarem, maior o peso. Use o botão "Gerar pedido" para criar um ofício coletivo.'}
+  ]},
+  buraco:{titulo:'Buraco na rua / asfalto',acoes:[
+    {i:'📞',t:'<strong>156 — Secretaria de Obras:</strong> Informe rua, número e tamanho aproximado do buraco.',tel:'156'},
+    {i:'📷',t:'<strong>Documente com foto:</strong> Tire fotos com data e hora ativados antes de ligar — é sua prova.'},
+    {i:'⚠️',t:'<strong>Se for perigoso:</strong> Sinalize o buraco com algo visível enquanto aguarda o conserto.'}
+  ]},
+  iluminacao:{titulo:'Iluminação pública',acoes:[
+    {i:'📞',t:'<strong>0800 722 9900 — COPEL:</strong> Número gratuito para reportar poste apagado em Maringá.',tel:'08007229900'},
+    {i:'📍',t:'<strong>Anote o número do poste:</strong> Está na placa metálica do poste. Facilita muito o atendimento.'},
+    {i:'⏱️',t:'<strong>Prazo legal:</strong> A concessionária tem 48h para resolver após o registro.'}
+  ]},
+  lixo:{titulo:'Lixo / entulho irregular',acoes:[
+    {i:'📞',t:'<strong>156 — Limpeza Urbana:</strong> Denuncie descarte irregular ou falta de coleta.',tel:'156'},
+    {i:'📸',t:'<strong>Tire foto como prova:</strong> Especialmente se houver endereço identificável na cena.'},
+    {i:'♻️',t:'<strong>Entulho de obra:</strong> É responsabilidade do dono da obra. A prefeitura pode autuar o responsável.'}
+  ]},
+  agua:{titulo:'Problema de água / esgoto',acoes:[
+    {i:'📞',t:'<strong>0800 722 0195 — SANEPAR:</strong> Falta de água, vazamento ou esgoto a céu aberto.',tel:'08007220195'},
+    {i:'⏱️',t:'<strong>Vazamento na rua:</strong> Prioridade máxima — ligue imediatamente, prazo de 4h para atendimento.'},
+    {i:'📋',t:'<strong>Guarde o protocolo:</strong> Se não resolverem, você pode acionar a ARSESP (agência reguladora).'}
+  ]},
+  seguranca:{titulo:'Segurança / suspeita',acoes:[
+    {i:'📞',t:'<strong>190 — Polícia Militar:</strong> Situações em andamento ou ameaças imediatas.',tel:'190'},
+    {i:'📞',t:'<strong>153 — Guarda Municipal:</strong> Ocorrências de menor urgência no bairro.',tel:'153'},
+    {i:'🚫',t:'<strong>Não confronte:</strong> Registre descrição e placa se possível, e acione a autoridade.'}
+  ]},
+  default:{titulo:'Como resolver',acoes:[
+    {i:'📞',t:'<strong>156 — Central da Prefeitura de Maringá:</strong> Canal geral para problemas urbanos.',tel:'156'},
+    {i:'🤖',t:'<strong>Gere o pedido formal:</strong> Use o botão abaixo para criar um ofício que pode ser enviado por e-mail ou protocolado.'},
+    {i:'✊',t:'<strong>Coletivize:</strong> Mais apoios = mais pressão. Compartilhe o post com seus vizinhos.'}
+  ]}
+};
+
+function detectOq(txt){
+  const t=txt.toLowerCase();
+  if(/cal[çc]ada|passeio/.test(t)) return 'calcada';
+  if(/buraco|asfalto|pavimento/.test(t)) return 'buraco';
+  if(/luz|poste|ilumina|escuro|apagad/.test(t)) return 'iluminacao';
+  if(/lixo|entulho|sujeira/.test(t)) return 'lixo';
+  if(/[áa]gua|vazamento|esgoto/.test(t)) return 'agua';
+  if(/assalto|roubo|suspeito|ladr|segur/.test(t)) return 'seguranca';
+  return 'default';
+}
+function temPalavrão(t){return PALAVROES.some(p=>t.toLowerCase().includes(p));}
+
+function formataCEP(el){
+  let v=el.value.replace(/\D/g,'');
+  if(v.length>5) v=v.slice(0,5)+'-'+v.slice(5,8);
+  el.value=v;
+  if(v.replace('-','').length===8) buscaCEP(v.replace('-',''));
+}
+
+async function buscaCEP(cep){
+  try{
+    const r=await fetch('https://viacep.com.br/ws/'+cep+'/json/');
+    const d=await r.json();
+    if(d.erro){document.getElementById('cep-resultado').style.display='none';toast('CEP não encontrado.');return;}
+    const addr=d.logradouro?d.logradouro+', '+d.bairro+' — '+d.localidade+'/'+d.uf:d.bairro+' — '+d.localidade+'/'+d.uf;
+    document.getElementById('inp-cep-addr').value=addr;
+    document.getElementById('cep-resultado').style.display='';
+    const numWrap=document.getElementById('num-wrap');
+    if(numWrap) numWrap.style.display='';
+    E.bairro=d.bairro||d.localidade;
+    E.cidade=d.localidade;
+    E.uf=d.uf;
+  }catch(e){toast('Erro ao buscar CEP. Tente novamente.');}
+}
+
+function mostrarLogin(){
+  document.getElementById('card-cadastro').style.display='none';
+  document.getElementById('card-login').style.display='';
+}
+function mostrarCadastro(){
+  document.getElementById('card-login').style.display='none';
+  document.getElementById('card-cadastro').style.display='';
+}
+function fazerLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const senha=document.getElementById('login-senha').value;
+  if(!email||!senha){toast('Preencha email e senha!');return;}
+  const saved=localStorage.getItem('vc_user');
+  if(!saved){toast('Conta não encontrada. Crie uma conta!');return;}
+  const user=JSON.parse(saved);
+  if(user.email!==email||user.senha!==senha){toast('Email ou senha incorretos.');return;}
+  E.nome=user.nome; E.bairro=user.bairro; E.cidade=user.cidade; E.uf=user.uf;
+  document.getElementById('fsub').textContent=`${E.cidade} · raio de ${E.raio}m`;
+  document.getElementById('fav').textContent=E.nome.charAt(0).toUpperCase();
+  render(); irTela('t-feed');
+}
+function irRaio(){
+  const n=document.getElementById('inp-nome').value.trim();
+  const email=document.getElementById('inp-email').value.trim();
+  const senha=document.getElementById('inp-senha').value;
+  const cep=document.getElementById('inp-cep').value.replace(/[^0-9]/g,'');
+  const num=document.getElementById('inp-num').value.trim();
+  if(!n){toast('Digite seu nome!');return;}
+  if(!email||!email.includes('@')){toast('Digite um email válido!');return;}
+  if(!senha||senha.length<6){toast('Senha deve ter pelo menos 6 caracteres!');return;}
+  if(cep.length!==8){toast('Digite um CEP válido!');return;}
+  if(!E.bairro){toast('Aguarde o CEP ser validado...');return;}
+  if(!num){toast('Digite o número da sua casa!');return;}
+  // salva localmente (simulando banco)
+  localStorage.setItem('vc_user', JSON.stringify({nome:n,email,senha,bairro:E.bairro,cidade:E.cidade,uf:E.uf}));
+  E.nome=n;
+  irTela('t-raio');
+}
+function irFeed(){
+  document.getElementById('fsub').textContent=`${E.cidade||E.bairro} · raio de ${E.raio}m`;
+  document.getElementById('fav').textContent=E.nome.charAt(0).toUpperCase();
+  render(); irTela('t-feed');
+}
+function irTela(id){document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa'));document.getElementById(id).classList.add('ativa');window.scrollTo(0,0);}
+
+const VD=[0.35,0.42,0.62,0.58,0.85,0.92];
+function atuRaio(v){
+  v=parseInt(v); E.raio=v;
+  document.getElementById('rv').textContent=v+'m';
+  const ds={50:'sua calçada',100:'~1 quadra',150:'~2 quadras',200:'~3 quadras',250:'meia rua',300:'rua inteira',350:'2 ruas',400:'quarteirão',450:'setor amplo',500:'bairro'};
+  document.getElementById('rd').textContent='~'+(ds[v]||v+'m')+' ao redor';
+  const p=(v-50)/450, px=Math.round(50+p*140);
+  document.getElementById('rc').style.cssText=`width:${px*2}px;height:${px*2}px;`;
+  let c=0;
+  VD.forEach((d,i)=>{const n=i+1,vis=d<=p+0.18;document.getElementById('vp'+n).style.opacity=vis?'1':'0.15';document.getElementById('vn'+n).style.opacity=vis?'1':'0';if(vis)c++;});
+  document.getElementById('rvc').textContent=c+' vizinho'+(c!==1?'s':'')+' no seu raio';
+  const pc=((v-50)/450)*100;
+  document.getElementById('rs').style.background=`linear-gradient(to right,var(--verde-claro) 0%,var(--verde-claro) ${pc}%,var(--creme-escuro) ${pc}%)`;
+}
+function setR(v,el){document.getElementById('rs').value=v;document.querySelectorAll('.rc3').forEach(c=>c.classList.remove('ativo'));el.classList.add('ativo');atuRaio(v);}
+
+const TL={problema:'🚧 Problema',aviso:'⚠️ Aviso',ajuda:'🤝 Ajuda',info:'💬 Info'};
+const TC={problema:'t-pr',aviso:'t-av',ajuda:'t-aj',info:'t-in'};
+const COR=['#5E60CE','#E76F51','#2D6A4F','#D4A017','#48CAE4'];
+
+function render(){
+  const lista=document.getElementById('feed');
+  const ps=E.filtro==='tudo'?E.posts:E.posts.filter(p=>p.tipo===E.filtro);
+  if(!ps.length){lista.innerHTML='<div style="text-align:center;padding:3rem 1rem;color:var(--texto-muted);font-size:14px;">Nenhum post aqui ainda.<br>Seja o primeiro! 🏡</div>';return;}
+  const AD='<div class="feed-ad"><div class="feed-ad-label">✦ PARCEIRO DO BAIRRO</div><div class="feed-ad-body"><div class="feed-ad-logo" style="background:#E8F5E9">🔧</div><div class="feed-ad-info"><div class="feed-ad-nome">Hidráulica do Zé · Encanador</div><div class="feed-ad-desc">a 180m · Emergências no mesmo dia</div></div><button class="feed-ad-btn" onclick="navTab(\'servicos\',document.getElementById(\'nav-servicos\'))">Ver serviços →</button></div></div>';
+  const rows=ps.map(p=>{
+    const cA=E.abCom.has(p.id), oA=E.abOq.has(p.id);
+    const db=p.tipo==='problema'?OQ[detectOq(p.txt)]:null;
+    const coms=p.coms.map(c=>`<div class="com"><div class="cav" style="background:${c.cor}20;color:${c.cor}">${c.av}</div><div><span class="cnome">${c.nome}</span> <span class="cdist">· ${c.dist}</span><div class="ctxt">${c.txt}</div></div></div>`).join('');
+    return `<div class="pc" id="pc${p.id}">
+      <div class="pm">
+        <div class="ph"><div class="pav" style="background:${p.cor}20;color:${p.cor}">${p.av}</div><div><div class="pnome">${p.nome}</div><div class="pdist">a ${p.dist} de você</div></div><span class="ptag ${TC[p.tipo]}">${TL[p.tipo]}</span></div>
+        <div class="ptxt">${p.txt}</div>
+        <div class="pac">
+          <button class="bapoiar ${p.apd?'ap':''}" onclick="apoiar(${p.id})">${p.apd?'✓':'+'} <span id="ac${p.id}">${p.ap}</span> apoio${p.ap!==1?'s':''}</button>
+          ${db?`<button class="boq" onclick="togOq(${p.id})">💡 O que fazer</button>`:''}
+          <button class="bcom" onclick="togCom(${p.id})">💬 ${p.coms.length?p.coms.length+' com.':'Comentar'}</button>
+        </div>
+      </div>
+      ${db?`<div class="oqf ${oA?'vis':''}" id="oq${p.id}">
+        <div class="oqlbl">💡 O que fazer — ${db.titulo}</div>
+        ${db.acoes.map(a=>`<div class="oqi"><div class="oqic">${a.i}</div><div class="oqtx">${a.t}${a.tel?`<br><button class="btntel" onclick="ligar('${a.tel}')">📞 Ligar agora</button>`:''}</div></div>`).join('')}
+        <div style="margin-top:10px;"><button class="bia" style="border-color:var(--verde-claro);color:var(--verde);" onclick="abrirIA(${p.id})">🤖 Gerar pedido formal</button></div>
+      </div>`:''}
+      <div class="carea">${cA?`<div class="clista">${coms||'<div style="padding:12px;font-size:13px;color:var(--texto-muted);">Seja o primeiro a comentar!</div>'}</div><div class="cform"><textarea class="cinput" id="ci${p.id}" placeholder="Comente com respeito..." rows="1"></textarea><button class="cenv" onclick="envCom(${p.id})">Enviar</button></div>`:''}</div>
+    </div>`;
+  });
+  if(rows.length>1){rows.splice(2,0,AD);}
+  lista.innerHTML=rows.join('');
+}
+
+function apoiar(id){const p=E.posts.find(x=>x.id===id);if(!p)return;p.apd=!p.apd;p.ap+=p.apd?1:-1;render();if(p.apd)toast('Você apoiou! 👊');}
+function togOq(id){E.abOq.has(id)?E.abOq.delete(id):E.abOq.add(id);render();}
+function togCom(id){E.abCom.has(id)?E.abCom.delete(id):E.abCom.add(id);render();setTimeout(()=>{const el=document.getElementById('ci'+id);if(el)el.focus();},100);}
+function envCom(id){
+  const el=document.getElementById('ci'+id); if(!el)return;
+  const txt=el.value.trim();
+  if(!txt){toast('Escreva algo primeiro!');return;}
+  if(temPalavrão(txt)){toast('⚠️ Mantenha o respeito, por favor.');return;}
+  if(txt.length>300){toast('Máximo 300 caracteres.');return;}
+  const p=E.posts.find(x=>x.id===id); if(!p)return;
+  p.coms.push({nome:E.nome,dist:'0m',txt,av:E.nome.charAt(0).toUpperCase(),cor:COR[Math.floor(Math.random()*COR.length)]});
+  render(); toast('Comentário publicado! 💬');
+}
+function filtrar(f,el){E.filtro=f;document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('ativo'));el.classList.add('ativo');render();}
+function ligar(n){toast('Abrindo discador... 📞');setTimeout(()=>window.open('tel:'+n),500);}
+
+let tipoAt='problema';
+function abrirM(){document.getElementById('mpost').classList.add('ab');}
+function fecharM(){document.getElementById('mpost').classList.remove('ab');document.getElementById('ptxt').value='';}
+function selTipo(t,el){tipoAt=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('at'));el.classList.add('at');}
+function postar(){
+  const txt=document.getElementById('ptxt').value.trim();
+  if(!txt){toast('Escreva algo antes!');return;}
+  if(temPalavrão(txt)){toast('⚠️ Revise o texto — sem palavrões.');return;}
+  E.posts.unshift({id:Date.now(),nome:E.nome,dist:'0m',tipo:tipoAt,txt,ap:0,apd:false,av:E.nome.charAt(0).toUpperCase(),cor:COR[Math.floor(Math.random()*COR.length)],coms:[]});
+  fecharM(); E.filtro='tudo'; document.querySelectorAll('.ftab').forEach((t,i)=>t.classList.toggle('ativo',i===0)); render(); toast('Publicado! 🎉');
+}
+
+async function abrirIA(id){
+  const p=E.posts.find(x=>x.id===id); if(!p)return;
+  document.getElementById('mia').classList.add('ab');
+  document.getElementById('iatit').textContent='Gerando pedido formal...';
+  document.getElementById('iatx').innerHTML='<div class="ial"><div class="iad"></div><div class="iad"></div><div class="iad"></div></div>';
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`Você ajuda moradores a redigirem pedidos formais para a prefeitura.
+
+Relato (bairro: ${E.bairro}): "${p.txt}"${p.ap>0?` Este problema tem ${p.ap} vizinhos apoiando.`:''}
+
+Redija um pedido formal, direto e educado com: saudação ao órgão competente, descrição clara do problema e endereço, menção à demanda coletiva se houver apoios, solicitação com prazo e encerramento. Máximo 180 palavras. Só o corpo do texto.`}]})});
+    const d=await r.json();
+    document.getElementById('iatit').textContent='Pedido pronto para enviar!';
+    document.getElementById('iatx').textContent=d.content?.[0]?.text||'Erro ao gerar.';
+  }catch(e){document.getElementById('iatx').textContent='Não foi possível conectar. Tente novamente.';}
+}
+function fecharIA(){document.getElementById('mia').classList.remove('ab');}
+function copiarIA(){navigator.clipboard.writeText(document.getElementById('iatx').textContent).then(()=>toast('Copiado! 📋'));}
+
+
+const SERVICOS = [
+  {id:1,nome:'Hidráulica do Zé',tipo:'Encanador',dist:'180m',desc:'Consertos, instalações e desentupimentos. Atendo emergências no mesmo dia.',tags:['Emergência','Encanamento','Desentupimento'],logo:'🔧',bg:'#E3F2FD',destaque:true,tel:'44999990001'},
+  {id:2,nome:'Diarista Cleide',tipo:'Diarista',dist:'90m',desc:'Limpeza residencial com produtos inclusos. 8 anos de experiência no bairro.',tags:['Limpeza','Produtos inclusos','Semanal'],logo:'🧹',bg:'#F3E5F5',destaque:true,tel:'44999990002'},
+  {id:3,nome:'Farmácia Bom Preço',tipo:'Comércio',dist:'320m',desc:'Entrega grátis no raio de 500m. Genéricos com desconto para moradores.',tags:['Entrega grátis','Manipulação','Genéricos'],logo:'💊',bg:'#E8F5E9',destaque:false,tel:'44999990003'},
+  {id:4,nome:'Elétrica Rápida',tipo:'Eletricista',dist:'250m',desc:'Instalações, curtos e laudos AVCB. Registro no CREA. Orçamento sem compromisso.',tags:['CREA','Laudo','Instalação'],logo:'⚡',bg:'#FFFDE7',destaque:false,tel:'44999990004'},
+  {id:5,nome:'Imobiliária Bairro Vivo',tipo:'Imobiliária',dist:'400m',desc:'Aluguéis e vendas na região. Conheça os imóveis disponíveis perto de você.',tags:['Aluguel','Venda','Local'],logo:'🏠',bg:'#FBE9E7',destaque:false,tel:'44999990005'},
+  {id:6,nome:'Cuidadora Sônia',tipo:'Cuidadora',dist:'130m',desc:'Babá com curso de primeiros socorros. Disponível fins de semana e noturno.',tags:['Primeiros socorros','Fins de semana','Noturno'],logo:'👶',bg:'#E0F7FA',destaque:false,tel:'44999990006'},
+];
+let catAtiva='todos';
+const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Cuidadora','Imobiliária'];
+
+function navTab(tab,el){
+  document.querySelectorAll('.nitem').forEach(n=>n.classList.remove('at'));
+  el.classList.add('at');
+  const feedEl=document.getElementById('feed');
+  const tabsEl=document.getElementById('feed-tabs');
+  const srvEl=document.getElementById('servicos-tab');
+  const fabEl=document.querySelector('.fab');
+  if(tab==='feed'){
+    feedEl.style.display=''; tabsEl.style.display=''; srvEl.style.display='none'; fabEl.style.display='flex';
+  } else {
+    feedEl.style.display='none'; tabsEl.style.display='none'; srvEl.style.display=''; fabEl.style.display='none';
+    renderServicos();
+  }
+}
+
+function renderServicos(){
+  const el=document.getElementById('servicos-tab');
+  const fil=catAtiva==='todos'?SERVICOS:SERVICOS.filter(s=>s.tipo===catAtiva);
+  const cats=CATS.map(c=>'<div class="srv-cat '+(c===catAtiva?'at':'')+'" onclick="setcat(\''+c+'\',this)">'+(c==='todos'?'Todos':c)+'</div>').join('');
+  const cards=fil.map(s=>'<div class="srv-card '+(s.destaque?'destaque':'')+'">'+
+    (s.destaque?'<div class="srv-destaque-label">★ PARCEIRO DESTAQUE</div>':'')+
+    '<div class="srv-body">'+
+    '<div class="srv-top"><div class="srv-logo" style="background:'+s.bg+'">'+s.logo+'</div>'+
+    '<div class="srv-info"><div class="srv-nome">'+s.nome+'</div><div class="srv-tipo">'+s.tipo+'</div><div class="srv-dist">a '+s.dist+' de você</div></div></div>'+
+    '<div class="srv-desc">'+s.desc+'</div>'+
+    '<div class="srv-tags">'+s.tags.map(t=>'<span class="srv-tag">'+t+'</span>').join('')+'</div>'+
+    '<div class="srv-acoes"><button class="srv-btn-wa" onclick="ligar(\''+s.tel+'\')">💬 WhatsApp</button>'+
+    '<button class="srv-btn-tel" onclick="ligar(\''+s.tel+'\')">📞 Ligar</button></div>'+
+    '</div></div>').join('');
+  el.innerHTML='<div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div>'+
+    '<div class="srv-cats">'+cats+'</div>'+
+    '<div class="srv-grid">'+cards+
+    '<div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Apareça para centenas de vizinhos por apenas <strong>R$ 49/mês.</strong></p>'+
+    '<button class="srv-btn-anunciar" onclick="toast(\'Em breve! Fale: (44) 99999-0000\')">Quero anunciar aqui →</button></div></div>';
+}
+function setcat(cat,el){catAtiva=cat;renderServicos();}
+
+
+// ===== FLUXO ANUNCIANTE =====
+const anunState={tipo:'',icon:'',nome:'',desc:'',tel:'',dias:0,preco:0,pgto:'pix'};
+
+function abrirAnun(){document.getElementById('manun').classList.add('ab');anunStep(1);}
+function fecharAnun(){document.getElementById('manun').classList.remove('ab');}
+
+function anunStep(n){
+  document.querySelectorAll('.anun-step').forEach(s=>s.classList.remove('ab'));
+  document.getElementById('as'+n).classList.add('ab');
+  for(let i=1;i<=4;i++){
+    const d=document.getElementById('ap'+i);
+    if(d) d.classList.toggle('done',i<=n);
+  }
+  if(n===4) renderResumo();
+  if(n===4) renderPgto();
+}
+
+function selTipoAnun(icon,tipo,el){
+  anunState.icon=icon; anunState.tipo=tipo;
+  document.querySelectorAll('.tipo-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('anun-n1').disabled=false;
+}
+
+function anunValidaDados(){
+  const n=document.getElementById('anun-nome').value.trim();
+  const d=document.getElementById('anun-desc').value.trim();
+  const t=document.getElementById('anun-tel').value.trim();
+  if(!n){toast('Digite o nome do negócio!');return;}
+  if(!d){toast('Escreva uma descrição!');return;}
+  if(!t){toast('Digite seu telefone!');return;}
+  anunState.nome=n; anunState.desc=d; anunState.tel=t;
+  anunStep(3);
+}
+
+function selPlano(dias,centavos,el){
+  anunState.dias=dias; anunState.preco=centavos;
+  document.querySelectorAll('.plano-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('anun-n3').disabled=false;
+}
+
+function renderResumo(){
+  const preco=(anunState.preco/100).toFixed(2).replace('.',',');
+  const beneficios={10:'Raio 1,5km · Feed + Serviços',20:'Raio 3km · Feed + Serviços + badge ✓',30:'Raio 5km · Tudo + topo da busca'};
+  document.getElementById('anun-resumo').innerHTML=
+    '<div class="resumo-row"><span>Anunciante</span><span>'+anunState.icon+' '+anunState.nome+'</span></div>'+
+    '<div class="resumo-row"><span>Categoria</span><span>'+anunState.tipo+'</span></div>'+
+    '<div class="resumo-row"><span>Plano</span><span>'+anunState.dias+' dias</span></div>'+
+    '<div class="resumo-row"><span>Inclui</span><span style="font-size:11px;text-align:right;max-width:160px;">'+beneficios[anunState.dias]+'</span></div>'+
+    '<div class="resumo-row"><span>Total</span><span>R$ '+preco+'</span></div>';
+}
+
+function selPgto(met,el){
+  anunState.pgto=met;
+  document.querySelectorAll('.pgto-btn').forEach(b=>b.classList.remove('sel'));
+  el.classList.add('sel');
+  renderPgto();
+}
+
+function renderPgto(){
+  const preco=(anunState.preco/100).toFixed(2).replace('.',',');
+  const area=document.getElementById('pgto-area');
+  if(anunState.pgto==='pix'){
+    area.innerHTML='<div class="pix-box"><div class="pix-qr">⬛</div><div class="pix-chave">Chave Pix: vizinhocerto@pagamento.com</div><div class="pix-chave" style="font-weight:500;color:var(--texto)">Valor: R$ '+preco+'</div><button class="pix-copiar" onclick="toast(\'Chave copiada! 📋\')">Copiar chave Pix</button></div>';
+  } else if(anunState.pgto==='cartao'){
+    area.innerHTML='<div style="background:var(--branco);border:1.5px solid var(--borda);border-radius:var(--radius-sm);padding:1rem;">'+
+      '<div class="anun-field"><label>Número do cartão</label><input type="tel" placeholder="0000 0000 0000 0000" maxlength="19"/></div>'+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+
+      '<div class="anun-field"><label>Validade</label><input type="text" placeholder="MM/AA" maxlength="5"/></div>'+
+      '<div class="anun-field"><label>CVV</label><input type="tel" placeholder="000" maxlength="3"/></div></div>'+
+      '<div class="anun-field" style="margin-bottom:0;"><label>Nome no cartão</label><input type="text" placeholder="NOME SOBRENOME"/></div></div>';
+  } else {
+    area.innerHTML='<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">📄</div><div class="pix-chave">Boleto gerado após confirmação.</div><div class="pix-chave">Vencimento em <strong>3 dias úteis.</strong></div><div class="pix-chave" style="font-weight:500;color:var(--texto)">Valor: R$ '+preco+'</div></div>';
+  }
+}
+
+function anunFinalizar(){
+  // Simula processamento
+  const btn=document.querySelector('#as4 .anun-next');
+  btn.textContent='Processando...'; btn.disabled=true;
+  setTimeout(()=>{
+    // Adiciona o anunciante na lista de serviços
+    SERVICOS.unshift({
+      id:Date.now(),nome:anunState.nome,tipo:anunState.tipo,dist:'perto de você',
+      desc:anunState.desc,tags:[anunState.tipo,'Novo'],logo:anunState.icon,
+      bg:'#E8F5E9',destaque:true,tel:anunState.tel.replace(/\D/g,'')
+    });
+    // Mostra sucesso
+    document.getElementById('as4').innerHTML='<div class="sucesso-box">'+
+      '<div class="sucesso-icon">🎉</div>'+
+      '<div class="sucesso-titulo">Anúncio no ar!</div>'+
+      '<div class="sucesso-desc">Seu anúncio já está aparecendo para os vizinhos no raio de <strong>'+E.bairro+'.</strong><br><br>Plano ativo por <strong>'+anunState.dias+' dias.</strong> Você receberá os contatos diretamente no seu WhatsApp.</div>'+
+      '<button class="anun-next" onclick="fecharAnun();navTab(\'servicos\',document.getElementById(\'nav-servicos\'))">Ver meu anúncio →</button>'+
+      '</div>';
+  },1800);
+}
+
+function abrirPanico(){
+  document.getElementById('mpanico').classList.add('ab');
+  document.getElementById('alerta-conf').classList.remove('vis');
+  const btn=document.getElementById('btn-alertar');
+  btn.classList.remove('enviado'); btn.innerHTML='📣 Alertar todos os vizinhos do raio'; btn.disabled=false;
+}
+function fecharPanico(){document.getElementById('mpanico').classList.remove('ab');}
+function enviarAlerta(){
+  const btn=document.getElementById('btn-alertar');
+  if(btn.disabled)return;
+  btn.disabled=true; btn.innerHTML='⏳ Enviando alerta...';
+  setTimeout(()=>{
+    E.posts.unshift({id:Date.now(),nome:E.nome,dist:'0m',tipo:'aviso',
+      txt:`🆘 ALERTA DE EMERGÊNCIA — ${E.nome} acionou o botão de pânico nas proximidades. Fique atento e verifique se pode ajudar. Polícia 190 | SAMU 192 | Bombeiros 193.`,
+      ap:0,apd:false,av:'🆘',cor:'#C0392B',coms:[]});
+    const vc=Math.floor(3+(E.raio/100));
+    document.getElementById('alerta-count').textContent=vc;
+    document.getElementById('alerta-conf').classList.add('vis');
+    btn.classList.add('enviado'); btn.innerHTML='✓ Alerta enviado para '+vc+' vizinhos!';
+    if(document.getElementById('t-feed').classList.contains('ativa')){
+      E.filtro='tudo';
+      document.querySelectorAll('.ftab').forEach((t,i)=>t.classList.toggle('ativo',i===0));
+      render();
+    }
+  },1200);
+}
+
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('vis');setTimeout(()=>t.classList.remove('vis'),2500);}
+
+atuRaio(150);
+</script>
+</body>
+</html>
