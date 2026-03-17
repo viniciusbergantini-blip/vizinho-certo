@@ -772,15 +772,17 @@ async function abrirIA(id){
   document.getElementById('iatit').textContent='Gerando pedido formal...';
   document.getElementById('iatx').innerHTML='<div class="ial"><div class="iad"></div><div class="iad"></div><div class="iad"></div></div>';
   try{
-    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:`Você ajuda moradores a redigirem pedidos formais para a prefeitura.
-
-Relato (bairro: ${E.bairro}): "${p.txt}"${p.ap>0?` Este problema tem ${p.ap} vizinhos apoiando.`:''}
-
-Redija um pedido formal, direto e educado com: saudação ao órgão competente, descrição clara do problema e endereço, menção à demanda coletiva se houver apoios, solicitação com prazo e encerramento. Máximo 180 palavras. Só o corpo do texto.`}]})});
-    const d=await r.json();
+    const resp=await fetch('/api/gerar-pedido',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({texto:p.txt,bairro:E.bairro||'meu bairro',apoios:p.ap})
+    });
+    const data=await resp.json();
     document.getElementById('iatit').textContent='Pedido pronto para enviar!';
-    document.getElementById('iatx').textContent=d.content?.[0]?.text||'Erro ao gerar.';
-  }catch(e){document.getElementById('iatx').textContent='Não foi possível conectar. Tente novamente.';}
+    document.getElementById('iatx').textContent=data.texto||'Erro ao gerar.';
+  }catch(e){
+    document.getElementById('iatx').textContent='Não foi possível gerar. Tente novamente.';
+  }
 }
 function fecharIA(){document.getElementById('mia').classList.remove('ab');}
 function copiarIA(){navigator.clipboard.writeText(document.getElementById('iatx').textContent).then(()=>toast('Copiado! 📋'));}
