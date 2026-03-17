@@ -778,10 +778,15 @@ async function abrirIA(id){
       body:JSON.stringify({texto:p.txt,bairro:E.bairro||'meu bairro',apoios:p.ap})
     });
     const data=await resp.json();
-    document.getElementById('iatit').textContent='Pedido pronto para enviar!';
-    document.getElementById('iatx').textContent=data.texto||'Erro ao gerar.';
+    if(data.texto){
+      document.getElementById('iatit').textContent='Pedido pronto para enviar!';
+      document.getElementById('iatx').textContent=data.texto;
+    } else {
+      document.getElementById('iatit').textContent='Erro';
+      document.getElementById('iatx').textContent=JSON.stringify(data);
+    }
   }catch(e){
-    document.getElementById('iatx').textContent='Não foi possível gerar. Tente novamente.';
+    document.getElementById('iatx').textContent='Erro: '+e.message;
   }
 }
 function fecharIA(){document.getElementById('mia').classList.remove('ab');}
