@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Vizinho Certo">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' rx='60' fill='%231B4D37'/%3E%3Cpolygon points='150,50 228,110 228,210 72,210 72,110' fill='%23FEFAE0'/%3E%3Crect x='120' y='150' width='60' height='60' rx='6' fill='%232D6A4F'/%3E%3Cpolygon points='80,120 120,95 160,120 160,185 80,185' fill='%2352B788'/%3E%3Cpolygon points='140,120 180,95 220,120 220,185 140,185' fill='%2352B788'/%3E%3C/svg%3E">
 <title>Vizinho Certo</title>
+<script src="https://sdk.mercadopago.com/js/v2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -618,19 +619,31 @@ function formataCEP(el){
 }
 
 async function buscaCEP(cep){
+  const addrEl=document.getElementById('inp-cep-addr');
+  const resEl=document.getElementById('cep-resultado');
+  const numWrap=document.getElementById('num-wrap');
+  addrEl.value='Buscando...';
+  resEl.style.display='';
   try{
     const r=await fetch('https://viacep.com.br/ws/'+cep+'/json/');
     const d=await r.json();
-    if(d.erro){document.getElementById('cep-resultado').style.display='none';toast('CEP não encontrado.');return;}
-    const addr=d.logradouro?d.logradouro+', '+d.bairro+' — '+d.localidade+'/'+d.uf:d.bairro+' — '+d.localidade+'/'+d.uf;
-    document.getElementById('inp-cep-addr').value=addr;
-    document.getElementById('cep-resultado').style.display='';
-    const numWrap=document.getElementById('num-wrap');
+    if(d.erro){resEl.style.display='none';addrEl.value='';toast('CEP não encontrado. Verifique e tente novamente.');E.bairro='';return;}
+    const logr=d.logradouro||'';
+    const bairro=d.bairro||d.localidade||'';
+    const cidade=d.localidade||'';
+    const uf=d.uf||'';
+    addrEl.value=(logr?logr+', ':'')+bairro+(cidade?' — '+cidade+'/'+uf:'');
     if(numWrap) numWrap.style.display='';
-    E.bairro=d.bairro||d.localidade;
-    E.cidade=d.localidade;
-    E.uf=d.uf;
-  }catch(e){toast('Erro ao buscar CEP. Tente novamente.');}
+    E.bairro=bairro||cidade;
+    E.cidade=cidade;
+    E.uf=uf;
+  }catch(e){
+    addrEl.value='CEP '+cep.slice(0,5)+'-'+cep.slice(5)+' encontrado';
+    if(numWrap) numWrap.style.display='';
+    E.bairro='Meu bairro';
+    E.cidade='Minha cidade';
+    E.uf='BR';
+  }
 }
 
 function mostrarLogin(){
@@ -703,7 +716,7 @@ function render(){
   const lista=document.getElementById('feed');
   const ps=E.filtro==='tudo'?E.posts:E.posts.filter(p=>p.tipo===E.filtro);
   if(!ps.length){lista.innerHTML='<div style="text-align:center;padding:3rem 1rem;color:var(--texto-muted);font-size:14px;">Nenhum post aqui ainda.<br>Seja o primeiro! 🏡</div>';return;}
-  const AD='<div class="feed-ad"><div class="feed-ad-label">✦ PARCEIRO DO BAIRRO</div><div class="feed-ad-body"><div class="feed-ad-logo" style="background:#E8F5E9">🔧</div><div class="feed-ad-info"><div class="feed-ad-nome">Hidráulica do Zé · Encanador</div><div class="feed-ad-desc">a 180m · Emergências no mesmo dia</div></div><button class="feed-ad-btn" onclick="navTab(\'servicos\',document.getElementById(\'nav-servicos\'))">Ver serviços →</button></div></div>';
+  const AD='';
   const rows=ps.map(p=>{
     const cA=E.abCom.has(p.id), oA=E.abOq.has(p.id);
     const db=p.tipo==='problema'?OQ[detectOq(p.txt)]:null;
@@ -778,14 +791,7 @@ function fecharIA(){document.getElementById('mia').classList.remove('ab');}
 function copiarIA(){navigator.clipboard.writeText(document.getElementById('iatx').textContent).then(()=>toast('Copiado! 📋'));}
 
 
-const SERVICOS = [
-  {id:1,nome:'Hidráulica do Zé',tipo:'Encanador',dist:'180m',desc:'Consertos, instalações e desentupimentos. Atendo emergências no mesmo dia.',tags:['Emergência','Encanamento','Desentupimento'],logo:'🔧',bg:'#E3F2FD',destaque:true,tel:'44999990001'},
-  {id:2,nome:'Diarista Cleide',tipo:'Diarista',dist:'90m',desc:'Limpeza residencial com produtos inclusos. 8 anos de experiência no bairro.',tags:['Limpeza','Produtos inclusos','Semanal'],logo:'🧹',bg:'#F3E5F5',destaque:true,tel:'44999990002'},
-  {id:3,nome:'Farmácia Bom Preço',tipo:'Comércio',dist:'320m',desc:'Entrega grátis no raio de 500m. Genéricos com desconto para moradores.',tags:['Entrega grátis','Manipulação','Genéricos'],logo:'💊',bg:'#E8F5E9',destaque:false,tel:'44999990003'},
-  {id:4,nome:'Elétrica Rápida',tipo:'Eletricista',dist:'250m',desc:'Instalações, curtos e laudos AVCB. Registro no CREA. Orçamento sem compromisso.',tags:['CREA','Laudo','Instalação'],logo:'⚡',bg:'#FFFDE7',destaque:false,tel:'44999990004'},
-  {id:5,nome:'Imobiliária Bairro Vivo',tipo:'Imobiliária',dist:'400m',desc:'Aluguéis e vendas na região. Conheça os imóveis disponíveis perto de você.',tags:['Aluguel','Venda','Local'],logo:'🏠',bg:'#FBE9E7',destaque:false,tel:'44999990005'},
-  {id:6,nome:'Cuidadora Sônia',tipo:'Cuidadora',dist:'130m',desc:'Babá com curso de primeiros socorros. Disponível fins de semana e noturno.',tags:['Primeiros socorros','Fins de semana','Noturno'],logo:'👶',bg:'#E0F7FA',destaque:false,tel:'44999990006'},
-];
+const SERVICOS = [];
 let catAtiva='todos';
 const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Cuidadora','Imobiliária'];
 
@@ -821,7 +827,7 @@ function renderServicos(){
   el.innerHTML='<div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div>'+
     '<div class="srv-cats">'+cats+'</div>'+
     '<div class="srv-grid">'+cards+
-    '<div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Apareça para centenas de vizinhos por apenas <strong>R$ 49/mês.</strong></p>'+
+    '<div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio por 10, 20 ou 30 dias.</p>'+
     '<button class="srv-btn-anunciar" onclick="toast(\'Em breve! Fale: (44) 99999-0000\')">Quero anunciar aqui →</button></div></div>';
 }
 function setcat(cat,el){catAtiva=cat;renderServicos();}
@@ -954,7 +960,27 @@ function enviarAlerta(){
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('vis');setTimeout(()=>t.classList.remove('vis'),2500);}
 
+
+function verificarRetornoPagamento(){
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('pagamento')==='sucesso'){
+    const nome=decodeURIComponent(params.get('nome')||'');
+    const tipo=decodeURIComponent(params.get('tipo')||'');
+    const desc=decodeURIComponent(params.get('desc')||'');
+    const tel=decodeURIComponent(params.get('tel')||'');
+    const icon=decodeURIComponent(params.get('icon')||'🏪');
+    const dias=parseInt(params.get('dias')||'10');
+    if(nome){
+      SERVICOS.unshift({id:Date.now(),nome,tipo,dist:'perto de você',desc,tags:[tipo,'Destaque'],logo:icon,bg:'#E8F5E9',destaque:true,tel:tel.replace(/[^0-9]/g,'')});
+      setTimeout(()=>{alert('🎉 Pagamento confirmado! Seu anúncio está no ar por '+dias+' dias.');window.history.replaceState({},'',window.location.pathname);},500);
+    }
+  } else if(params.get('pagamento')==='falhou'){
+    setTimeout(()=>{alert('Pagamento não aprovado. Tente novamente.');window.history.replaceState({},'',window.location.pathname);},500);
+  }
+}
+
 atuRaio(150);
+verificarRetornoPagamento();
 </script>
 </body>
 </html>
