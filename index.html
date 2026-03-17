@@ -828,7 +828,7 @@ function renderServicos(){
     '<div class="srv-cats">'+cats+'</div>'+
     '<div class="srv-grid">'+cards+
     '<div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio por 10, 20 ou 30 dias.</p>'+
-    '<button class="srv-btn-anunciar" onclick="toast(\'Em breve! Fale: (44) 99999-0000\')">Quero anunciar aqui →</button></div></div>';
+    '<button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div></div>';
 }
 function setcat(cat,el){catAtiva=cat;renderServicos();}
 
@@ -910,27 +910,53 @@ function renderPgto(){
   }
 }
 
-function anunFinalizar(){
-  // Simula processamento
+async function anunFinalizar(){
   const btn=document.querySelector('#as4 .anun-next');
-  btn.textContent='Processando...'; btn.disabled=true;
-  setTimeout(()=>{
-    // Adiciona o anunciante na lista de serviços
-    SERVICOS.unshift({
-      id:Date.now(),nome:anunState.nome,tipo:anunState.tipo,dist:'perto de você',
-      desc:anunState.desc,tags:[anunState.tipo,'Novo'],logo:anunState.icon,
-      bg:'#E8F5E9',destaque:true,tel:anunState.tel.replace(/\D/g,'')
+  btn.textContent='Abrindo pagamento...'; btn.disabled=true;
+  try{
+    const planos={10:'Plano Rua 10 dias',20:'Plano Bairro 20 dias',30:'Plano Cidade 30 dias'};
+    const retorno=window.location.href.split('?')[0];
+    const body={
+      items:[{title:planos[anunState.dias]+' — '+anunState.nome,quantity:1,unit_price:anunState.preco/100,currency_id:'BRL'}],
+      back_urls:{
+        success:retorno+'?pg=ok&nome='+encodeURIComponent(anunState.nome)+'&tipo='+encodeURIComponent(anunState.tipo)+'&desc='+encodeURIComponent(anunState.desc)+'&tel='+encodeURIComponent(anunState.tel)+'&icon='+encodeURIComponent(anunState.icon)+'&dias='+anunState.dias,
+        failure:retorno+'?pg=err',
+        pending:retorno+'?pg=pend'
+      },
+      auto_return:'approved',
+      statement_descriptor:'VIZINHO CERTO'
+    };
+    const resp=await fetch('https://api.mercadopago.com/checkout/preferences',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer APP_USR-95732e0f-10fe-4753-bc22-017a6be967b4'},
+      body:JSON.stringify(body)
     });
-    // Mostra sucesso
-    document.getElementById('as4').innerHTML='<div class="sucesso-box">'+
-      '<div class="sucesso-icon">🎉</div>'+
-      '<div class="sucesso-titulo">Anúncio no ar!</div>'+
-      '<div class="sucesso-desc">Seu anúncio já está aparecendo para os vizinhos no raio de <strong>'+E.bairro+'.</strong><br><br>Plano ativo por <strong>'+anunState.dias+' dias.</strong> Você receberá os contatos diretamente no seu WhatsApp.</div>'+
-      '<button class="anun-next" onclick="fecharAnun();navTab(\'servicos\',document.getElementById(\'nav-servicos\'))">Ver meu anúncio →</button>'+
-      '</div>';
-  },1800);
+    const data=await resp.json();
+    if(data.init_point){window.location.href=data.init_point;}
+    else{throw new Error('sem link de pagamento');}
+  }catch(e){
+    btn.disabled=false; btn.textContent='Pagar e publicar →';
+    toast('Erro ao conectar com Mercado Pago. Tente novamente.');
+  }
 }
 
+function verificarRetornoPagamento(){
+  const p=new URLSearchParams(window.location.search);
+  if(p.get('pg')==='ok'){
+    const nome=decodeURIComponent(p.get('nome')||'');
+    const tipo=decodeURIComponent(p.get('tipo')||'');
+    const desc=decodeURIComponent(p.get('desc')||'');
+    const tel=decodeURIComponent(p.get('tel')||'');
+    const icon=decodeURIComponent(p.get('icon')||'🏪');
+    const dias=parseInt(p.get('dias')||'10');
+    if(nome){
+      SERVICOS.unshift({id:Date.now(),nome,tipo,dist:'perto de você',desc,tags:[tipo,'Destaque'],logo:icon,bg:'#E8F5E9',destaque:true,tel:tel.replace(/[^0-9]/g,'')});
+      setTimeout(()=>{alert('🎉 Pagamento confirmado! Anúncio no ar por '+dias+' dias.');window.history.replaceState({},'',window.location.pathname);},500);
+    }
+  } else if(p.get('pg')==='err'){
+    setTimeout(()=>{alert('Pagamento não aprovado. Tente novamente.');window.history.replaceState({},'',window.location.pathname);},500);
+  }
+}
 function abrirPanico(){
   document.getElementById('mpanico').classList.add('ab');
   document.getElementById('alerta-conf').classList.remove('vis');
