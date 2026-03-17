@@ -2,7 +2,13 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#2D6A4F">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Vizinho Certo">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' rx='60' fill='%231B4D37'/%3E%3Cpolygon points='150,50 228,110 228,210 72,210 72,110' fill='%23FEFAE0'/%3E%3Crect x='120' y='150' width='60' height='60' rx='6' fill='%232D6A4F'/%3E%3Cpolygon points='80,120 120,95 160,120 160,185 80,185' fill='%2352B788'/%3E%3Cpolygon points='140,120 180,95 220,120 220,185 140,185' fill='%2352B788'/%3E%3C/svg%3E">
 <title>Vizinho Certo</title>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -270,6 +276,14 @@
   .anun-next{flex:2;padding:12px;background:#2D6A4F;color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .2s;}
   .anun-next:hover{background:#1B4D37;}
   .anun-next:disabled{background:var(--borda);cursor:not-allowed;}
+  html,body{height:100%;overflow-x:hidden;}
+  @media(max-width:479px){
+    .tela{width:100%;min-height:100vh;}
+    .bv-inner{padding:0 1rem;}
+    .card{border-radius:var(--radius);margin:0;}
+    .anun-sheet,.msheet,.panico-sheet{border-radius:20px 20px 0 0;}
+    input,textarea,select{font-size:16px!important;}
+  }
   @media(min-width:480px){.tela{max-width:420px;margin:0 auto}body{background:#E8E0CC}.fab{right:calc(50% - 210px + 24px)}.panico-fab{left:calc(50% - 210px + 16px)!important;right:auto!important}}
 
   /* BOTÃO DE PÂNICO */
