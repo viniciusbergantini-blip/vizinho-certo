@@ -452,7 +452,7 @@
     <div class="anun-step" id="as2">
       <div class="anun-titulo">Seu anúncio</div>
       <div class="anun-sub">Essas informações aparecem para os vizinhos no seu raio.</div>
-      <div class="anun-field"><label>Nome do negócio ou seu nome</label><input type="text" id="anun-nome" placeholder="Ex: Hidráulica do Zé"/></div>
+      <div class="anun-field"><label>Nome do negócio ou seu nome</label><input type="text" id="anun-nome" placeholder="Ex: Encanador do João, Mercado Silva..."/></div>
       <div class="anun-field"><label>Descrição curta</label><textarea id="anun-desc" placeholder="Ex: Consertos e instalações. Atendo emergências no mesmo dia."></textarea></div>
       <div class="anun-field"><label>Telefone / WhatsApp</label><input type="tel" id="anun-tel" placeholder="(44) 99999-0000"/></div>
       <div class="anun-nav"><button class="anun-back" onclick="anunStep(1)">← Voltar</button><button class="anun-next" onclick="anunValidaDados()">Continuar →</button></div>
@@ -550,15 +550,10 @@
 const PALAVROES=['idiota','burro','imbecil','merda','fdp','filho da','viado','vadia','puta','vagabundo','cretino','otário','lixo'];
 const E={nome:'',bairro:'',raio:150,tipo:'problema',filtro:'tudo',abCom:new Set(),abOq:new Set(),
 posts:[
-  {id:1,nome:'Carlos Mendes',dist:'80m',tipo:'problema',txt:'A calçada da Rua Pioneiros está toda esburacada perto do número 230. Já faz 2 meses. Alguém mais caiu aí?',ap:12,apd:false,av:'C',cor:'#5E60CE',coms:[
-    {nome:'Ana Paula',dist:'120m',txt:'Passei ontem, tá terrível mesmo. Tropecei duas vezes!',av:'A',cor:'#E76F51'},
-    {nome:'João F.',dist:'200m',txt:'Minha mãe caiu aí semana passada. Precisamos resolver isso.',av:'J',cor:'#2D6A4F'}
-  ]},
-  {id:2,nome:'Ana Paula',dist:'120m',tipo:'aviso',txt:'Tem um cachorro grande solto na Rua das Acácias desde ontem. Parece manso mas está assustando as crianças. Alguém conhece o dono?',ap:7,apd:false,av:'A',cor:'#E76F51',coms:[
-    {nome:'D. Lúcia',dist:'95m',txt:'Acho que é do vizinho do 145. Vou perguntar pra ele.',av:'L',cor:'#2D6A4F'}
-  ]},
-  {id:3,nome:'Dona Lúcia',dist:'95m',tipo:'ajuda',txt:'Alguém pode indicar um eletricista de confiança aqui perto? Preciso urgente consertar uma tomada.',ap:3,apd:false,av:'L',cor:'#2D6A4F',coms:[]},
-  {id:4,nome:'João Ferreira',dist:'200m',tipo:'info',txt:'Semana que vem tem feira de trocas de mudas na praça — sábado das 8h ao meio dia. Traga suas plantas!',ap:18,apd:false,av:'J',cor:'#E9C46A',coms:[]}
+  {id:1,nome:'Vizinho Certo',dist:'',tipo:'info',txt:'👋 Bem-vindo ao Vizinho Certo! Você é um dos primeiros da sua rua. Faça seu primeiro post e convide seus vizinhos — quanto mais gente, mais seguro e informado fica seu bairro.',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]},
+  {id:2,nome:'Vizinho Certo',dist:'',tipo:'aviso',txt:'📲 Compartilhe o Vizinho Certo com seus vizinhos! Mande o link pelo WhatsApp, cole no grupo da rua ou mostre pessoalmente. Cada vizinho que entra deixa o bairro mais seguro e conectado para todos.',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]},
+  {id:3,nome:'Vizinho Certo',dist:'',tipo:'info',txt:'🔒 Sua privacidade é prioridade. Seu endereço exato nunca é mostrado a ninguém — usamos só o CEP para calcular a distância entre vizinhos.',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]},
+  {id:4,nome:'Vizinho Certo',dist:'',tipo:'ajuda',txt:'🚧 Tem um problema na sua rua? Buraco, calçada quebrada, poste apagado? Clique no + abaixo, descreva o problema e a IA gera um pedido formal para a prefeitura em segundos!',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]}
 ]};
 
 const OQ={
@@ -897,7 +892,7 @@ function renderPgto(){
   const preco=(anunState.preco/100).toFixed(2).replace('.',',');
   const area=document.getElementById('pgto-area');
   if(anunState.pgto==='pix'){
-    area.innerHTML='<div class="pix-box"><div class="pix-qr">⬛</div><div class="pix-chave">Chave Pix: vizinhocerto@pagamento.com</div><div class="pix-chave" style="font-weight:500;color:var(--texto)">Valor: R$ '+preco+'</div><button class="pix-copiar" onclick="toast(\'Chave copiada! 📋\')">Copiar chave Pix</button></div>';
+    area.innerHTML='<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">📱</div><div class="pix-chave" style="font-weight:500;color:var(--texto);font-size:14px;">Valor: R$ '+preco+'</div><div class="pix-chave" style="margin-top:8px;">Ao clicar em Pagar, você será redirecionado para o Mercado Pago para finalizar o pagamento com Pix, cartão ou boleto.</div></div>';
   } else if(anunState.pgto==='cartao'){
     area.innerHTML='<div style="background:var(--branco);border:1.5px solid var(--borda);border-radius:var(--radius-sm);padding:1rem;">'+
       '<div class="anun-field"><label>Número do cartão</label><input type="tel" placeholder="0000 0000 0000 0000" maxlength="19"/></div>'+
