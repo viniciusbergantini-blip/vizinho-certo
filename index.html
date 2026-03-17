@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-title" content="Vizinho Certo">
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' rx='60' fill='%231B4D37'/%3E%3Cpolygon points='150,50 228,110 228,210 72,210 72,110' fill='%23FEFAE0'/%3E%3Crect x='120' y='150' width='60' height='60' rx='6' fill='%232D6A4F'/%3E%3Cpolygon points='80,120 120,95 160,120 160,185 80,185' fill='%2352B788'/%3E%3Cpolygon points='140,120 180,95 220,120 220,185 140,185' fill='%2352B788'/%3E%3C/svg%3E">
 <title>Vizinho Certo</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231B4D37'/%3E%3Cpolygon points='50,12 78,35 78,75 22,75 22,35' fill='%23FEFAE0'/%3E%3Crect x='38' y='52' width='24' height='23' rx='3' fill='%232D6A4F'/%3E%3Crect x='26' y='42' width='14' height='14' rx='2' fill='%23D8F3DC'/%3E%3Crect x='60' y='42' width='14' height='14' rx='2' fill='%23D8F3DC'/%3E%3Cpolygon points='22,35 38,25 38,42 22,42' fill='%2352B788'/%3E%3Cpolygon points='78,35 62,25 62,42 78,42' fill='%2352B788'/%3E%3Ccircle cx='28' cy='65' r='4' fill='%23E76F51'/%3E%3Ccircle cx='50' cy='60' r='4' fill='%23E76F51'/%3E%3Ccircle cx='72' cy='65' r='4' fill='%23E76F51'/%3E%3Cline x1='32' y1='65' x2='46' y2='60' stroke='%23E76F51' stroke-width='2'/%3E%3Cline x1='54' y1='60' x2='68' y2='65' stroke='%23E76F51' stroke-width='2'/%3E%3C/svg%3E">
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -548,7 +549,7 @@
 
 <script>
 const PALAVROES=['idiota','burro','imbecil','merda','fdp','filho da','viado','vadia','puta','vagabundo','cretino','otário','lixo'];
-const E={nome:'',bairro:'',raio:150,tipo:'problema',filtro:'tudo',abCom:new Set(),abOq:new Set(),
+const E={nome:'',bairro:'',cidade:'',uf:'',rua:'',cep:'',lat:null,lon:null,raio:150,tipo:'problema',filtro:'tudo',abCom:new Set(),abOq:new Set(),
 posts:[
   {id:1,nome:'Vizinho Certo',dist:'',tipo:'info',txt:'👋 Bem-vindo ao Vizinho Certo! Você é um dos primeiros da sua rua. Faça seu primeiro post e convide seus vizinhos — quanto mais gente, mais seguro e informado fica seu bairro.',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]},
   {id:2,nome:'Vizinho Certo',dist:'',tipo:'aviso',txt:'📲 Compartilhe o Vizinho Certo com seus vizinhos! Mande o link pelo WhatsApp, cole no grupo da rua ou mostre pessoalmente. Cada vizinho que entra deixa o bairro mais seguro e conectado para todos.',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]},
@@ -617,7 +618,7 @@ async function buscaCEP(cep){
   const addrEl=document.getElementById('inp-cep-addr');
   const resEl=document.getElementById('cep-resultado');
   const numWrap=document.getElementById('num-wrap');
-  addrEl.value='Buscando...';
+  addrEl.value='Buscando endereço...';
   resEl.style.display='';
   try{
     const r=await fetch('https://viacep.com.br/ws/'+cep+'/json/');
@@ -629,18 +630,25 @@ async function buscaCEP(cep){
     const uf=d.uf||'';
     addrEl.value=(logr?logr+', ':'')+bairro+(cidade?' — '+cidade+'/'+uf:'');
     if(numWrap) numWrap.style.display='';
-    E.bairro=bairro||cidade;
-    E.cidade=cidade;
-    E.uf=uf;
+    E.rua=logr; E.bairro=bairro||cidade; E.cidade=cidade; E.uf=uf; E.cep=cep;
   }catch(e){
     addrEl.value='CEP '+cep.slice(0,5)+'-'+cep.slice(5)+' encontrado';
     if(numWrap) numWrap.style.display='';
-    E.bairro='Meu bairro';
-    E.cidade='Minha cidade';
-    E.uf='BR';
+    E.bairro='Meu bairro'; E.cidade='Minha cidade'; E.uf='BR'; E.cep=cep;
   }
 }
 
+async function geocodificar(rua,numero,cidade,uf){
+  try{
+    const q=encodeURIComponent((rua?rua+' '+numero+', ':'')+cidade+', '+uf+', Brasil');
+    const r=await fetch('https://nominatim.openstreetmap.org/search?q='+q+'&format=json&limit=1',{
+      headers:{'Accept-Language':'pt-BR','User-Agent':'VizinhoCerto/1.0'}
+    });
+    const d=await r.json();
+    if(d&&d[0]) return {lat:parseFloat(d[0].lat),lon:parseFloat(d[0].lon)};
+  }catch(e){}
+  return null;
+}
 function mostrarLogin(){
   document.getElementById('card-cadastro').style.display='none';
   document.getElementById('card-login').style.display='';
@@ -680,9 +688,13 @@ function irRaio(){
   E.nome=apelido;
   irTela('t-raio');
 }
-function irFeed(){
+async function irFeed(){
   document.getElementById('fsub').textContent=`${E.cidade||E.bairro} · raio de ${E.raio}m`;
   document.getElementById('fav').textContent=E.nome.charAt(0).toUpperCase();
+  const num=document.getElementById('inp-num')?document.getElementById('inp-num').value.trim():'';
+  if(E.rua&&num&&E.cidade){
+    geocodificar(E.rua,num,E.cidade,E.uf).then(c=>{if(c){E.lat=c.lat;E.lon=c.lon;}});
+  }
   render(); irTela('t-feed');
 }
 function irTela(id){document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa'));document.getElementById(id).classList.add('ativa');window.scrollTo(0,0);}
