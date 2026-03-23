@@ -388,6 +388,23 @@
   </div>
 </div>
 
+<!-- TELA CONFIRMAR EMAIL -->
+<div class="tela" id="t-confirmar">
+  <div style="background:var(--verde);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;position:relative;overflow:hidden;">
+    <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(82,183,136,0.15);top:-80px;right:-100px;"></div>
+    <div style="position:relative;z-index:1;width:100%;max-width:380px;text-align:center;">
+      <div style="font-size:64px;margin-bottom:1.5rem;">📬</div>
+      <div style="font-family:'Fraunces',serif;font-size:28px;color:var(--creme);margin-bottom:12px;">Confirme seu email</div>
+      <div style="font-size:15px;color:rgba(254,250,224,0.75);line-height:1.6;margin-bottom:2rem;">Enviamos um link de confirmação para <strong id="conf-email" style="color:var(--creme);">seu email</strong>.<br><br>Clique no link para ativar sua conta e entrar na vizinhança.</div>
+      <div style="background:rgba(255,255,255,0.1);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.5rem;">
+        <div style="font-size:13px;color:rgba(254,250,224,0.6);margin-bottom:8px;">Não recebeu o email?</div>
+        <button onclick="reenviarEmail()" style="background:transparent;border:1.5px solid rgba(254,250,224,0.4);color:var(--creme);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">Reenviar email →</button>
+      </div>
+      <div onclick="mostrarLoginDireto()" style="font-size:13px;color:rgba(254,250,224,0.5);cursor:pointer;text-decoration:underline;">Já confirmei, quero entrar</div>
+    </div>
+  </div>
+</div>
+
 <!-- TELA FEED -->
 <div class="tela" id="t-feed">
   <div class="fh">
@@ -553,10 +570,21 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   const { data: { session } } = await sb.auth.getSession();
   if (session) {
-    // usuário já logado — carrega perfil e vai pro feed
+    // Verifica se email foi confirmado
+    if(!session.user.email_confirmed_at){
+      document.getElementById('conf-email').textContent = session.user.email;
+      irTela('t-confirmar');
+      return;
+    }
     await carregarPerfil(session.user.id);
-    await carregarPosts();
-    irTela('t-feed');
+    // Se é novo usuário sem raio definido, vai pra tela de raio
+    const { data } = await sb.from('usuarios').select('raio').eq('id', session.user.id).single();
+    if(!data){
+      irTela('t-raio');
+    } else {
+      await carregarPosts();
+      irTela('t-feed');
+    }
   } else {
     irTela('t-bv');
   }
@@ -565,6 +593,18 @@ window.addEventListener('DOMContentLoaded', async () => {
 // ============================================================
 // AUTH
 // ============================================================
+async function reenviarEmail(){
+  const email = document.getElementById('conf-email').textContent;
+  const { error } = await sb.auth.resend({ type: 'signup', email });
+  if(error){ toast('Erro ao reenviar: ' + error.message); return; }
+  toast('Email reenviado! Verifique sua caixa de entrada. 📬');
+}
+
+function mostrarLoginDireto(){
+  mostrarLogin();
+  irTela('t-bv');
+}
+
 function mostrarLogin(){
   document.getElementById('card-cadastro').style.display='none';
   document.getElementById('card-login').style.display='';
@@ -624,7 +664,10 @@ async function irRaio(){
     E.apelido = apelido;
 
     btn.disabled=false; btn.textContent='Criar conta →';
-    irTela('t-raio');
+
+    // Mostra tela de confirmação de email
+    document.getElementById('conf-email').textContent = email;
+    irTela('t-confirmar');
 
   } catch(e) {
     toast('Erro inesperado: ' + e.message);
@@ -641,7 +684,16 @@ async function fazerLogin(){
   btn.disabled=true; btn.textContent='Entrando...';
 
   const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
-  if(error){ toast('Email ou senha incorretos.'); btn.disabled=false; btn.textContent='Entrar →'; return; }
+  if(error){
+    if(error.message.includes('Email not confirmed')){
+      document.getElementById('conf-email').textContent = email;
+      irTela('t-confirmar');
+      toast('Confirme seu email primeiro! 📬');
+    } else {
+      toast('Email ou senha incorretos.');
+    }
+    btn.disabled=false; btn.textContent='Entrar →'; return;
+  }
 
   await carregarPerfil(data.user.id);
   await carregarPosts();
