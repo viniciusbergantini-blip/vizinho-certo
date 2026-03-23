@@ -11,12 +11,8 @@
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' rx='60' fill='%231B4D37'/%3E%3Cpolygon points='150,50 228,110 228,210 72,210 72,110' fill='%23FEFAE0'/%3E%3Crect x='120' y='150' width='60' height='60' rx='6' fill='%232D6A4F'/%3E%3Cpolygon points='80,120 120,95 160,120 160,185 80,185' fill='%2352B788'/%3E%3Cpolygon points='140,120 180,95 220,120 220,185 140,185' fill='%2352B788'/%3E%3C/svg%3E">
 <title>Vizinho Certo</title>
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
-<link rel="apple-touch-icon" href="/icon.svg">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Vizinho Certo">
 <link rel="manifest" href="/manifest.json">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%231B4D37'/%3E%3Cpolygon points='50,12 78,35 78,75 22,75 22,35' fill='%23FEFAE0'/%3E%3Crect x='38' y='52' width='24' height='23' rx='3' fill='%232D6A4F'/%3E%3Crect x='26' y='42' width='14' height='14' rx='2' fill='%23D8F3DC'/%3E%3Crect x='60' y='42' width='14' height='14' rx='2' fill='%23D8F3DC'/%3E%3Cpolygon points='22,35 38,25 38,42 22,42' fill='%2352B788'/%3E%3Cpolygon points='78,35 62,25 62,42 78,42' fill='%2352B788'/%3E%3Ccircle cx='28' cy='65' r='4' fill='%23E76F51'/%3E%3Ccircle cx='50' cy='60' r='4' fill='%23E76F51'/%3E%3Ccircle cx='72' cy='65' r='4' fill='%23E76F51'/%3E%3Cline x1='32' y1='65' x2='46' y2='60' stroke='%23E76F51' stroke-width='2'/%3E%3Cline x1='54' y1='60' x2='68' y2='65' stroke='%23E76F51' stroke-width='2'/%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -30,6 +26,14 @@
   body{font-family:'DM Sans',sans-serif;background:var(--creme);color:var(--texto);min-height:100vh;padding-bottom:65px;}
   .tela{display:none;min-height:100vh;padding-bottom:65px;}
   .tela.ativa{display:flex;flex-direction:column;}
+
+  /* LOADING */
+  #t-loading{background:var(--verde);align-items:center;justify-content:center;}
+  .loading-logo{font-family:'Fraunces',serif;font-size:44px;color:var(--creme);text-align:center;}
+  .loading-logo span{color:var(--verde-claro);}
+  .loading-dots{display:flex;gap:8px;justify-content:center;margin-top:24px;}
+  .ld{width:10px;height:10px;border-radius:50%;background:var(--verde-claro);animation:pp 1.2s infinite;}
+  .ld:nth-child(2){animation-delay:.2s}.ld:nth-child(3){animation-delay:.4s}
 
   /* BOAS VINDAS */
   #t-bv{background:var(--verde);align-items:center;justify-content:center;padding:2rem;text-align:center;position:relative;overflow:hidden;}
@@ -48,6 +52,7 @@
   .ig input:focus{border-color:var(--verde-claro);}
   .btnp{width:100%;padding:13px;background:var(--verde);color:var(--creme);border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:background .2s;}
   .btnp:hover{background:#1B4D37;}
+  .btnp:disabled{background:#aaa;cursor:not-allowed;}
   .disclaimer{font-size:11px;color:rgba(254,250,224,0.45);margin-top:16px;}
 
   /* RAIO */
@@ -103,8 +108,6 @@
   .t-in{background:#E3F2FD;color:#1565C0;}
   .ptxt{font-size:14px;color:var(--texto);line-height:1.65;margin-bottom:12px;}
   .pac{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
-
-  /* BOTÕES AÇÕES */
   .bapoiar{display:flex;align-items:center;gap:5px;padding:6px 13px;border-radius:20px;border:1.5px solid var(--verde-claro);background:transparent;color:var(--verde);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif;}
   .bapoiar:hover{background:var(--verde-bg);}
   .bapoiar.ap{background:var(--verde);color:var(--creme);border-color:var(--verde);}
@@ -112,8 +115,6 @@
   .bcom{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:20px;border:1.5px solid var(--borda);background:transparent;color:var(--texto-muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;margin-left:auto;}
   .bcom:hover{background:var(--creme-escuro);}
   .bia{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1.5px solid var(--borda);background:transparent;color:var(--texto-muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;}
-
-  /* O QUE FAZER */
   .oqf{background:#F0FBF4;border-top:1px solid #C8EEDD;padding:12px 1.25rem;display:none;}
   .oqf.vis{display:block;}
   .oqlbl{font-size:11px;font-weight:500;color:var(--verde);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
@@ -123,8 +124,6 @@
   .oqtx{font-size:13px;color:var(--texto);line-height:1.55;}
   .oqtx strong{font-weight:500;color:var(--verde);}
   .btntel{display:inline-flex;align-items:center;gap:4px;margin-top:5px;background:var(--verde);color:var(--creme);font-size:12px;font-weight:500;padding:5px 12px;border-radius:20px;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;}
-
-  /* COMENTÁRIOS */
   .carea{border-top:1px solid var(--borda);}
   .clista{padding:0 1.25rem;}
   .com{display:flex;gap:8px;padding:10px 0;border-bottom:1px solid var(--creme-escuro);}
@@ -163,7 +162,7 @@
   .iatx{background:var(--branco);border:1px solid var(--borda);border-radius:var(--radius-sm);padding:1rem;font-size:13px;color:var(--texto);line-height:1.7;margin-bottom:1rem;min-height:120px;}
   .ial{display:flex;gap:6px;align-items:center;justify-content:center;padding:2rem;}
   .iad{width:8px;height:8px;border-radius:50%;background:var(--verde-claro);animation:pp 1.2s infinite;}
-  .iad:nth-child(2){animation-delay:.2s} .iad:nth-child(3){animation-delay:.4s}
+  .iad:nth-child(2){animation-delay:.2s}.iad:nth-child(3){animation-delay:.4s}
   @keyframes pp{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
   .iaa{display:flex;gap:8px;}
   .bcop{flex:1;padding:10px;background:var(--verde);color:var(--creme);border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;}
@@ -208,17 +207,8 @@
   .srv-anunciar p{font-size:13px;color:var(--texto-muted);margin-bottom:10px;line-height:1.5;}
   .srv-anunciar strong{color:var(--texto);font-weight:500;}
   .srv-btn-anunciar{padding:10px 20px;background:#2D6A4F;color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
-  /* card patrocinado no feed */
-  .feed-ad{background:var(--branco);border-radius:var(--radius);border:1px solid #E9C46A;margin-bottom:12px;overflow:hidden;}
-  .feed-ad-label{background:#FFFBEA;padding:5px 1.25rem;font-size:10px;color:#7D5A00;font-weight:500;letter-spacing:.5px;border-bottom:1px solid #F5E9A0;}
-  .feed-ad-body{padding:.9rem 1.25rem;display:flex;gap:12px;align-items:center;}
-  .feed-ad-logo{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-  .feed-ad-info{flex:1;}
-  .feed-ad-nome{font-size:14px;font-weight:500;color:var(--texto);}
-  .feed-ad-desc{font-size:12px;color:var(--texto-muted);margin-top:2px;}
-  .feed-ad-btn{padding:7px 14px;background:#2D6A4F;color:white;border:none;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;white-space:nowrap;}
 
-  /* FLUXO ANUNCIANTE */
+  /* ANUNCIANTE */
   .anun-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:flex-end;justify-content:center;}
   .anun-overlay.ab{display:flex;}
   .anun-sheet{background:var(--creme);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;animation:su .3s ease;}
@@ -230,76 +220,49 @@
   .anun-progress{display:flex;gap:6px;margin-bottom:1.5rem;}
   .anun-dot{height:4px;flex:1;border-radius:2px;background:var(--borda);transition:background .3s;}
   .anun-dot.done{background:#2D6A4F;}
-  /* tipo selector */
   .tipo-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.5rem;}
   .tipo-card{padding:1rem;border-radius:var(--radius-sm);border:1.5px solid var(--borda);background:var(--branco);cursor:pointer;text-align:center;transition:all .15s;}
   .tipo-card:hover{border-color:var(--verde-claro);}
   .tipo-card.sel{border:2px solid #2D6A4F;background:var(--verde-bg);}
   .tipo-card-icon{font-size:24px;margin-bottom:6px;}
   .tipo-card-label{font-size:13px;font-weight:500;color:var(--texto);}
-  /* form fields */
   .anun-field{margin-bottom:14px;}
   .anun-field label{font-size:11px;font-weight:500;color:var(--texto-muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
   .anun-field input,.anun-field textarea,.anun-field select{width:100%;padding:11px 14px;border:1.5px solid var(--borda);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;color:var(--texto);background:var(--branco);outline:none;transition:border-color .2s;}
   .anun-field input:focus,.anun-field textarea:focus,.anun-field select:focus{border-color:var(--verde-claro);}
   .anun-field textarea{resize:none;min-height:80px;line-height:1.5;}
-  /* planos */
   .planos-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:1.5rem;}
   .plano-card{padding:1rem 1.25rem;border-radius:var(--radius-sm);border:1.5px solid var(--borda);background:var(--branco);cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .15s;}
   .plano-card:hover{border-color:var(--verde-claro);}
   .plano-card.sel{border:2px solid #2D6A4F;background:var(--verde-bg);}
   .plano-card.popular{border-color:#E9C46A;}
-  .plano-card.popular.sel{border-color:#2D6A4F;}
   .plano-popular-badge{font-size:10px;font-weight:500;background:#E9C46A;color:#7D5A00;padding:2px 8px;border-radius:20px;margin-bottom:4px;display:inline-block;}
   .plano-info{flex:1;}
   .plano-nome{font-size:14px;font-weight:500;color:var(--texto);}
   .plano-desc{font-size:12px;color:var(--texto-muted);margin-top:2px;}
   .plano-preco{font-size:18px;font-weight:500;color:#2D6A4F;white-space:nowrap;}
-  .plano-preco small{font-size:11px;color:var(--texto-muted);font-weight:400;}
   .plano-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--borda);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
   .plano-card.sel .plano-radio{border-color:#2D6A4F;background:#2D6A4F;}
   .plano-card.sel .plano-radio::after{content:'';width:6px;height:6px;border-radius:50%;background:white;}
-  /* resumo */
   .resumo-box{background:var(--verde-bg);border-radius:var(--radius-sm);padding:1rem 1.25rem;margin-bottom:1.5rem;}
   .resumo-row{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;border-bottom:.5px solid rgba(45,106,79,.15);}
   .resumo-row:last-child{border-bottom:none;font-weight:500;font-size:14px;padding-top:8px;}
   .resumo-row span:first-child{color:#1B4D37;}
   .resumo-row span:last-child{color:#2D6A4F;font-weight:500;}
-  /* pagamento */
   .pgto-metodos{display:flex;gap:8px;margin-bottom:1rem;}
   .pgto-btn{flex:1;padding:10px;border-radius:var(--radius-sm);border:1.5px solid var(--borda);background:var(--branco);font-size:13px;font-weight:500;cursor:pointer;text-align:center;transition:all .15s;font-family:'DM Sans',sans-serif;color:var(--texto-muted);}
   .pgto-btn.sel{border-color:#2D6A4F;color:#2D6A4F;background:var(--verde-bg);}
   .pix-box{background:var(--branco);border:1.5px solid var(--borda);border-radius:var(--radius-sm);padding:1.25rem;text-align:center;margin-bottom:1rem;}
-  .pix-qr{width:140px;height:140px;background:#F5F5F5;border-radius:8px;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;font-size:60px;}
-  .pix-chave{font-size:12px;color:var(--texto-muted);margin-bottom:8px;}
-  .pix-copiar{padding:7px 16px;background:#2D6A4F;color:white;border:none;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;}
-  /* sucesso */
-  .sucesso-box{text-align:center;padding:1rem 0;}
-  .sucesso-icon{font-size:56px;margin-bottom:16px;}
-  .sucesso-titulo{font-family:'Fraunces',serif;font-size:24px;color:#2D6A4F;margin-bottom:8px;}
-  .sucesso-desc{font-size:14px;color:var(--texto-muted);line-height:1.6;margin-bottom:1.5rem;}
-  /* botões nav */
   .anun-nav{display:flex;gap:10px;margin-top:6px;}
   .anun-back{flex:1;padding:12px;border:1.5px solid var(--borda);border-radius:var(--radius-sm);background:transparent;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--texto-muted);cursor:pointer;}
   .anun-next{flex:2;padding:12px;background:#2D6A4F;color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .2s;}
   .anun-next:hover{background:#1B4D37;}
   .anun-next:disabled{background:var(--borda);cursor:not-allowed;}
-  html,body{height:100%;overflow-x:hidden;}
-  @media(max-width:479px){
-    .tela{width:100%;min-height:100vh;}
-    .bv-inner{padding:0 1rem;}
-    .card{border-radius:var(--radius);margin:0;}
-    .anun-sheet,.msheet,.panico-sheet{border-radius:20px 20px 0 0;}
-    input,textarea,select{font-size:16px!important;}
-  }
-  @media(min-width:480px){.tela{max-width:420px;margin:0 auto}body{background:#E8E0CC}.fab{right:calc(50% - 210px + 24px)}.panico-fab{left:calc(50% - 210px + 16px)!important;right:auto!important}}
 
-  /* BOTÃO DE PÂNICO */
+  /* PÂNICO */
   .panico-fab{position:fixed;bottom:74px;left:16px;width:52px;height:52px;border-radius:50%;background:#C0392B;color:white;border:3px solid #922B21;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(192,57,43,.5);display:none;align-items:center;justify-content:center;z-index:100;animation:panicoIdle 2.5s infinite;}
   .panico-fab.visivel{display:flex;}
   @keyframes panicoIdle{0%,100%{box-shadow:0 4px 16px rgba(192,57,43,.5)}50%{box-shadow:0 4px 24px rgba(192,57,43,.8)}}
-
-  /* MODAL PÂNICO */
   .panico-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:flex-end;justify-content:center;}
   .panico-overlay.ab{display:flex;}
   .panico-sheet{background:#1C1C1C;border-radius:24px 24px 0 0;padding:1.5rem;width:100%;max-width:480px;animation:su .25s ease;}
@@ -314,30 +277,50 @@
   .nums-title{font-size:11px;font-weight:500;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.8px;margin-bottom:10px;}
   .num-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.06);border-radius:var(--radius-sm);margin-bottom:8px;cursor:pointer;transition:background .15s;}
   .num-item:hover{background:rgba(255,255,255,.1);}
-  .num-item:last-child{margin-bottom:0;}
   .num-icone{font-size:20px;width:32px;text-align:center;flex-shrink:0;}
   .num-info{flex:1;}
   .num-nome{font-size:14px;font-weight:500;color:#FFFFFF;}
   .num-desc{font-size:12px;color:rgba(255,255,255,.45);margin-top:1px;}
   .num-tel{font-size:18px;font-weight:500;color:#52B788;margin-left:auto;}
   .panico-fechar{width:100%;padding:12px;background:transparent;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:1rem;}
-  .panico-fechar:hover{color:rgba(255,255,255,.7);}
   .alerta-confirmacao{background:rgba(82,183,136,.15);border:1px solid rgba(82,183,136,.3);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:#52B788;text-align:center;margin-bottom:1rem;display:none;}
   .alerta-confirmacao.vis{display:block;}
+
+  /* FOTO UPLOAD */
+  .foto-area{margin-bottom:12px;}
+  .foto-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;border:2px dashed var(--borda);border-radius:var(--radius-sm);background:var(--branco);color:var(--texto-muted);font-size:13px;font-weight:500;cursor:pointer;width:100%;transition:all .2s;font-family:'DM Sans',sans-serif;}
+  .foto-btn:hover{border-color:var(--verde-claro);color:var(--verde);background:#F0FBF4;}
+  .foto-preview{position:relative;margin-top:10px;border-radius:var(--radius-sm);overflow:hidden;background:#000;}
+  .foto-preview img{width:100%;max-height:220px;object-fit:cover;display:block;border-radius:var(--radius-sm);}
+  .foto-remove{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.6);color:white;border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
+  .foto-loading{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--verde);padding:8px 0;}
+  /* FOTO NO FEED */
+  .post-foto{width:100%;max-height:280px;object-fit:cover;display:block;border-top:1px solid var(--borda);}
+
+  html,body{height:100%;overflow-x:hidden;}
+  @media(max-width:479px){.tela{width:100%;min-height:100vh;}.bv-inner{padding:0 1rem;}.card{border-radius:var(--radius);margin:0;}input,textarea,select{font-size:16px!important;}}
+  @media(min-width:480px){.tela{max-width:420px;margin:0 auto}body{background:#E8E0CC}.fab{right:calc(50% - 210px + 24px)}.panico-fab{left:calc(50% - 210px + 16px)!important;right:auto!important}}
 </style>
 </head>
 <body>
 
-<!-- TELA 1: CADASTRO -->
-<div class="tela ativa" id="t-bv">
-  <div class="bv-inner" style="position:relative;z-index:1;width:100%;max-width:380px;">
+<!-- TELA LOADING -->
+<div class="tela ativa" id="t-loading">
+  <div class="loading-logo">Vizinho<br><span>Certo</span></div>
+  <div class="loading-dots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
+</div>
+
+<!-- TELA CADASTRO/LOGIN -->
+<div class="tela" id="t-bv">
+  <div class="bv-inner">
     <div class="logo">Vizinho<br><span>Certo</span></div>
     <div class="tagline">Sua rua. Seus vizinhos. Do seu jeito.</div>
+
     <div class="card" id="card-cadastro">
       <h2>Criar conta</h2>
       <p>Crie sua conta gratuita para se conectar com seus vizinhos.</p>
       <div class="ig"><label>Seu nome completo</label><input type="text" id="inp-nome" placeholder="Ex: Maria Silva"/></div>
-      <div class="ig"><label>Como quer ser chamado(a) no app</label><input type="text" id="inp-apelido" placeholder="Ex: Mari, Dona Lúcia, Vizinho do 42"/><div style="font-size:11px;color:var(--texto-muted);margin-top:4px;">Este é o nome que seus vizinhos vão ver. Seu nome completo nunca é exibido.</div></div>
+      <div class="ig"><label>Como quer ser chamado(a)</label><input type="text" id="inp-apelido" placeholder="Ex: Mari, Dona Lúcia"/><div style="font-size:11px;color:var(--texto-muted);margin-top:4px;">Este é o nome que seus vizinhos vão ver.</div></div>
       <div class="ig"><label>E-mail</label><input type="email" id="inp-email" placeholder="Ex: maria@email.com"/></div>
       <div class="ig"><label>Senha</label><input type="password" id="inp-senha" placeholder="Mínimo 6 caracteres"/></div>
       <div class="ig"><label>CEP</label><input type="tel" id="inp-cep" placeholder="Ex: 87010-000" maxlength="9" oninput="formataCEP(this)"/></div>
@@ -349,7 +332,7 @@
         <label>Número da sua casa</label>
         <input type="tel" id="inp-num" placeholder="Ex: 142"/>
       </div>
-      <button class="btnp" onclick="irRaio()">Criar conta →</button>
+      <button class="btnp" id="btn-cadastrar" onclick="irRaio()">Criar conta →</button>
       <div style="text-align:center;margin-top:12px;">
         <span style="font-size:13px;color:var(--texto-muted);">Já tem conta? </span>
         <span style="font-size:13px;color:#2D6A4F;font-weight:500;cursor:pointer;" onclick="mostrarLogin()">Entrar</span>
@@ -361,17 +344,21 @@
       <p>Bem-vindo de volta!</p>
       <div class="ig"><label>E-mail</label><input type="email" id="login-email" placeholder="seu@email.com"/></div>
       <div class="ig"><label>Senha</label><input type="password" id="login-senha" placeholder="Sua senha"/></div>
-      <button class="btnp" onclick="fazerLogin()">Entrar →</button>
+      <button class="btnp" id="btn-login" onclick="fazerLogin()">Entrar →</button>
       <div style="text-align:center;margin-top:12px;">
         <span style="font-size:13px;color:var(--texto-muted);">Não tem conta? </span>
         <span style="font-size:13px;color:#2D6A4F;font-weight:500;cursor:pointer;" onclick="mostrarCadastro()">Criar conta</span>
       </div>
     </div>
-    <div class="disclaimer" style="background:rgba(82,183,136,0.15);border:1px solid rgba(82,183,136,0.3);border-radius:10px;padding:10px 14px;margin-top:16px;position:relative;z-index:1;display:flex;align-items:center;gap:8px;max-width:380px;"><span style="font-size:18px;">🔒</span><span style="font-size:13px;color:rgba(254,250,224,0.9);line-height:1.5;"><strong style="color:white;">Seu endereço exato nunca é mostrado</strong> a outros usuários. Só calculamos a distância entre vizinhos.</span></div>
+
+    <div class="disclaimer" style="background:rgba(82,183,136,0.15);border:1px solid rgba(82,183,136,0.3);border-radius:10px;padding:10px 14px;margin-top:16px;position:relative;z-index:1;display:flex;align-items:center;gap:8px;max-width:380px;">
+      <span style="font-size:18px;">🔒</span>
+      <span style="font-size:13px;color:rgba(254,250,224,0.9);line-height:1.5;"><strong style="color:white;">Seu endereço exato nunca é mostrado</strong> a outros usuários. Só calculamos a distância entre vizinhos.</span>
+    </div>
   </div>
 </div>
 
-<!-- TELA 2: RAIO -->
+<!-- TELA RAIO -->
 <div class="tela" id="t-raio">
   <div class="rh"><h2>Defina seu raio</h2><p>Quanto de vizinhança você quer acompanhar?</p></div>
   <div class="rb">
@@ -401,11 +388,11 @@
   </div>
 </div>
 
-<!-- TELA 3: FEED -->
+<!-- TELA FEED -->
 <div class="tela" id="t-feed">
   <div class="fh">
-    <div><h1>Vizinho Certo</h1><p id="fsub">Zona 07 · 150m</p></div>
-    <div class="fav" id="fav">M</div>
+    <div><h1>Vizinho Certo</h1><p id="fsub">Carregando...</p></div>
+    <div class="fav" id="fav">?</div>
   </div>
   <div class="ft" id="feed-tabs">
     <div class="ftab ativo" onclick="filtrar('tudo',this)">Tudo</div>
@@ -425,20 +412,14 @@
   <button class="panico-fab visivel" id="panico-fab" onclick="abrirPanico()" title="Emergência">🆘</button>
 </div>
 
-
 <!-- MODAL ANUNCIANTE -->
 <div class="anun-overlay" id="manun">
   <div class="anun-sheet">
     <div style="padding:1rem 1.5rem 0;"><div class="anun-handle"></div>
       <div class="anun-progress" id="anun-prog">
-        <div class="anun-dot done" id="ap1"></div>
-        <div class="anun-dot" id="ap2"></div>
-        <div class="anun-dot" id="ap3"></div>
-        <div class="anun-dot" id="ap4"></div>
+        <div class="anun-dot done" id="ap1"></div><div class="anun-dot" id="ap2"></div><div class="anun-dot" id="ap3"></div><div class="anun-dot" id="ap4"></div>
       </div>
     </div>
-
-    <!-- STEP 1: TIPO -->
     <div class="anun-step ab" id="as1">
       <div class="anun-titulo">Você é...</div>
       <div class="anun-sub">Escolha a categoria do seu serviço ou negócio.</div>
@@ -454,42 +435,24 @@
       </div>
       <div class="anun-nav"><button class="anun-back" onclick="fecharAnun()">Cancelar</button><button class="anun-next" id="anun-n1" onclick="anunStep(2)" disabled>Continuar →</button></div>
     </div>
-
-    <!-- STEP 2: DADOS -->
     <div class="anun-step" id="as2">
       <div class="anun-titulo">Seu anúncio</div>
       <div class="anun-sub">Essas informações aparecem para os vizinhos no seu raio.</div>
-      <div class="anun-field"><label>Nome do negócio ou seu nome</label><input type="text" id="anun-nome" placeholder="Ex: Encanador do João, Mercado Silva..."/></div>
+      <div class="anun-field"><label>Nome do negócio ou seu nome</label><input type="text" id="anun-nome" placeholder="Ex: Encanador do João..."/></div>
       <div class="anun-field"><label>Descrição curta</label><textarea id="anun-desc" placeholder="Ex: Consertos e instalações. Atendo emergências no mesmo dia."></textarea></div>
       <div class="anun-field"><label>Telefone / WhatsApp</label><input type="tel" id="anun-tel" placeholder="(44) 99999-0000"/></div>
       <div class="anun-nav"><button class="anun-back" onclick="anunStep(1)">← Voltar</button><button class="anun-next" onclick="anunValidaDados()">Continuar →</button></div>
     </div>
-
-    <!-- STEP 3: PLANO -->
     <div class="anun-step" id="as3">
       <div class="anun-titulo">Escolha o plano</div>
       <div class="anun-sub">Seu anúncio aparece no feed e na aba Serviços para vizinhos no raio escolhido.</div>
       <div class="planos-grid">
-        <div class="plano-card" onclick="selPlano(10,990,this)">
-          <div class="plano-radio"></div>
-          <div class="plano-info"><div class="plano-nome">Plano Rua · 10 dias</div><div class="plano-desc">Raio 1,5km · Feed + aba Serviços</div></div>
-          <div class="plano-preco">R$ 9,90</div>
-        </div>
-        <div class="plano-card popular" onclick="selPlano(20,1990,this)">
-          <div class="plano-radio"></div>
-          <div class="plano-info"><div class="plano-popular-badge">★ Mais escolhido</div><div class="plano-nome">Plano Bairro · 20 dias</div><div class="plano-desc">Raio 3km · Feed + Serviços + badge ✓</div></div>
-          <div class="plano-preco">R$ 19,90</div>
-        </div>
-        <div class="plano-card" onclick="selPlano(30,2790,this)">
-          <div class="plano-radio"></div>
-          <div class="plano-info"><div class="plano-nome">Plano Cidade · 30 dias</div><div class="plano-desc">Raio 5km · Tudo + topo da busca 🔥</div></div>
-          <div class="plano-preco">R$ 27,90</div>
-        </div>
+        <div class="plano-card" onclick="selPlano(10,990,this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-nome">Plano Rua · 10 dias</div><div class="plano-desc">Raio 1,5km · Feed + aba Serviços</div></div><div class="plano-preco">R$ 9,90</div></div>
+        <div class="plano-card popular" onclick="selPlano(20,1990,this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-popular-badge">★ Mais escolhido</div><div class="plano-nome">Plano Bairro · 20 dias</div><div class="plano-desc">Raio 3km · Feed + Serviços + badge ✓</div></div><div class="plano-preco">R$ 19,90</div></div>
+        <div class="plano-card" onclick="selPlano(30,2790,this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-nome">Plano Cidade · 30 dias</div><div class="plano-desc">Raio 5km · Tudo + topo da busca 🔥</div></div><div class="plano-preco">R$ 27,90</div></div>
       </div>
       <div class="anun-nav"><button class="anun-back" onclick="anunStep(2)">← Voltar</button><button class="anun-next" id="anun-n3" onclick="anunStep(4)" disabled>Ver resumo →</button></div>
     </div>
-
-    <!-- STEP 4: PAGAMENTO -->
     <div class="anun-step" id="as4">
       <div class="anun-titulo">Pagamento</div>
       <div class="anun-sub">Após o pagamento seu anúncio entra no ar automaticamente.</div>
@@ -502,17 +465,13 @@
       <div id="pgto-area"></div>
       <div class="anun-nav"><button class="anun-back" onclick="anunStep(3)">← Voltar</button><button class="anun-next" onclick="anunFinalizar()">Pagar e publicar →</button></div>
     </div>
-
   </div>
 </div>
 
 <!-- MODAL PÂNICO -->
 <div class="panico-overlay" id="mpanico">
   <div class="panico-sheet">
-    <div class="panico-topo">
-      <div class="panico-icone">🆘</div>
-      <div><div class="panico-titulo">Emergência</div><div class="panico-sub">Alertar vizinhos e acionar ajuda</div></div>
-    </div>
+    <div class="panico-topo"><div class="panico-icone">🆘</div><div><div class="panico-titulo">Emergência</div><div class="panico-sub">Alertar vizinhos e acionar ajuda</div></div></div>
     <div class="alerta-confirmacao" id="alerta-conf">✓ Alerta enviado para <span id="alerta-count">0</span> vizinhos no seu raio!</div>
     <button class="panico-alerta-btn" id="btn-alertar" onclick="enviarAlerta()">📣 Alertar todos os vizinhos do raio</button>
     <div class="nums-title">Números de emergência</div>
@@ -538,6 +497,20 @@
       <div class="tbtn" onclick="selTipo('info',this)">💬 Info</div>
     </div>
     <textarea class="mta" id="ptxt" placeholder="O que está acontecendo na sua rua?"></textarea>
+    <div class="foto-area">
+      <input type="file" id="foto-input" accept="image/*" capture="environment" style="display:none;" onchange="previewFoto(this)">
+      <button class="foto-btn" onclick="document.getElementById('foto-input').click()">
+        <span style="font-size:18px;">📷</span> Adicionar foto (opcional)
+      </button>
+      <div class="foto-preview" id="foto-preview" style="display:none;">
+        <img id="foto-img" src="" alt="Preview"/>
+        <button class="foto-remove" onclick="removerFoto()">×</button>
+      </div>
+      <div class="foto-loading" id="foto-loading" style="display:none;">
+        <div class="iad"></div><div class="iad"></div><div class="iad"></div>
+        <span>Enviando foto...</span>
+      </div>
+    </div>
     <div class="mac"><button class="bcanc" onclick="fecharM()">Cancelar</button><button class="bpost" onclick="postar()">Publicar →</button></div>
   </div>
 </div>
@@ -554,51 +527,299 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ============================================================
+// SUPABASE INIT
+// ============================================================
+const SUPABASE_URL = 'https://xurtdibicsxmouvzfxvb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1cnRkaWJpY3N4bW91dnpmeHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNjcsImV4cCI6MjA4OTg3MTM2N30.WQ36EsY2JHP5G4VvLAfRNv7j4RjArne1sjbRS_tfvUU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ============================================================
+// ESTADO GLOBAL
+// ============================================================
 const PALAVROES=['idiota','burro','imbecil','merda','fdp','filho da','viado','vadia','puta','vagabundo','cretino','otário','lixo'];
-const E={nome:'',bairro:'',cidade:'',uf:'',rua:'',cep:'',lat:null,lon:null,raio:150,tipo:'problema',filtro:'tudo',abCom:new Set(),abOq:new Set(),
-posts:[
-  {id:1,nome:'Vizinho Certo',dist:'',tipo:'info',txt:'👋 Bem-vindo ao Vizinho Certo! Você é um dos primeiros da sua rua. Faça seu primeiro post e convide seus vizinhos — quanto mais gente, mais seguro e informado fica seu bairro.',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]},
-  {id:2,nome:'Vizinho Certo',dist:'',tipo:'aviso',txt:'📲 Compartilhe o Vizinho Certo com seus vizinhos! Mande o link pelo WhatsApp, cole no grupo da rua ou mostre pessoalmente. Cada vizinho que entra deixa o bairro mais seguro e conectado para todos.',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]},
-  {id:3,nome:'Vizinho Certo',dist:'',tipo:'info',txt:'🔒 Sua privacidade é prioridade. Seu endereço exato nunca é mostrado a ninguém — usamos só o CEP para calcular a distância entre vizinhos.',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]},
-  {id:4,nome:'Vizinho Certo',dist:'',tipo:'ajuda',txt:'🚧 Tem um problema na sua rua? Buraco, calçada quebrada, poste apagado? Clique no + abaixo, descreva o problema e a IA gera um pedido formal para a prefeitura em segundos!',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]}
-]};
+const COR=['#5E60CE','#E76F51','#2D6A4F','#D4A017','#48CAE4'];
+const E={
+  userId:null, nome:'', apelido:'', bairro:'', cidade:'', uf:'', rua:'', cep:'', lat:null, lon:null,
+  raio:150, tipo:'problema', filtro:'tudo', abCom:new Set(), abOq:new Set(), posts:[]
+};
+
+// ============================================================
+// INIT — verifica sessão ao carregar
+// ============================================================
+window.addEventListener('DOMContentLoaded', async () => {
+  atuRaio(150);
+  verificarRetornoPagamento();
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    // usuário já logado — carrega perfil e vai pro feed
+    await carregarPerfil(session.user.id);
+    await carregarPosts();
+    irTela('t-feed');
+  } else {
+    irTela('t-bv');
+  }
+});
+
+// ============================================================
+// AUTH
+// ============================================================
+function mostrarLogin(){
+  document.getElementById('card-cadastro').style.display='none';
+  document.getElementById('card-login').style.display='';
+}
+function mostrarCadastro(){
+  document.getElementById('card-login').style.display='none';
+  document.getElementById('card-cadastro').style.display='';
+}
+
+async function irRaio(){
+  const nome    = document.getElementById('inp-nome').value.trim();
+  const apelido = document.getElementById('inp-apelido').value.trim();
+  const email   = document.getElementById('inp-email').value.trim();
+  const senha   = document.getElementById('inp-senha').value;
+  const cep     = document.getElementById('inp-cep').value.replace(/[^0-9]/g,'');
+  const num     = document.getElementById('inp-num').value.trim();
+
+  if(!nome)           { toast('Digite seu nome completo!'); return; }
+  if(!apelido)        { toast('Digite como quer ser chamado(a)!'); return; }
+  if(!email||!email.includes('@')) { toast('Digite um email válido!'); return; }
+  if(!senha||senha.length<6)       { toast('Senha deve ter pelo menos 6 caracteres!'); return; }
+  if(cep.length!==8)  { toast('Digite um CEP válido!'); return; }
+  if(!E.bairro)       { toast('Aguarde o CEP ser validado...'); return; }
+  if(!num)            { toast('Digite o número da sua casa!'); return; }
+
+  const btn = document.getElementById('btn-cadastrar');
+  btn.disabled = true; btn.textContent = 'Criando conta...';
+
+  try {
+    // 1. Cria usuário no Auth
+    const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
+    if (authErr) { toast('Erro: ' + authErr.message); btn.disabled=false; btn.textContent='Criar conta →'; return; }
+
+    const uid = authData.user.id;
+
+    // 2. Salva perfil na tabela usuarios
+    const { error: dbErr } = await sb.from('usuarios').insert({
+      id: uid,
+      nome,
+      apelido,
+      email,
+      cep,
+      numero: num,
+      rua: E.rua,
+      bairro: E.bairro,
+      cidade: E.cidade,
+      uf: E.uf,
+      raio: E.raio,
+      lat: E.lat,
+      lon: E.lon
+    });
+
+    if (dbErr) console.warn('Erro ao salvar perfil:', dbErr.message);
+
+    E.userId  = uid;
+    E.nome    = apelido;
+    E.apelido = apelido;
+
+    btn.disabled=false; btn.textContent='Criar conta →';
+    irTela('t-raio');
+
+  } catch(e) {
+    toast('Erro inesperado: ' + e.message);
+    btn.disabled=false; btn.textContent='Criar conta →';
+  }
+}
+
+async function fazerLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  if(!email||!senha){ toast('Preencha email e senha!'); return; }
+
+  const btn = document.getElementById('btn-login');
+  btn.disabled=true; btn.textContent='Entrando...';
+
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+  if(error){ toast('Email ou senha incorretos.'); btn.disabled=false; btn.textContent='Entrar →'; return; }
+
+  await carregarPerfil(data.user.id);
+  await carregarPosts();
+  btn.disabled=false; btn.textContent='Entrar →';
+  irTela('t-feed');
+}
+
+async function carregarPerfil(uid){
+  E.userId = uid;
+  const { data } = await sb.from('usuarios').select('*').eq('id', uid).single();
+  if(data){
+    E.nome    = data.apelido || data.nome;
+    E.apelido = data.apelido || data.nome;
+    E.bairro  = data.bairro  || '';
+    E.cidade  = data.cidade  || '';
+    E.uf      = data.uf      || '';
+    E.rua     = data.rua     || '';
+    E.cep     = data.cep     || '';
+    E.lat     = data.lat;
+    E.lon     = data.lon;
+    E.raio    = data.raio    || 150;
+  }
+  document.getElementById('fsub').textContent = `${E.cidade||E.bairro} · raio de ${E.raio}m`;
+  document.getElementById('fav').textContent  = E.nome.charAt(0).toUpperCase();
+}
+
+async function sair(){
+  if(!confirm('Deseja sair da sua conta?')) return;
+  await sb.auth.signOut();
+  E.userId=null; E.nome=''; E.posts=[];
+  irTela('t-bv');
+}
+
+// ============================================================
+// POSTS — Supabase
+// ============================================================
+async function carregarPosts(){
+  document.getElementById('feed').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando feed...</div>';
+
+  const { data, error } = await sb
+    .from('posts')
+    .select('*, comentarios(*)')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if(error){ console.error(error); E.posts=[]; render(); return; }
+
+  E.posts = (data||[]).map(p => ({
+    id: p.id,
+    nome: p.apelido_autor || 'Vizinho',
+    dist: p.distancia || '0m',
+    tipo: p.tipo,
+    txt:  p.texto,
+    ap:   p.apoios || 0,
+    apd:  false,
+    av:   (p.apelido_autor||'V').charAt(0).toUpperCase(),
+    cor:  COR[Math.abs(hashStr(p.id+'')) % COR.length],
+    foto_url: p.foto_url || null,
+    coms: (p.comentarios||[]).map(c=>({
+      nome: c.apelido_autor||'Vizinho',
+      dist: '0m',
+      txt:  c.texto,
+      av:   (c.apelido_autor||'V').charAt(0).toUpperCase(),
+      cor:  COR[Math.abs(hashStr(c.id+'')) % COR.length]
+    }))
+  }));
+
+  // Posts de boas vindas se feed vazio
+  if(E.posts.length === 0){
+    E.posts = [
+      {id:'bv1',nome:'Vizinho Certo',dist:'',tipo:'info',txt:'👋 Bem-vindo ao Vizinho Certo! Você é um dos primeiros da sua rua. Faça seu primeiro post e convide seus vizinhos!',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]},
+      {id:'bv2',nome:'Vizinho Certo',dist:'',tipo:'aviso',txt:'📲 Compartilhe o Vizinho Certo com seus vizinhos! Mande o link pelo WhatsApp: vizinhocerto.com.br',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]},
+      {id:'bv3',nome:'Vizinho Certo',dist:'',tipo:'info',txt:'🔒 Sua privacidade é prioridade. Seu endereço exato nunca é mostrado a ninguém.',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]}
+    ];
+  }
+
+  render();
+}
+
+function hashStr(s){ let h=0; for(let i=0;i<s.length;i++) h=Math.imul(31,h)+s.charCodeAt(i)|0; return h; }
+
+async function postar(){
+  const txt = document.getElementById('ptxt').value.trim();
+  if(!txt){ toast('Escreva algo antes!'); return; }
+  if(temPalavrão(txt)){ toast('⚠️ Revise o texto — sem palavrões.'); return; }
+  if(!E.userId){ toast('Você precisa estar logado!'); return; }
+
+  const { data, error } = await sb.from('posts').insert({
+    usuario_id:   E.userId,
+    apelido_autor: E.apelido,
+    tipo:         tipoAt,
+    texto:        txt,
+    bairro:       E.bairro,
+    cidade:       E.cidade,
+    cep:          E.cep,
+    lat:          E.lat,
+    lon:          E.lon,
+    apoios:       0
+  }).select().single();
+
+  if(error){ toast('Erro ao publicar: ' + error.message); return; }
+
+  fecharM();
+  E.filtro='tudo';
+  document.querySelectorAll('.ftab').forEach((t,i)=>t.classList.toggle('ativo',i===0));
+
+  // Adiciona localmente pra ser imediato
+  E.posts.unshift({
+    id: data.id,
+    nome: E.apelido,
+    dist: '0m',
+    tipo: tipoAt,
+    txt,
+    ap: 0, apd: false,
+    av: E.apelido.charAt(0).toUpperCase(),
+    cor: COR[Math.abs(hashStr(data.id+'')) % COR.length],
+    coms: []
+  });
+  render();
+  toast('Publicado! 🎉');
+}
+
+async function apoiar(id){
+  const p = E.posts.find(x=>x.id===id); if(!p) return;
+  p.apd = !p.apd;
+  p.ap  += p.apd ? 1 : -1;
+
+  // Atualiza no banco só se for post real (não boas-vindas)
+  if(typeof id === 'string' && id.startsWith('bv')) { render(); return; }
+  await sb.from('posts').update({ apoios: p.ap }).eq('id', id);
+  render();
+  if(p.apd) toast('Você apoiou! 👊');
+}
+
+async function envCom(id){
+  const el = document.getElementById('ci'+id); if(!el) return;
+  const txt = el.value.trim();
+  if(!txt){ toast('Escreva algo primeiro!'); return; }
+  if(temPalavrão(txt)){ toast('⚠️ Mantenha o respeito, por favor.'); return; }
+  if(txt.length>300){ toast('Máximo 300 caracteres.'); return; }
+  if(!E.userId){ toast('Você precisa estar logado!'); return; }
+
+  const p = E.posts.find(x=>x.id===id); if(!p) return;
+
+  // Posts de boas-vindas: só local
+  if(typeof id === 'string' && id.startsWith('bv')){
+    p.coms.push({nome:E.apelido,dist:'0m',txt,av:E.apelido.charAt(0).toUpperCase(),cor:COR[Math.floor(Math.random()*COR.length)]});
+    render(); toast('Comentário publicado! 💬'); return;
+  }
+
+  const { error } = await sb.from('comentarios').insert({
+    post_id:      id,
+    usuario_id:   E.userId,
+    apelido_autor: E.apelido,
+    texto:        txt
+  });
+
+  if(error){ toast('Erro ao comentar: ' + error.message); return; }
+
+  p.coms.push({nome:E.apelido,dist:'0m',txt,av:E.apelido.charAt(0).toUpperCase(),cor:COR[Math.floor(Math.random()*COR.length)]});
+  render();
+  toast('Comentário publicado! 💬');
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+const TL={problema:'🚧 Problema',aviso:'⚠️ Aviso',ajuda:'🤝 Ajuda',info:'💬 Info'};
+const TC={problema:'t-pr',aviso:'t-av',ajuda:'t-aj',info:'t-in'};
 
 const OQ={
-  calcada:{titulo:'Calçada danificada',acoes:[
-    {i:'📞',t:'<strong>156 — Central da Prefeitura:</strong> Ligue e registre com o endereço exato. Anote o número do protocolo.',tel:'156'},
-    {i:'📱',t:'<strong>App 156 ou e-Cidadão:</strong> Registre com foto para ter comprovante digital e histórico.'},
-    {i:'✊',t:'<strong>Abaixo-assinado:</strong> Quanto mais vizinhos apoiarem, maior o peso. Use o botão "Gerar pedido" para criar um ofício coletivo.'}
-  ]},
-  buraco:{titulo:'Buraco na rua / asfalto',acoes:[
-    {i:'📞',t:'<strong>156 — Secretaria de Obras:</strong> Informe rua, número e tamanho aproximado do buraco.',tel:'156'},
-    {i:'📷',t:'<strong>Documente com foto:</strong> Tire fotos com data e hora ativados antes de ligar — é sua prova.'},
-    {i:'⚠️',t:'<strong>Se for perigoso:</strong> Sinalize o buraco com algo visível enquanto aguarda o conserto.'}
-  ]},
-  iluminacao:{titulo:'Iluminação pública',acoes:[
-    {i:'📞',t:'<strong>0800 722 9900 — COPEL:</strong> Número gratuito para reportar poste apagado em Maringá.',tel:'08007229900'},
-    {i:'📍',t:'<strong>Anote o número do poste:</strong> Está na placa metálica do poste. Facilita muito o atendimento.'},
-    {i:'⏱️',t:'<strong>Prazo legal:</strong> A concessionária tem 48h para resolver após o registro.'}
-  ]},
-  lixo:{titulo:'Lixo / entulho irregular',acoes:[
-    {i:'📞',t:'<strong>156 — Limpeza Urbana:</strong> Denuncie descarte irregular ou falta de coleta.',tel:'156'},
-    {i:'📸',t:'<strong>Tire foto como prova:</strong> Especialmente se houver endereço identificável na cena.'},
-    {i:'♻️',t:'<strong>Entulho de obra:</strong> É responsabilidade do dono da obra. A prefeitura pode autuar o responsável.'}
-  ]},
-  agua:{titulo:'Problema de água / esgoto',acoes:[
-    {i:'📞',t:'<strong>0800 722 0195 — SANEPAR:</strong> Falta de água, vazamento ou esgoto a céu aberto.',tel:'08007220195'},
-    {i:'⏱️',t:'<strong>Vazamento na rua:</strong> Prioridade máxima — ligue imediatamente, prazo de 4h para atendimento.'},
-    {i:'📋',t:'<strong>Guarde o protocolo:</strong> Se não resolverem, você pode acionar a ARSESP (agência reguladora).'}
-  ]},
-  seguranca:{titulo:'Segurança / suspeita',acoes:[
-    {i:'📞',t:'<strong>190 — Polícia Militar:</strong> Situações em andamento ou ameaças imediatas.',tel:'190'},
-    {i:'📞',t:'<strong>153 — Guarda Municipal:</strong> Ocorrências de menor urgência no bairro.',tel:'153'},
-    {i:'🚫',t:'<strong>Não confronte:</strong> Registre descrição e placa se possível, e acione a autoridade.'}
-  ]},
-  default:{titulo:'Como resolver',acoes:[
-    {i:'📞',t:'<strong>156 — Central da Prefeitura de Maringá:</strong> Canal geral para problemas urbanos.',tel:'156'},
-    {i:'🤖',t:'<strong>Gere o pedido formal:</strong> Use o botão abaixo para criar um ofício que pode ser enviado por e-mail ou protocolado.'},
-    {i:'✊',t:'<strong>Coletivize:</strong> Mais apoios = mais pressão. Compartilhe o post com seus vizinhos.'}
-  ]}
+  calcada:{titulo:'Calçada danificada',acoes:[{i:'📞',t:'<strong>156 — Central da Prefeitura:</strong> Ligue e registre com o endereço exato. Anote o número do protocolo.',tel:'156'},{i:'📱',t:'<strong>App 156 ou e-Cidadão:</strong> Registre com foto para ter comprovante digital.'},{i:'✊',t:'<strong>Abaixo-assinado:</strong> Quanto mais vizinhos apoiarem, maior o peso.'}]},
+  buraco:{titulo:'Buraco na rua / asfalto',acoes:[{i:'📞',t:'<strong>156 — Secretaria de Obras:</strong> Informe rua, número e tamanho aproximado.',tel:'156'},{i:'📷',t:'<strong>Documente com foto:</strong> Tire fotos com data e hora ativados antes de ligar.'},{i:'⚠️',t:'<strong>Se for perigoso:</strong> Sinalize o buraco enquanto aguarda o conserto.'}]},
+  iluminacao:{titulo:'Iluminação pública',acoes:[{i:'📞',t:'<strong>0800 722 9900 — COPEL:</strong> Número gratuito para reportar poste apagado.',tel:'08007229900'},{i:'📍',t:'<strong>Anote o número do poste:</strong> Está na placa metálica. Facilita muito o atendimento.'},{i:'⏱️',t:'<strong>Prazo legal:</strong> A concessionária tem 48h para resolver após o registro.'}]},
+  lixo:{titulo:'Lixo / entulho irregular',acoes:[{i:'📞',t:'<strong>156 — Limpeza Urbana:</strong> Denuncie descarte irregular ou falta de coleta.',tel:'156'},{i:'📸',t:'<strong>Tire foto como prova:</strong> Especialmente se houver endereço identificável.'},{i:'♻️',t:'<strong>Entulho de obra:</strong> É responsabilidade do dono da obra.'}]},
+  agua:{titulo:'Problema de água / esgoto',acoes:[{i:'📞',t:'<strong>0800 722 0195 — SANEPAR:</strong> Falta de água, vazamento ou esgoto a céu aberto.',tel:'08007220195'},{i:'⏱️',t:'<strong>Vazamento na rua:</strong> Prioridade máxima — ligue imediatamente.'},{i:'📋',t:'<strong>Guarde o protocolo:</strong> Se não resolverem, você pode acionar a agência reguladora.'}]},
+  seguranca:{titulo:'Segurança / suspeita',acoes:[{i:'📞',t:'<strong>190 — Polícia Militar:</strong> Situações em andamento ou ameaças imediatas.',tel:'190'},{i:'📞',t:'<strong>153 — Guarda Municipal:</strong> Ocorrências de menor urgência no bairro.',tel:'153'},{i:'🚫',t:'<strong>Não confronte:</strong> Registre descrição e placa se possível.'}]},
+  default:{titulo:'Como resolver',acoes:[{i:'📞',t:'<strong>156 — Central da Prefeitura de Maringá:</strong> Canal geral para problemas urbanos.',tel:'156'},{i:'🤖',t:'<strong>Gere o pedido formal:</strong> Use o botão abaixo para criar um ofício.'},{i:'✊',t:'<strong>Coletivize:</strong> Mais apoios = mais pressão.'}]}
 };
 
 function detectOq(txt){
@@ -613,13 +834,50 @@ function detectOq(txt){
 }
 function temPalavrão(t){return PALAVROES.some(p=>t.toLowerCase().includes(p));}
 
+function render(){
+  const lista = document.getElementById('feed');
+  const ps = E.filtro==='tudo' ? E.posts : E.posts.filter(p=>p.tipo===E.filtro);
+  if(!ps.length){ lista.innerHTML='<div style="text-align:center;padding:3rem 1rem;color:var(--texto-muted);font-size:14px;">Nenhum post aqui ainda.<br>Seja o primeiro! 🏡</div>'; return; }
+
+  const rows = ps.map(p=>{
+    const cA = E.abCom.has(p.id), oA = E.abOq.has(p.id);
+    const db = p.tipo==='problema' ? OQ[detectOq(p.txt)] : null;
+    const coms = p.coms.map(c=>`<div class="com"><div class="cav" style="background:${c.cor}20;color:${c.cor}">${c.av}</div><div><span class="cnome">${c.nome}</span> <span class="cdist">· ${c.dist}</span><div class="ctxt">${c.txt}</div></div></div>`).join('');
+    return `<div class="pc" id="pc${p.id}">
+      <div class="pm">
+        <div class="ph"><div class="pav" style="background:${p.cor}20;color:${p.cor}">${p.av}</div><div><div class="pnome">${p.nome}</div><div class="pdist">${p.dist ? 'a '+p.dist+' de você' : ''}</div></div><span class="ptag ${TC[p.tipo]}">${TL[p.tipo]}</span></div>
+        <div class="ptxt">${p.txt}</div>
+        ${p.foto_url ? `<img class="post-foto" src="${p.foto_url}" alt="Foto do post" loading="lazy" onclick="verFoto('${p.foto_url}')">` : ''}
+        <div class="pac">
+          <button class="bapoiar ${p.apd?'ap':''}" onclick="apoiar('${p.id}')">${p.apd?'✓':'+'} <span id="ac${p.id}">${p.ap}</span> apoio${p.ap!==1?'s':''}</button>
+          ${db?`<button class="boq" onclick="togOq('${p.id}')">💡 O que fazer</button>`:''}
+          <button class="bcom" onclick="togCom('${p.id}')">💬 ${p.coms.length?p.coms.length+' com.':'Comentar'}</button>
+        </div>
+      </div>
+      ${db?`<div class="oqf ${oA?'vis':''}" id="oq${p.id}">
+        <div class="oqlbl">💡 O que fazer — ${db.titulo}</div>
+        ${db.acoes.map(a=>`<div class="oqi"><div class="oqic">${a.i}</div><div class="oqtx">${a.t}${a.tel?`<br><button class="btntel" onclick="ligar('${a.tel}')">📞 Ligar agora</button>`:''}</div></div>`).join('')}
+        <div style="margin-top:10px;"><button class="bia" style="border-color:var(--verde-claro);color:var(--verde);" onclick="abrirIA('${p.id}')">🤖 Gerar pedido formal</button></div>
+      </div>`:''}
+      <div class="carea">${cA?`<div class="clista">${coms||'<div style="padding:12px;font-size:13px;color:var(--texto-muted);">Seja o primeiro a comentar!</div>'}</div><div class="cform"><textarea class="cinput" id="ci${p.id}" placeholder="Comente com respeito..." rows="1"></textarea><button class="cenv" onclick="envCom('${p.id}')">Enviar</button></div>`:''}</div>
+    </div>`;
+  });
+  lista.innerHTML = rows.join('');
+}
+
+function togOq(id){E.abOq.has(id)?E.abOq.delete(id):E.abOq.add(id);render();}
+function togCom(id){E.abCom.has(id)?E.abCom.delete(id):E.abCom.add(id);render();setTimeout(()=>{const el=document.getElementById('ci'+id);if(el)el.focus();},100);}
+function filtrar(f,el){E.filtro=f;document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('ativo'));el.classList.add('ativo');render();}
+
+// ============================================================
+// CEP / GEO
+// ============================================================
 function formataCEP(el){
   let v=el.value.replace(/\D/g,'');
   if(v.length>5) v=v.slice(0,5)+'-'+v.slice(5,8);
   el.value=v;
   if(v.replace('-','').length===8) buscaCEP(v.replace('-',''));
 }
-
 async function buscaCEP(cep){
   const addrEl=document.getElementById('inp-cep-addr');
   const resEl=document.getElementById('cep-resultado');
@@ -629,24 +887,22 @@ async function buscaCEP(cep){
   try{
     const r=await fetch('https://viacep.com.br/ws/'+cep+'/json/');
     const d=await r.json();
-    if(d.erro){resEl.style.display='none';addrEl.value='';toast('CEP não encontrado. Verifique e tente novamente.');E.bairro='';return;}
+    if(d.erro){resEl.style.display='none';addrEl.value='';toast('CEP não encontrado.');E.bairro='';return;}
     const logr=d.logradouro||'';
     const bairro=d.bairro||d.localidade||'';
-    const cidade=d.localidade||'';
-    const uf=d.uf||'';
-    addrEl.value=(logr?logr+', ':'')+bairro+(cidade?' — '+cidade+'/'+uf:'');
+    addrEl.value=(logr?logr+', ':'')+bairro+(d.localidade?' — '+d.localidade+'/'+d.uf:'');
     if(numWrap) numWrap.style.display='';
-    E.rua=logr; E.bairro=bairro||cidade; E.cidade=cidade; E.uf=uf; E.cep=cep;
+    E.rua=logr; E.bairro=bairro||d.localidade; E.cidade=d.localidade; E.uf=d.uf; E.cep=cep;
+    geocodificar(logr,'',d.localidade,d.uf).then(c=>{if(c){E.lat=c.lat;E.lon=c.lon;}});
   }catch(e){
     addrEl.value='CEP '+cep.slice(0,5)+'-'+cep.slice(5)+' encontrado';
     if(numWrap) numWrap.style.display='';
     E.bairro='Meu bairro'; E.cidade='Minha cidade'; E.uf='BR'; E.cep=cep;
   }
 }
-
 async function geocodificar(rua,numero,cidade,uf){
   try{
-    const q=encodeURIComponent((rua?rua+' '+numero+', ':'')+cidade+', '+uf+', Brasil');
+    const q=encodeURIComponent((rua?rua+(numero?' '+numero:'')+(', '):'')+cidade+', '+uf+', Brasil');
     const r=await fetch('https://nominatim.openstreetmap.org/search?q='+q+'&format=json&limit=1',{
       headers:{'Accept-Language':'pt-BR','User-Agent':'VizinhoCerto/1.0'}
     });
@@ -655,56 +911,10 @@ async function geocodificar(rua,numero,cidade,uf){
   }catch(e){}
   return null;
 }
-function mostrarLogin(){
-  document.getElementById('card-cadastro').style.display='none';
-  document.getElementById('card-login').style.display='';
-}
-function mostrarCadastro(){
-  document.getElementById('card-login').style.display='none';
-  document.getElementById('card-cadastro').style.display='';
-}
-function fazerLogin(){
-  const email=document.getElementById('login-email').value.trim();
-  const senha=document.getElementById('login-senha').value;
-  if(!email||!senha){toast('Preencha email e senha!');return;}
-  const saved=localStorage.getItem('vc_user');
-  if(!saved){toast('Conta não encontrada. Crie uma conta!');return;}
-  const user=JSON.parse(saved);
-  if(user.email!==email||user.senha!==senha){toast('Email ou senha incorretos.');return;}
-  E.nome=user.apelido||user.nome; E.bairro=user.bairro; E.cidade=user.cidade; E.uf=user.uf;
-  document.getElementById('fsub').textContent=`${E.cidade} · raio de ${E.raio}m`;
-  document.getElementById('fav').textContent=E.nome.charAt(0).toUpperCase();
-  render(); irTela('t-feed');
-}
-function irRaio(){
-  const n=document.getElementById('inp-nome').value.trim();
-  const email=document.getElementById('inp-email').value.trim();
-  const senha=document.getElementById('inp-senha').value;
-  const cep=document.getElementById('inp-cep').value.replace(/[^0-9]/g,'');
-  const num=document.getElementById('inp-num').value.trim();
-  const apelido=document.getElementById('inp-apelido').value.trim();
-  if(!n){toast('Digite seu nome completo!');return;}
-  if(!apelido){toast('Digite como quer ser chamado(a)!');return;}
-  if(!email||!email.includes('@')){toast('Digite um email válido!');return;}
-  if(!senha||senha.length<6){toast('Senha deve ter pelo menos 6 caracteres!');return;}
-  if(cep.length!==8){toast('Digite um CEP válido!');return;}
-  if(!E.bairro){toast('Aguarde o CEP ser validado...');return;}
-  if(!num){toast('Digite o número da sua casa!');return;}
-  localStorage.setItem('vc_user', JSON.stringify({nome:n,apelido,email,senha,bairro:E.bairro,cidade:E.cidade,uf:E.uf}));
-  E.nome=apelido;
-  irTela('t-raio');
-}
-async function irFeed(){
-  document.getElementById('fsub').textContent=`${E.cidade||E.bairro} · raio de ${E.raio}m`;
-  document.getElementById('fav').textContent=E.nome.charAt(0).toUpperCase();
-  const num=document.getElementById('inp-num')?document.getElementById('inp-num').value.trim():'';
-  if(E.rua&&num&&E.cidade){
-    geocodificar(E.rua,num,E.cidade,E.uf).then(c=>{if(c){E.lat=c.lat;E.lon=c.lon;}});
-  }
-  render(); irTela('t-feed');
-}
-function irTela(id){document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa'));document.getElementById(id).classList.add('ativa');window.scrollTo(0,0);}
 
+// ============================================================
+// RAIO
+// ============================================================
 const VD=[0.35,0.42,0.62,0.58,0.85,0.92];
 function atuRaio(v){
   v=parseInt(v); E.raio=v;
@@ -721,71 +931,141 @@ function atuRaio(v){
 }
 function setR(v,el){document.getElementById('rs').value=v;document.querySelectorAll('.rc3').forEach(c=>c.classList.remove('ativo'));el.classList.add('ativo');atuRaio(v);}
 
-const TL={problema:'🚧 Problema',aviso:'⚠️ Aviso',ajuda:'🤝 Ajuda',info:'💬 Info'};
-const TC={problema:'t-pr',aviso:'t-av',ajuda:'t-aj',info:'t-in'};
-const COR=['#5E60CE','#E76F51','#2D6A4F','#D4A017','#48CAE4'];
-
-function render(){
-  const lista=document.getElementById('feed');
-  const ps=E.filtro==='tudo'?E.posts:E.posts.filter(p=>p.tipo===E.filtro);
-  if(!ps.length){lista.innerHTML='<div style="text-align:center;padding:3rem 1rem;color:var(--texto-muted);font-size:14px;">Nenhum post aqui ainda.<br>Seja o primeiro! 🏡</div>';return;}
-  const AD='';
-  const rows=ps.map(p=>{
-    const cA=E.abCom.has(p.id), oA=E.abOq.has(p.id);
-    const db=p.tipo==='problema'?OQ[detectOq(p.txt)]:null;
-    const coms=p.coms.map(c=>`<div class="com"><div class="cav" style="background:${c.cor}20;color:${c.cor}">${c.av}</div><div><span class="cnome">${c.nome}</span> <span class="cdist">· ${c.dist}</span><div class="ctxt">${c.txt}</div></div></div>`).join('');
-    return `<div class="pc" id="pc${p.id}">
-      <div class="pm">
-        <div class="ph"><div class="pav" style="background:${p.cor}20;color:${p.cor}">${p.av}</div><div><div class="pnome">${p.nome}</div><div class="pdist">a ${p.dist} de você</div></div><span class="ptag ${TC[p.tipo]}">${TL[p.tipo]}</span></div>
-        <div class="ptxt">${p.txt}</div>
-        <div class="pac">
-          <button class="bapoiar ${p.apd?'ap':''}" onclick="apoiar(${p.id})">${p.apd?'✓':'+'} <span id="ac${p.id}">${p.ap}</span> apoio${p.ap!==1?'s':''}</button>
-          ${db?`<button class="boq" onclick="togOq(${p.id})">💡 O que fazer</button>`:''}
-          <button class="bcom" onclick="togCom(${p.id})">💬 ${p.coms.length?p.coms.length+' com.':'Comentar'}</button>
-        </div>
-      </div>
-      ${db?`<div class="oqf ${oA?'vis':''}" id="oq${p.id}">
-        <div class="oqlbl">💡 O que fazer — ${db.titulo}</div>
-        ${db.acoes.map(a=>`<div class="oqi"><div class="oqic">${a.i}</div><div class="oqtx">${a.t}${a.tel?`<br><button class="btntel" onclick="ligar('${a.tel}')">📞 Ligar agora</button>`:''}</div></div>`).join('')}
-        <div style="margin-top:10px;"><button class="bia" style="border-color:var(--verde-claro);color:var(--verde);" onclick="abrirIA(${p.id})">🤖 Gerar pedido formal</button></div>
-      </div>`:''}
-      <div class="carea">${cA?`<div class="clista">${coms||'<div style="padding:12px;font-size:13px;color:var(--texto-muted);">Seja o primeiro a comentar!</div>'}</div><div class="cform"><textarea class="cinput" id="ci${p.id}" placeholder="Comente com respeito..." rows="1"></textarea><button class="cenv" onclick="envCom(${p.id})">Enviar</button></div>`:''}</div>
-    </div>`;
-  });
-  if(rows.length>1){rows.splice(2,0,AD);}
-  lista.innerHTML=rows.join('');
+// ============================================================
+// FEED / TELAS
+// ============================================================
+async function irFeed(){
+  // Salva raio no perfil
+  if(E.userId){
+    await sb.from('usuarios').update({ raio: E.raio }).eq('id', E.userId);
+  }
+  document.getElementById('fsub').textContent=`${E.cidade||E.bairro} · raio de ${E.raio}m`;
+  document.getElementById('fav').textContent=E.nome.charAt(0).toUpperCase();
+  await carregarPosts();
+  irTela('t-feed');
 }
 
-function apoiar(id){const p=E.posts.find(x=>x.id===id);if(!p)return;p.apd=!p.apd;p.ap+=p.apd?1:-1;render();if(p.apd)toast('Você apoiou! 👊');}
-function togOq(id){E.abOq.has(id)?E.abOq.delete(id):E.abOq.add(id);render();}
-function togCom(id){E.abCom.has(id)?E.abCom.delete(id):E.abCom.add(id);render();setTimeout(()=>{const el=document.getElementById('ci'+id);if(el)el.focus();},100);}
-function envCom(id){
-  const el=document.getElementById('ci'+id); if(!el)return;
-  const txt=el.value.trim();
-  if(!txt){toast('Escreva algo primeiro!');return;}
-  if(temPalavrão(txt)){toast('⚠️ Mantenha o respeito, por favor.');return;}
-  if(txt.length>300){toast('Máximo 300 caracteres.');return;}
-  const p=E.posts.find(x=>x.id===id); if(!p)return;
-  p.coms.push({nome:E.nome,dist:'0m',txt,av:E.nome.charAt(0).toUpperCase(),cor:COR[Math.floor(Math.random()*COR.length)]});
-  render(); toast('Comentário publicado! 💬');
+function irTela(id){
+  document.querySelectorAll('.tela').forEach(t=>t.classList.remove('ativa'));
+  document.getElementById(id).classList.add('ativa');
+  window.scrollTo(0,0);
 }
-function filtrar(f,el){E.filtro=f;document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('ativo'));el.classList.add('ativo');render();}
+
 function ligar(n){toast('Abrindo discador... 📞');setTimeout(()=>window.open('tel:'+n),500);}
 
-let tipoAt='problema';
-function abrirM(){document.getElementById('mpost').classList.add('ab');}
-function fecharM(){document.getElementById('mpost').classList.remove('ab');document.getElementById('ptxt').value='';}
-function selTipo(t,el){tipoAt=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('at'));el.classList.add('at');}
-function postar(){
-  const txt=document.getElementById('ptxt').value.trim();
-  if(!txt){toast('Escreva algo antes!');return;}
-  if(temPalavrão(txt)){toast('⚠️ Revise o texto — sem palavrões.');return;}
-  E.posts.unshift({id:Date.now(),nome:E.nome,dist:'0m',tipo:tipoAt,txt,ap:0,apd:false,av:E.nome.charAt(0).toUpperCase(),cor:COR[Math.floor(Math.random()*COR.length)],coms:[]});
-  fecharM(); E.filtro='tudo'; document.querySelectorAll('.ftab').forEach((t,i)=>t.classList.toggle('ativo',i===0)); render(); toast('Publicado! 🎉');
+// ============================================================
+// FOTO UPLOAD
+// ============================================================
+let fotoFile = null;
+let fotoUrl  = null;
+
+function previewFoto(input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 10 * 1024 * 1024){ toast('Foto muito grande! Máximo 10MB.'); return; }
+  fotoFile = file;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('foto-img').src = e.target.result;
+    document.getElementById('foto-preview').style.display = '';
+  };
+  reader.readAsDataURL(file);
 }
 
+function removerFoto(){
+  fotoFile = null; fotoUrl = null;
+  document.getElementById('foto-input').value = '';
+  document.getElementById('foto-preview').style.display = 'none';
+  document.getElementById('foto-img').src = '';
+}
+
+async function uploadFoto(file){
+  const ext  = file.name.split('.').pop() || 'jpg';
+  const path = `posts/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+  const { error } = await sb.storage.from('fotos').upload(path, file, { contentType: file.type, upsert: false });
+  if(error) throw error;
+  const { data } = sb.storage.from('fotos').getPublicUrl(path);
+  return data.publicUrl;
+}
+
+function verFoto(url){
+  // Abre foto em fullscreen simples
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+  overlay.innerHTML = `<img src="${url}" style="max-width:95vw;max-height:90vh;border-radius:12px;object-fit:contain;">`;
+  overlay.onclick = () => document.body.removeChild(overlay);
+  document.body.appendChild(overlay);
+}
+
+// ============================================================
+// POST MODAL
+// ============================================================
+let tipoAt='problema';
+function abrirM(){document.getElementById('mpost').classList.add('ab');}
+function fecharM(){
+  document.getElementById('mpost').classList.remove('ab');
+  document.getElementById('ptxt').value='';
+  removerFoto();
+}
+function selTipo(t,el){tipoAt=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('at'));el.classList.add('at');}
+
+async function postar(){
+  const txt = document.getElementById('ptxt').value.trim();
+  if(!txt && !fotoFile){ toast('Escreva algo ou adicione uma foto!'); return; }
+  if(txt && temPalavrão(txt)){ toast('⚠️ Revise o texto — sem palavrões.'); return; }
+  if(!E.userId){ toast('Você precisa estar logado!'); return; }
+
+  const btn = document.querySelector('.bpost');
+  btn.disabled=true; btn.textContent='Publicando...';
+
+  let uploadedUrl = null;
+  if(fotoFile){
+    document.getElementById('foto-loading').style.display='flex';
+    try{ uploadedUrl = await uploadFoto(fotoFile); }
+    catch(e){
+      toast('Erro ao enviar foto: ' + e.message);
+      document.getElementById('foto-loading').style.display='none';
+      btn.disabled=false; btn.textContent='Publicar →'; return;
+    }
+    document.getElementById('foto-loading').style.display='none';
+  }
+
+  const { data, error } = await sb.from('posts').insert({
+    usuario_id:    E.userId,
+    apelido_autor: E.apelido,
+    tipo:          tipoAt,
+    texto:         txt || '',
+    bairro:        E.bairro,
+    cidade:        E.cidade,
+    cep:           E.cep,
+    lat:           E.lat,
+    lon:           E.lon,
+    apoios:        0,
+    foto_url:      uploadedUrl
+  }).select().single();
+
+  btn.disabled=false; btn.textContent='Publicar →';
+  if(error){ toast('Erro ao publicar: ' + error.message); return; }
+
+  fecharM();
+  E.filtro='tudo';
+  document.querySelectorAll('.ftab').forEach((t,i)=>t.classList.toggle('ativo',i===0));
+  E.posts.unshift({
+    id: data.id, nome: E.apelido, dist:'0m', tipo:tipoAt,
+    txt: txt||'', ap:0, apd:false,
+    av: E.apelido.charAt(0).toUpperCase(),
+    cor: COR[Math.abs(hashStr(data.id+'')) % COR.length],
+    foto_url: uploadedUrl, coms:[]
+  });
+  render();
+  toast('Publicado! 🎉');
+}
+
+// ============================================================
+// IA MODAL
+// ============================================================
 async function abrirIA(id){
-  const p=E.posts.find(x=>x.id===id); if(!p)return;
+  const p=E.posts.find(x=>x.id==id); if(!p) return;
   document.getElementById('mia').classList.add('ab');
   document.getElementById('iatit').textContent='Gerando pedido formal...';
   document.getElementById('iatx').innerHTML='<div class="ial"><div class="iad"></div><div class="iad"></div><div class="iad"></div></div>';
@@ -803,15 +1083,15 @@ async function abrirIA(id){
       document.getElementById('iatit').textContent='Erro';
       document.getElementById('iatx').textContent=JSON.stringify(data);
     }
-  }catch(e){
-    document.getElementById('iatx').textContent='Erro: '+e.message;
-  }
+  }catch(e){document.getElementById('iatx').textContent='Erro: '+e.message;}
 }
 function fecharIA(){document.getElementById('mia').classList.remove('ab');}
 function copiarIA(){navigator.clipboard.writeText(document.getElementById('iatx').textContent).then(()=>toast('Copiado! 📋'));}
 
-
-const SERVICOS = [];
+// ============================================================
+// NAV TABS
+// ============================================================
+const SERVICOS=[];
 let catAtiva='todos';
 const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Cuidadora','Imobiliária'];
 
@@ -829,76 +1109,57 @@ function navTab(tab,el){
     srvEl.style.display=''; renderServicos();
   } else if(tab==='vizinhos'){
     srvEl.style.display='';
-    srvEl.innerHTML='<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;"><div style="font-size:48px;margin-bottom:1rem;">🏘️</div><div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Seus vizinhos aparecem aqui</div><p style="font-size:13px;line-height:1.6;">Quando outras pessoas cadastrarem no mesmo raio que você, os perfis delas vão aparecer aqui.</p><div style="margin-top:1.5rem;background:var(--verde-bg);border-radius:12px;padding:1rem;font-size:13px;color:#1B4D37;margin-bottom:1rem;">📲 <strong>vizinhocerto.com.br</strong></div><button onclick="compartilharApp()" style="width:100%;padding:14px;background:#2D6A4F;color:white;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><span>📤</span> Compartilhar com vizinhos</button></div>';
+    srvEl.innerHTML='<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;"><div style="font-size:48px;margin-bottom:1rem;">🏘️</div><div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Seus vizinhos aparecem aqui</div><p style="font-size:13px;line-height:1.6;">Quando outras pessoas se cadastrarem no mesmo raio, os perfis aparecem aqui.</p><div style="margin-top:1.5rem;background:var(--verde-bg);border-radius:12px;padding:1rem;font-size:13px;color:#1B4D37;margin-bottom:1rem;">📲 <strong>vizinhocerto.com.br</strong></div><button onclick="compartilharApp()" style="width:100%;padding:14px;background:#2D6A4F;color:white;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><span>📤</span> Compartilhar com vizinhos</button></div>';
   } else if(tab==='perfil'){
     srvEl.style.display='';
-    srvEl.innerHTML='<div style="padding:2rem 1rem;"><div style="text-align:center;margin-bottom:1.5rem;"><div style="width:72px;height:72px;border-radius:50%;background:#D8F3DC;display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:32px;color:#2D6A4F;margin:0 auto 12px;">'+E.nome.charAt(0).toUpperCase()+'</div><div style="font-size:18px;font-weight:500;color:var(--texto);">'+E.nome+'</div><div style="font-size:13px;color:var(--texto-muted);margin-top:4px;">'+(E.cidade||'Minha cidade')+'</div></div><div style="background:var(--branco);border-radius:12px;border:1px solid var(--borda);overflow:hidden;"><div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Raio atual</span><span style="font-weight:500;">'+E.raio+'m</span></div><div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Posts publicados</span><span style="font-weight:500;">'+E.posts.filter(p=>p.nome===E.nome).length+'</span></div><div style="padding:14px 16px;font-size:14px;"><span style="color:var(--texto-muted);">Membro desde</span><span style="float:right;font-weight:500;">hoje</span></div></div><button style="width:100%;margin-top:1.5rem;padding:12px;background:transparent;border:1.5px solid #E24B4A;border-radius:10px;color:#A32D2D;font-size:14px;cursor:pointer;font-family:DM Sans,sans-serif;" onclick="sair()">Sair da conta</button></div>';
+    srvEl.innerHTML=`<div style="padding:2rem 1rem;"><div style="text-align:center;margin-bottom:1.5rem;"><div style="width:72px;height:72px;border-radius:50%;background:#D8F3DC;display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:32px;color:#2D6A4F;margin:0 auto 12px;">${E.nome.charAt(0).toUpperCase()}</div><div style="font-size:18px;font-weight:500;color:var(--texto);">${E.nome}</div><div style="font-size:13px;color:var(--texto-muted);margin-top:4px;">${E.cidade||'Minha cidade'}</div></div><div style="background:var(--branco);border-radius:12px;border:1px solid var(--borda);overflow:hidden;"><div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Raio atual</span><span style="font-weight:500;">${E.raio}m</span></div><div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Posts publicados</span><span style="font-weight:500;">${E.posts.filter(p=>p.nome===E.apelido).length}</span></div><div style="padding:14px 16px;font-size:14px;"><span style="color:var(--texto-muted);">Bairro</span><span style="float:right;font-weight:500;">${E.bairro||'—'}</span></div></div><button style="width:100%;margin-top:1.5rem;padding:12px;background:transparent;border:1.5px solid #E24B4A;border-radius:10px;color:#A32D2D;font-size:14px;cursor:pointer;font-family:DM Sans,sans-serif;" onclick="sair()">Sair da conta</button></div>`;
   }
 }
 
 function compartilharApp(){
-  const texto='Oi! Estou usando o Vizinho Certo — um app pra conectar vizinhos da mesma rua. Dá pra reportar problemas, pedir ajuda e muito mais. Entra aí: https://vizinhocerto.com.br';
-  if(navigator.share){
-    navigator.share({title:'Vizinho Certo',text:texto,url:'https://vizinhocerto.com.br'});
-  } else {
-    navigator.clipboard.writeText('https://vizinhocerto.com.br').then(()=>toast('Link copiado! 📋'));
-  }
-}
-
-function sair(){
-  if(confirm('Deseja sair da sua conta?')){
-    localStorage.removeItem('vc_user');
-    location.reload();
-  }
+  const texto='Oi! Estou usando o Vizinho Certo — um app pra conectar vizinhos da mesma rua. Entra aí: https://vizinhocerto.com.br';
+  if(navigator.share){navigator.share({title:'Vizinho Certo',text:texto,url:'https://vizinhocerto.com.br'});}
+  else{navigator.clipboard.writeText('https://vizinhocerto.com.br').then(()=>toast('Link copiado! 📋'));}
 }
 
 function renderServicos(){
   const el=document.getElementById('servicos-tab');
   const fil=catAtiva==='todos'?SERVICOS:SERVICOS.filter(s=>s.tipo===catAtiva);
-  const cats=CATS.map(c=>'<div class="srv-cat '+(c===catAtiva?'at':'')+'" onclick="setcat(\''+c+'\',this)">'+(c==='todos'?'Todos':c)+'</div>').join('');
-  const cards=fil.map(s=>'<div class="srv-card '+(s.destaque?'destaque':'')+'">'+
-    (s.destaque?'<div class="srv-destaque-label">★ PARCEIRO DESTAQUE</div>':'')+
-    '<div class="srv-body">'+
-    '<div class="srv-top"><div class="srv-logo" style="background:'+s.bg+'">'+s.logo+'</div>'+
-    '<div class="srv-info"><div class="srv-nome">'+s.nome+'</div><div class="srv-tipo">'+s.tipo+'</div><div class="srv-dist">a '+s.dist+' de você</div></div></div>'+
-    '<div class="srv-desc">'+s.desc+'</div>'+
-    '<div class="srv-tags">'+s.tags.map(t=>'<span class="srv-tag">'+t+'</span>').join('')+'</div>'+
-    '<div class="srv-acoes"><button class="srv-btn-wa" onclick="ligar(\''+s.tel+'\')">💬 WhatsApp</button>'+
-    '<button class="srv-btn-tel" onclick="ligar(\''+s.tel+'\')">📞 Ligar</button></div>'+
-    '</div></div>').join('');
-  el.innerHTML='<div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div>'+
-    '<div class="srv-cats">'+cats+'</div>'+
-    '<div class="srv-grid">'+cards+
-    '<div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio por 10, 20 ou 30 dias.</p>'+
-    '<button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div></div>';
+  const cats=CATS.map(c=>`<div class="srv-cat ${c===catAtiva?'at':''}" onclick="setcat('${c}',this)">${c==='todos'?'Todos':c}</div>`).join('');
+  const cards=fil.map(s=>`<div class="srv-card ${s.destaque?'destaque':''}">
+    ${s.destaque?'<div class="srv-destaque-label">★ PARCEIRO DESTAQUE</div>':''}
+    <div class="srv-body"><div class="srv-top"><div class="srv-logo" style="background:${s.bg}">${s.logo}</div>
+    <div class="srv-info"><div class="srv-nome">${s.nome}</div><div class="srv-tipo">${s.tipo}</div><div class="srv-dist">a ${s.dist} de você</div></div></div>
+    <div class="srv-desc">${s.desc}</div>
+    <div class="srv-tags">${s.tags.map(t=>`<span class="srv-tag">${t}</span>`).join('')}</div>
+    <div class="srv-acoes"><button class="srv-btn-wa" onclick="ligar('${s.tel}')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligar('${s.tel}')">📞 Ligar</button></div>
+    </div></div>`).join('');
+  el.innerHTML=`<div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div>
+    <div class="srv-cats">${cats}</div>
+    <div class="srv-grid">${cards}
+    <div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p>
+    <button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div></div>`;
 }
-function setcat(cat,el){catAtiva=cat;renderServicos();}
+function setcat(cat){catAtiva=cat;renderServicos();}
 
-
-// ===== FLUXO ANUNCIANTE =====
+// ============================================================
+// ANUNCIANTE
+// ============================================================
 const anunState={tipo:'',icon:'',nome:'',desc:'',tel:'',dias:0,preco:0,pgto:'pix'};
-
 function abrirAnun(){document.getElementById('manun').classList.add('ab');anunStep(1);}
 function fecharAnun(){document.getElementById('manun').classList.remove('ab');}
-
 function anunStep(n){
   document.querySelectorAll('.anun-step').forEach(s=>s.classList.remove('ab'));
   document.getElementById('as'+n).classList.add('ab');
-  for(let i=1;i<=4;i++){
-    const d=document.getElementById('ap'+i);
-    if(d) d.classList.toggle('done',i<=n);
-  }
-  if(n===4) renderResumo();
-  if(n===4) renderPgto();
+  for(let i=1;i<=4;i++){const d=document.getElementById('ap'+i);if(d)d.classList.toggle('done',i<=n);}
+  if(n===4){renderResumo();renderPgto();}
 }
-
 function selTipoAnun(icon,tipo,el){
-  anunState.icon=icon; anunState.tipo=tipo;
+  anunState.icon=icon;anunState.tipo=tipo;
   document.querySelectorAll('.tipo-card').forEach(c=>c.classList.remove('sel'));
   el.classList.add('sel');
   document.getElementById('anun-n1').disabled=false;
 }
-
 function anunValidaDados(){
   const n=document.getElementById('anun-nome').value.trim();
   const d=document.getElementById('anun-desc').value.trim();
@@ -906,121 +1167,104 @@ function anunValidaDados(){
   if(!n){toast('Digite o nome do negócio!');return;}
   if(!d){toast('Escreva uma descrição!');return;}
   if(!t){toast('Digite seu telefone!');return;}
-  anunState.nome=n; anunState.desc=d; anunState.tel=t;
+  anunState.nome=n;anunState.desc=d;anunState.tel=t;
   anunStep(3);
 }
-
 function selPlano(dias,centavos,el){
-  anunState.dias=dias; anunState.preco=centavos;
+  anunState.dias=dias;anunState.preco=centavos;
   document.querySelectorAll('.plano-card').forEach(c=>c.classList.remove('sel'));
   el.classList.add('sel');
   document.getElementById('anun-n3').disabled=false;
 }
-
 function renderResumo(){
   const preco=(anunState.preco/100).toFixed(2).replace('.',',');
   const beneficios={10:'Raio 1,5km · Feed + Serviços',20:'Raio 3km · Feed + Serviços + badge ✓',30:'Raio 5km · Tudo + topo da busca'};
   document.getElementById('anun-resumo').innerHTML=
-    '<div class="resumo-row"><span>Anunciante</span><span>'+anunState.icon+' '+anunState.nome+'</span></div>'+
-    '<div class="resumo-row"><span>Categoria</span><span>'+anunState.tipo+'</span></div>'+
-    '<div class="resumo-row"><span>Plano</span><span>'+anunState.dias+' dias</span></div>'+
-    '<div class="resumo-row"><span>Inclui</span><span style="font-size:11px;text-align:right;max-width:160px;">'+beneficios[anunState.dias]+'</span></div>'+
-    '<div class="resumo-row"><span>Total</span><span>R$ '+preco+'</span></div>';
+    `<div class="resumo-row"><span>Anunciante</span><span>${anunState.icon} ${anunState.nome}</span></div>
+    <div class="resumo-row"><span>Categoria</span><span>${anunState.tipo}</span></div>
+    <div class="resumo-row"><span>Plano</span><span>${anunState.dias} dias</span></div>
+    <div class="resumo-row"><span>Inclui</span><span style="font-size:11px;text-align:right;max-width:160px;">${beneficios[anunState.dias]}</span></div>
+    <div class="resumo-row"><span>Total</span><span>R$ ${preco}</span></div>`;
 }
-
 function selPgto(met,el){
   anunState.pgto=met;
   document.querySelectorAll('.pgto-btn').forEach(b=>b.classList.remove('sel'));
   el.classList.add('sel');
   renderPgto();
 }
-
 function renderPgto(){
   const preco=(anunState.preco/100).toFixed(2).replace('.',',');
   const area=document.getElementById('pgto-area');
   if(anunState.pgto==='pix'){
-    area.innerHTML='<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">📱</div><div class="pix-chave" style="font-weight:500;color:var(--texto);font-size:14px;">Valor: R$ '+preco+'</div><div class="pix-chave" style="margin-top:8px;">Ao clicar em Pagar, você será redirecionado para o Mercado Pago para finalizar o pagamento com Pix, cartão ou boleto.</div></div>';
+    area.innerHTML=`<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">📱</div><div style="font-weight:500;color:var(--texto);font-size:14px;">Valor: R$ ${preco}</div><div style="font-size:12px;color:var(--texto-muted);margin-top:8px;">Ao clicar em Pagar, você será redirecionado para o Mercado Pago.</div></div>`;
   } else if(anunState.pgto==='cartao'){
-    area.innerHTML='<div style="background:var(--branco);border:1.5px solid var(--borda);border-radius:var(--radius-sm);padding:1rem;">'+
-      '<div class="anun-field"><label>Número do cartão</label><input type="tel" placeholder="0000 0000 0000 0000" maxlength="19"/></div>'+
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">'+
-      '<div class="anun-field"><label>Validade</label><input type="text" placeholder="MM/AA" maxlength="5"/></div>'+
-      '<div class="anun-field"><label>CVV</label><input type="tel" placeholder="000" maxlength="3"/></div></div>'+
-      '<div class="anun-field" style="margin-bottom:0;"><label>Nome no cartão</label><input type="text" placeholder="NOME SOBRENOME"/></div></div>';
+    area.innerHTML=`<div style="background:var(--branco);border:1.5px solid var(--borda);border-radius:var(--radius-sm);padding:1rem;">
+      <div class="anun-field"><label>Número do cartão</label><input type="tel" placeholder="0000 0000 0000 0000" maxlength="19"/></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div class="anun-field"><label>Validade</label><input type="text" placeholder="MM/AA" maxlength="5"/></div>
+      <div class="anun-field"><label>CVV</label><input type="tel" placeholder="000" maxlength="3"/></div></div>
+      <div class="anun-field" style="margin-bottom:0;"><label>Nome no cartão</label><input type="text" placeholder="NOME SOBRENOME"/></div></div>`;
   } else {
-    area.innerHTML='<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">📄</div><div class="pix-chave">Boleto gerado após confirmação.</div><div class="pix-chave">Vencimento em <strong>3 dias úteis.</strong></div><div class="pix-chave" style="font-weight:500;color:var(--texto)">Valor: R$ '+preco+'</div></div>';
+    area.innerHTML=`<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">📄</div><div style="font-size:12px;color:var(--texto-muted);">Boleto gerado após confirmação. Vencimento em 3 dias úteis.</div><div style="font-weight:500;color:var(--texto);margin-top:8px;">Valor: R$ ${preco}</div></div>`;
   }
 }
-
 async function anunFinalizar(){
   const btn=document.querySelector('#as4 .anun-next');
-  btn.textContent='Abrindo pagamento...'; btn.disabled=true;
+  btn.textContent='Abrindo pagamento...';btn.disabled=true;
   try{
     const retorno=window.location.href.split('?')[0];
     const resp=await fetch('/api/checkout',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        nome:anunState.nome, tipo:anunState.tipo, dias:anunState.dias,
-        preco:anunState.preco, icon:anunState.icon, desc:anunState.desc,
-        tel:anunState.tel, retorno
-      })
+      body:JSON.stringify({nome:anunState.nome,tipo:anunState.tipo,dias:anunState.dias,preco:anunState.preco,icon:anunState.icon,desc:anunState.desc,tel:anunState.tel,retorno})
     });
     const data=await resp.json();
     if(data.url){window.location.href=data.url;}
     else{throw new Error('sem link de pagamento');}
   }catch(e){
-    btn.disabled=false; btn.textContent='Pagar e publicar →';
+    btn.disabled=false;btn.textContent='Pagar e publicar →';
     toast('Erro ao conectar com Mercado Pago. Tente novamente.');
   }
 }
 
-function verificarRetornoPagamento(){
-  const p=new URLSearchParams(window.location.search);
-  if(p.get('pg')==='ok'){
-    const nome=decodeURIComponent(p.get('nome')||'');
-    const tipo=decodeURIComponent(p.get('tipo')||'');
-    const desc=decodeURIComponent(p.get('desc')||'');
-    const tel=decodeURIComponent(p.get('tel')||'');
-    const icon=decodeURIComponent(p.get('icon')||'🏪');
-    const dias=parseInt(p.get('dias')||'10');
-    if(nome){
-      SERVICOS.unshift({id:Date.now(),nome,tipo,dist:'perto de você',desc,tags:[tipo,'Destaque'],logo:icon,bg:'#E8F5E9',destaque:true,tel:tel.replace(/[^0-9]/g,'')});
-      setTimeout(()=>{alert('🎉 Pagamento confirmado! Anúncio no ar por '+dias+' dias.');window.history.replaceState({},'',window.location.pathname);},500);
-    }
-  } else if(p.get('pg')==='err'){
-    setTimeout(()=>{alert('Pagamento não aprovado. Tente novamente.');window.history.replaceState({},'',window.location.pathname);},500);
-  }
-}
+// ============================================================
+// PÂNICO
+// ============================================================
 function abrirPanico(){
   document.getElementById('mpanico').classList.add('ab');
   document.getElementById('alerta-conf').classList.remove('vis');
   const btn=document.getElementById('btn-alertar');
-  btn.classList.remove('enviado'); btn.innerHTML='📣 Alertar todos os vizinhos do raio'; btn.disabled=false;
+  btn.classList.remove('enviado');btn.innerHTML='📣 Alertar todos os vizinhos do raio';btn.disabled=false;
 }
 function fecharPanico(){document.getElementById('mpanico').classList.remove('ab');}
-function enviarAlerta(){
+async function enviarAlerta(){
   const btn=document.getElementById('btn-alertar');
-  if(btn.disabled)return;
-  btn.disabled=true; btn.innerHTML='⏳ Enviando alerta...';
+  if(btn.disabled) return;
+  btn.disabled=true;btn.innerHTML='⏳ Enviando alerta...';
+
+  // Salva alerta como post no Supabase
+  const txt=`🆘 ALERTA DE EMERGÊNCIA — ${E.nome} acionou o botão de pânico nas proximidades. Fique atento e verifique se pode ajudar. Polícia 190 | SAMU 192 | Bombeiros 193.`;
+  if(E.userId){
+    await sb.from('posts').insert({
+      usuario_id:E.userId, apelido_autor:E.apelido,
+      tipo:'aviso', texto:txt,
+      bairro:E.bairro, cidade:E.cidade, cep:E.cep, lat:E.lat, lon:E.lon, apoios:0
+    });
+  }
+
   setTimeout(()=>{
-    E.posts.unshift({id:Date.now(),nome:E.nome,dist:'0m',tipo:'aviso',
-      txt:`🆘 ALERTA DE EMERGÊNCIA — ${E.nome} acionou o botão de pânico nas proximidades. Fique atento e verifique se pode ajudar. Polícia 190 | SAMU 192 | Bombeiros 193.`,
-      ap:0,apd:false,av:'🆘',cor:'#C0392B',coms:[]});
     const vc=Math.floor(3+(E.raio/100));
     document.getElementById('alerta-count').textContent=vc;
     document.getElementById('alerta-conf').classList.add('vis');
-    btn.classList.add('enviado'); btn.innerHTML='✓ Alerta enviado para '+vc+' vizinhos!';
-    if(document.getElementById('t-feed').classList.contains('ativa')){
-      E.filtro='tudo';
-      document.querySelectorAll('.ftab').forEach((t,i)=>t.classList.toggle('ativo',i===0));
-      render();
-    }
+    btn.classList.add('enviado');btn.innerHTML='✓ Alerta enviado para '+vc+' vizinhos!';
+    carregarPosts();
   },1200);
 }
 
+// ============================================================
+// TOAST + RETORNO PAGAMENTO
+// ============================================================
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('vis');setTimeout(()=>t.classList.remove('vis'),2500);}
-
 
 function verificarRetornoPagamento(){
   const params=new URLSearchParams(window.location.search);
@@ -1039,9 +1283,6 @@ function verificarRetornoPagamento(){
     setTimeout(()=>{alert('Pagamento não aprovado. Tente novamente.');window.history.replaceState({},'',window.location.pathname);},500);
   }
 }
-
-atuRaio(150);
-verificarRetornoPagamento();
 </script>
 </body>
 </html>
