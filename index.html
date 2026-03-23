@@ -568,26 +568,56 @@ window.addEventListener('DOMContentLoaded', async () => {
   atuRaio(150);
   verificarRetornoPagamento();
 
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    // Verifica se email foi confirmado
-    if(!session.user.email_confirmed_at){
-      document.getElementById('conf-email').textContent = session.user.email;
-      irTela('t-confirmar');
+  let jaProcessou = false;
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    // Evita processar múltiplas vezes
+    if(event === 'SIGNED_IN' && jaProcessou) return;
+    if(event === 'SIGNED_IN') jaProcessou = true;
+
+    if(event === 'SIGNED_OUT'){
+      jaProcessou = false;
+      irTela('t-bv');
       return;
     }
-    await carregarPerfil(session.user.id);
-    // Se é novo usuário sem raio definido, vai pra tela de raio
-    const { data } = await sb.from('usuarios').select('raio').eq('id', session.user.id).single();
-    if(!data){
-      irTela('t-raio');
-    } else {
-      await carregarPosts();
-      irTela('t-feed');
+
+    if(session && session.user){
+      if(!session.user.email_confirmed_at){
+        document.getElementById('conf-email').textContent = session.user.email;
+        irTela('t-confirmar');
+        return;
+      }
+
+      E.userId = session.user.id;
+
+      const { data: perfil } = await sb.from('usuarios').select('*').eq('id', session.user.id).single();
+
+      if(!perfil){
+        // Novo usuário — precisa escolher raio
+        irTela('t-raio');
+      } else {
+        // Carrega tudo do perfil
+        E.nome    = perfil.apelido || perfil.nome || 'Vizinho';
+        E.apelido = perfil.apelido || perfil.nome || 'Vizinho';
+        E.bairro  = perfil.bairro  || '';
+        E.cidade  = perfil.cidade  || '';
+        E.uf      = perfil.uf      || '';
+        E.rua     = perfil.rua     || '';
+        E.cep     = perfil.cep     || '';
+        E.lat     = perfil.lat;
+        E.lon     = perfil.lon;
+        E.raio    = perfil.raio    || 150;
+
+        document.getElementById('fsub').textContent = `${E.cidade||E.bairro||'Minha cidade'} · ${E.raio}m`;
+        document.getElementById('fav').textContent  = E.nome.charAt(0).toUpperCase();
+
+        await carregarPosts();
+        irTela('t-feed');
+      }
+    } else if(event === 'INITIAL_SESSION' && !session){
+      irTela('t-bv');
     }
-  } else {
-    irTela('t-bv');
-  }
+  });
 });
 
 // ============================================================
