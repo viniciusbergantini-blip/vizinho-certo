@@ -823,10 +823,19 @@ function navTab(tab,el){
     srvEl.style.display=''; renderServicos();
   } else if(tab==='vizinhos'){
     srvEl.style.display='';
-    srvEl.innerHTML='<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;"><div style="font-size:48px;margin-bottom:1rem;">🏘️</div><div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Seus vizinhos aparecem aqui</div><p style="font-size:13px;line-height:1.6;">Quando outras pessoas cadastrarem no mesmo raio que você, os perfis delas vão aparecer aqui.<br><br>Compartilhe o link com seus vizinhos para conectar!</p><div style="margin-top:1.5rem;background:var(--verde-bg);border-radius:12px;padding:1rem;font-size:13px;color:#1B4D37;">📲 <strong>Link do app:</strong><br>vizinhocerto.com.br</div></div>';
+    srvEl.innerHTML='<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;"><div style="font-size:48px;margin-bottom:1rem;">🏘️</div><div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Seus vizinhos aparecem aqui</div><p style="font-size:13px;line-height:1.6;">Quando outras pessoas cadastrarem no mesmo raio que você, os perfis delas vão aparecer aqui.</p><div style="margin-top:1.5rem;background:var(--verde-bg);border-radius:12px;padding:1rem;font-size:13px;color:#1B4D37;margin-bottom:1rem;">📲 <strong>vizinhocerto.com.br</strong></div><button onclick="compartilharApp()" style="width:100%;padding:14px;background:#2D6A4F;color:white;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><span>📤</span> Compartilhar com vizinhos</button></div>';
   } else if(tab==='perfil'){
     srvEl.style.display='';
     srvEl.innerHTML='<div style="padding:2rem 1rem;"><div style="text-align:center;margin-bottom:1.5rem;"><div style="width:72px;height:72px;border-radius:50%;background:#D8F3DC;display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:32px;color:#2D6A4F;margin:0 auto 12px;">'+E.nome.charAt(0).toUpperCase()+'</div><div style="font-size:18px;font-weight:500;color:var(--texto);">'+E.nome+'</div><div style="font-size:13px;color:var(--texto-muted);margin-top:4px;">'+(E.cidade||'Minha cidade')+'</div></div><div style="background:var(--branco);border-radius:12px;border:1px solid var(--borda);overflow:hidden;"><div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Raio atual</span><span style="font-weight:500;">'+E.raio+'m</span></div><div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Posts publicados</span><span style="font-weight:500;">'+E.posts.filter(p=>p.nome===E.nome).length+'</span></div><div style="padding:14px 16px;font-size:14px;"><span style="color:var(--texto-muted);">Membro desde</span><span style="float:right;font-weight:500;">hoje</span></div></div><button style="width:100%;margin-top:1.5rem;padding:12px;background:transparent;border:1.5px solid #E24B4A;border-radius:10px;color:#A32D2D;font-size:14px;cursor:pointer;font-family:DM Sans,sans-serif;" onclick="sair()">Sair da conta</button></div>';
+  }
+}
+
+function compartilharApp(){
+  const texto='Oi! Estou usando o Vizinho Certo — um app pra conectar vizinhos da mesma rua. Dá pra reportar problemas, pedir ajuda e muito mais. Entra aí: https://vizinhocerto.com.br';
+  if(navigator.share){
+    navigator.share({title:'Vizinho Certo',text:texto,url:'https://vizinhocerto.com.br'});
+  } else {
+    navigator.clipboard.writeText('https://vizinhocerto.com.br').then(()=>toast('Link copiado! 📋'));
   }
 }
 
