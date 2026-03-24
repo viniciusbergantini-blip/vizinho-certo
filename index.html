@@ -568,31 +568,22 @@ window.addEventListener('DOMContentLoaded', async () => {
   atuRaio(150);
   verificarRetornoPagamento();
 
-  let jaNavegou = false;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
 
-  function navegar(tela){ if(!jaNavegou){ jaNavegou=true; irTela(tela); } }
-
-  // Timeout de segurança — se demorar mais de 4s, vai pra login
-  const timeout = setTimeout(() => navegar('t-bv'), 4000);
-
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if(event === 'SIGNED_OUT'){ clearTimeout(timeout); jaNavegou=false; irTela('t-bv'); return; }
-    if(event !== 'INITIAL_SESSION' && event !== 'SIGNED_IN') return;
-
-    clearTimeout(timeout);
-
-    if(!session || !session.user){ navegar('t-bv'); return; }
+    if(!session || !session.user){
+      irTela('t-bv'); return;
+    }
 
     if(!session.user.email_confirmed_at){
       document.getElementById('conf-email').textContent = session.user.email;
-      navegar('t-confirmar'); return;
+      irTela('t-confirmar'); return;
     }
 
     E.userId = session.user.id;
-
     const { data: perfil } = await sb.from('usuarios').select('*').eq('id', session.user.id).single();
 
-    if(!perfil){ navegar('t-raio'); return; }
+    if(!perfil){ irTela('t-raio'); return; }
 
     E.nome    = perfil.apelido || perfil.nome || 'Vizinho';
     E.apelido = perfil.apelido || perfil.nome || 'Vizinho';
@@ -609,7 +600,16 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('fav').textContent  = E.nome.charAt(0).toUpperCase();
 
     await carregarPosts();
-    navegar('t-feed');
+    irTela('t-feed');
+
+  } catch(e) {
+    console.error('Erro no init:', e);
+    irTela('t-bv');
+  }
+
+  // Listener só pra logout
+  sb.auth.onAuthStateChange((event) => {
+    if(event === 'SIGNED_OUT'){ irTela('t-bv'); }
   });
 });
 
