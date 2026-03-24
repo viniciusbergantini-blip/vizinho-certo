@@ -869,6 +869,7 @@ async function carregarPosts(){
     av:   (p.apelido_autor||'V').charAt(0).toUpperCase(),
     cor:  COR[Math.abs(hashStr(p.id+'')) % COR.length],
     foto_url: p.foto_url || null,
+    meu: p.usuario_id === E.userId,
     coms: (p.comentarios||[]).map(c=>({
       nome: c.apelido_autor||'Vizinho',
       dist: '0m',
@@ -1021,6 +1022,7 @@ function render(){
           <button class="bapoiar ${p.apd?'ap':''}" onclick="apoiar('${p.id}')">${p.apd?'✓':'+'} <span id="ac${p.id}">${p.ap}</span> apoio${p.ap!==1?'s':''}</button>
           ${db?`<button class="boq" onclick="togOq('${p.id}')">💡 O que fazer</button>`:''}
           <button class="bcom" onclick="togCom('${p.id}')">💬 ${p.coms.length?p.coms.length+' com.':'Comentar'}</button>
+          ${p.meu?`<button class="bia" style="border-color:#E24B4A;color:#A32D2D;margin-left:auto;" onclick="excluirPost('${p.id}')">🗑️</button>`:''}
         </div>
       </div>
       ${db?`<div class="oqf ${oA?'vis':''}" id="oq${p.id}">
@@ -1037,6 +1039,15 @@ function render(){
 function togOq(id){E.abOq.has(id)?E.abOq.delete(id):E.abOq.add(id);render();}
 function togCom(id){E.abCom.has(id)?E.abCom.delete(id):E.abCom.add(id);render();setTimeout(()=>{const el=document.getElementById('ci'+id);if(el)el.focus();},100);}
 function filtrar(f,el){E.filtro=f;document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('ativo'));el.classList.add('ativo');render();}
+
+async function excluirPost(id){
+  if(!confirm('Excluir este post?')) return;
+  const { error } = await sb.from('posts').delete().eq('id', id).eq('usuario_id', E.userId);
+  if(error){ toast('Erro ao excluir: ' + error.message); return; }
+  E.posts = E.posts.filter(p => p.id != id);
+  render();
+  toast('Post excluído! 🗑️');
+}
 
 // ============================================================
 // CEP / GEO
@@ -1252,7 +1263,7 @@ async function postar(){
     txt: txt||'', ap:0, apd:false,
     av: E.apelido.charAt(0).toUpperCase(),
     cor: COR[Math.abs(hashStr(data.id+'')) % COR.length],
-    foto_url: uploadedUrl, coms:[]
+    foto_url: uploadedUrl, coms:[], meu: true
   });
   render();
   toast('Publicado! 🎉');
