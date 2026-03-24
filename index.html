@@ -541,6 +541,27 @@
   </div>
 </div>
 
+<!-- MODAL ALTERAR ENDEREÇO -->
+<div class="moverlay" id="m-endereco">
+  <div class="msheet">
+    <div class="mhandle"></div>
+    <div class="mtitle">📍 Alterar endereço</div>
+    <div class="ig"><label>CEP</label><input type="tel" id="end-cep" placeholder="Ex: 87010-000" maxlength="9" oninput="formataCEPEnd(this)"/></div>
+    <div class="ig" id="end-cep-resultado" style="display:none;">
+      <label>Rua encontrada</label>
+      <input type="text" id="end-cep-addr" readonly style="background:#F0FBF4;color:#2D6A4F;font-weight:500;"/>
+    </div>
+    <div class="ig" id="end-num-wrap" style="display:none;">
+      <label>Número da sua casa</label>
+      <input type="tel" id="end-num" placeholder="Ex: 142"/>
+    </div>
+    <div class="mac">
+      <button class="bcanc" onclick="fecharAlterarEndereco()">Cancelar</button>
+      <button class="bpost" onclick="salvarEndereco()">Salvar →</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -743,10 +764,88 @@ async function sair(){
 }
 
 function alterarRaio(){
-  // Vai pra tela de raio com o valor atual já selecionado
   document.getElementById('rs').value = E.raio;
   atuRaio(E.raio);
   irTela('t-raio');
+}
+
+// ============================================================
+// ALTERAR ENDEREÇO
+// ============================================================
+let endTemp = {};
+
+function abrirAlterarEndereco(){
+  document.getElementById('m-endereco').classList.add('ab');
+  document.getElementById('end-cep').value = '';
+  document.getElementById('end-cep-resultado').style.display = 'none';
+  document.getElementById('end-num-wrap').style.display = 'none';
+  endTemp = {};
+}
+
+function fecharAlterarEndereco(){
+  document.getElementById('m-endereco').classList.remove('ab');
+}
+
+function formataCEPEnd(el){
+  let v = el.value.replace(/\D/g,'');
+  if(v.length>5) v = v.slice(0,5)+'-'+v.slice(5,8);
+  el.value = v;
+  if(v.replace('-','').length===8) buscaCEPEnd(v.replace('-',''));
+}
+
+async function buscaCEPEnd(cep){
+  const addrEl = document.getElementById('end-cep-addr');
+  const resEl  = document.getElementById('end-cep-resultado');
+  const numWrap= document.getElementById('end-num-wrap');
+  addrEl.value = 'Buscando endereço...';
+  resEl.style.display = '';
+  try{
+    const r = await fetch('https://viacep.com.br/ws/'+cep+'/json/');
+    const d = await r.json();
+    if(d.erro){ resEl.style.display='none'; toast('CEP não encontrado.'); return; }
+    addrEl.value = (d.logradouro?d.logradouro+', ':'')+d.bairro+' — '+d.localidade+'/'+d.uf;
+    numWrap.style.display = '';
+    endTemp = { cep, rua: d.logradouro||'', bairro: d.bairro||d.localidade, cidade: d.localidade, uf: d.uf };
+    geocodificar(d.logradouro,'',d.localidade,d.uf).then(c=>{ if(c){ endTemp.lat=c.lat; endTemp.lon=c.lon; }});
+  } catch(e){
+    addrEl.value = 'CEP encontrado';
+    numWrap.style.display = '';
+    endTemp = { cep, rua:'', bairro:'Meu bairro', cidade:'Minha cidade', uf:'BR' };
+  }
+}
+
+async function salvarEndereco(){
+  const num = document.getElementById('end-num').value.trim();
+  if(!endTemp.cep){ toast('Digite e aguarde o CEP ser validado!'); return; }
+  if(!num){ toast('Digite o número da sua casa!'); return; }
+
+  const btn = document.querySelector('#m-endereco .bpost');
+  btn.disabled=true; btn.textContent='Salvando...';
+
+  await sb.from('usuarios').update({
+    cep:    endTemp.cep,
+    rua:    endTemp.rua,
+    numero: num,
+    bairro: endTemp.bairro,
+    cidade: endTemp.cidade,
+    uf:     endTemp.uf,
+    lat:    endTemp.lat || null,
+    lon:    endTemp.lon || null
+  }).eq('id', E.userId);
+
+  E.cep    = endTemp.cep;
+  E.rua    = endTemp.rua;
+  E.bairro = endTemp.bairro;
+  E.cidade = endTemp.cidade;
+  E.uf     = endTemp.uf;
+  E.lat    = endTemp.lat;
+  E.lon    = endTemp.lon;
+
+  document.getElementById('fsub').textContent = `${E.cidade||E.bairro} · ${E.raio}m`;
+
+  btn.disabled=false; btn.textContent='Salvar →';
+  fecharAlterarEndereco();
+  toast('Endereço atualizado! 📍');
 }
 
 // ============================================================
@@ -1014,32 +1113,24 @@ async function irFeed(){
   if(!uid){ irTela('t-bv'); return; }
   E.userId = uid;
 
-  // Verifica se perfil já existe
-  const { data: perfil } = await sb.from('usuarios').select('id').eq('id', uid).single();
+  const d = cadastroTemp;
 
-  if(!perfil){
-    // Novo usuário — salva perfil com raio escolhido agora
-    const d = cadastroTemp;
-    // Salva/atualiza perfil completo
-    await sb.from('usuarios').upsert({
-      id: uid,
-      nome: d.nome || E.nome,
-      apelido: d.apelido || E.apelido,
-      email: d.email || session?.user?.email || '',
-      cep: d.cep || E.cep,
-      numero: d.numero || '',
-      rua: d.rua || E.rua,
-      bairro: d.bairro || E.bairro,
-      cidade: d.cidade || E.cidade,
-      uf: d.uf || E.uf,
-      raio: E.raio,
-      lat: d.lat || E.lat,
-      lon: d.lon || E.lon
-    }, { onConflict: 'id' });
-  } else {
-    // Usuário existente — só atualiza o raio
-    await sb.from('usuarios').update({ raio: E.raio }).eq('id', uid);
-  }
+  // Sempre salva/atualiza o perfil com os dados preenchidos + raio escolhido
+  await sb.from('usuarios').upsert({
+    id: uid,
+    nome:    d.nome    || E.nome    || '',
+    apelido: d.apelido || E.apelido || '',
+    email:   d.email   || session?.user?.email || '',
+    cep:     d.cep     || E.cep    || '',
+    numero:  d.numero  || '',
+    rua:     d.rua     || E.rua    || '',
+    bairro:  d.bairro  || E.bairro || '',
+    cidade:  d.cidade  || E.cidade || '',
+    uf:      d.uf      || E.uf     || '',
+    raio:    E.raio,
+    lat:     d.lat     || E.lat,
+    lon:     d.lon     || E.lon
+  }, { onConflict: 'id' });
 
   await carregarPerfil(uid);
   await carregarPosts();
@@ -1213,7 +1304,21 @@ function navTab(tab,el){
     srvEl.innerHTML='<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;"><div style="font-size:48px;margin-bottom:1rem;">🏘️</div><div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Seus vizinhos aparecem aqui</div><p style="font-size:13px;line-height:1.6;">Quando outras pessoas se cadastrarem no mesmo raio, os perfis aparecem aqui.</p><div style="margin-top:1.5rem;background:var(--verde-bg);border-radius:12px;padding:1rem;font-size:13px;color:#1B4D37;margin-bottom:1rem;">📲 <strong>vizinhocerto.com.br</strong></div><button onclick="compartilharApp()" style="width:100%;padding:14px;background:#2D6A4F;color:white;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><span>📤</span> Compartilhar com vizinhos</button></div>';
   } else if(tab==='perfil'){
     srvEl.style.display='';
-    srvEl.innerHTML=`<div style="padding:2rem 1rem;"><div style="text-align:center;margin-bottom:1.5rem;"><div style="width:72px;height:72px;border-radius:50%;background:#D8F3DC;display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:32px;color:#2D6A4F;margin:0 auto 12px;">${E.nome.charAt(0).toUpperCase()}</div><div style="font-size:18px;font-weight:500;color:var(--texto);">${E.nome}</div><div style="font-size:13px;color:var(--texto-muted);margin-top:4px;">${E.cidade||'Minha cidade'}</div></div><div style="background:var(--branco);border-radius:12px;border:1px solid var(--borda);overflow:hidden;"><div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Raio atual</span><span style="font-weight:500;">${E.raio}m</span></div><div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Posts publicados</span><span style="font-weight:500;">${E.posts.filter(p=>p.nome===E.apelido).length}</span></div><div style="padding:14px 16px;font-size:14px;"><span style="color:var(--texto-muted);">Bairro</span><span style="float:right;font-weight:500;">${E.bairro||'—'}</span></div></div><button onclick="alterarRaio()" style="width:100%;margin-top:1rem;padding:12px;background:#2D6A4F;color:white;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">🎯 Alterar raio de vizinhança</button><button style="width:100%;margin-top:10px;padding:12px;background:transparent;border:1.5px solid #E24B4A;border-radius:10px;color:#A32D2D;font-size:14px;cursor:pointer;font-family:DM Sans,sans-serif;" onclick="sair()">Sair da conta</button></div>`;
+    srvEl.innerHTML=`<div style="padding:2rem 1rem;">
+      <div style="text-align:center;margin-bottom:1.5rem;">
+        <div style="width:72px;height:72px;border-radius:50%;background:#D8F3DC;display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:32px;color:#2D6A4F;margin:0 auto 12px;">${E.nome.charAt(0).toUpperCase()||'?'}</div>
+        <div style="font-size:18px;font-weight:500;color:var(--texto);">${E.nome||'—'}</div>
+        <div style="font-size:13px;color:var(--texto-muted);margin-top:4px;">${E.cidade||'—'}</div>
+      </div>
+      <div style="background:var(--branco);border-radius:12px;border:1px solid var(--borda);overflow:hidden;">
+        <div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Raio atual</span><span style="font-weight:500;">${E.raio}m</span></div>
+        <div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Bairro</span><span style="font-weight:500;">${E.bairro||'—'}</span></div>
+        <div style="padding:14px 16px;display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Posts publicados</span><span style="font-weight:500;">${E.posts.filter(p=>p.nome===E.apelido).length}</span></div>
+      </div>
+      <button onclick="alterarRaio()" style="width:100%;margin-top:1rem;padding:12px;background:#2D6A4F;color:white;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">🎯 Alterar raio de vizinhança</button>
+      <button onclick="abrirAlterarEndereco()" style="width:100%;margin-top:10px;padding:12px;background:var(--branco);color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">📍 Alterar endereço</button>
+      <button style="width:100%;margin-top:10px;padding:12px;background:transparent;border:1.5px solid #E24B4A;border-radius:10px;color:#A32D2D;font-size:14px;cursor:pointer;font-family:DM Sans,sans-serif;" onclick="sair()">Sair da conta</button>
+    </div>`;
   }
 }
 
