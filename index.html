@@ -590,6 +590,13 @@ window.addEventListener('DOMContentLoaded', async () => {
   verificarRetornoPagamento();
 
   try {
+    // Trata token de confirmação de email na URL
+    const hash = window.location.hash;
+    if(hash && hash.includes('access_token')){
+      // Supabase vai processar automaticamente, espera um momento
+      await new Promise(r => setTimeout(r, 1500));
+    }
+
     const { data: { session } } = await sb.auth.getSession();
 
     if(!session || !session.user){
@@ -604,13 +611,29 @@ window.addEventListener('DOMContentLoaded', async () => {
     E.userId = session.user.id;
     const { data: perfil } = await sb.from('usuarios').select('*').eq('id', session.user.id).single();
 
-    if(!perfil || !perfil.apelido){ 
-      // Perfil vazio ou inexistente — preenche email no form e vai pro cadastro
-      irTela('t-bv');
-      mostrarCadastro();
-      document.getElementById('inp-email').value = session.user.email;
-      toast('Complete seu cadastro para continuar! 👋');
-      return; 
+    if(!perfil || !perfil.apelido){
+      // Perfil vazio — verifica se tem dados no sessionStorage (vindo do link de confirmação)
+      const saved = JSON.parse(sessionStorage.getItem('vc_cadastro')||'{}');
+      if(saved.apelido){
+        // Tem dados salvos — vai direto pra tela de raio
+        E.nome = saved.apelido;
+        E.apelido = saved.apelido;
+        E.bairro = saved.bairro || '';
+        E.cidade = saved.cidade || '';
+        E.uf = saved.uf || '';
+        E.rua = saved.rua || '';
+        E.cep = saved.cep || '';
+        E.lat = saved.lat || null;
+        E.lon = saved.lon || null;
+        irTela('t-raio');
+      } else {
+        // Sem dados — pede pra completar cadastro
+        irTela('t-bv');
+        mostrarCadastro();
+        document.getElementById('inp-email').value = session.user.email;
+        toast('Complete seu cadastro para continuar! 👋');
+      }
+      return;
     }
 
     E.nome    = perfil.apelido || perfil.nome || 'Vizinho';
@@ -635,7 +658,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     irTela('t-bv');
   }
 
-  // Listener só pra logout
   sb.auth.onAuthStateChange((event) => {
     if(event === 'SIGNED_OUT'){ irTela('t-bv'); }
   });
@@ -665,8 +687,8 @@ function mostrarCadastro(){
   document.getElementById('card-cadastro').style.display='';
 }
 
-// Dados temporários do cadastro (antes de confirmar email)
-let cadastroTemp = {};
+// Dados temporários do cadastro — persiste no sessionStorage
+let cadastroTemp = JSON.parse(sessionStorage.getItem('vc_cadastro')||'{}');
 
 async function irRaio(){
   const nome    = document.getElementById('inp-nome').value.trim();
@@ -691,8 +713,9 @@ async function irRaio(){
     const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
     if (authErr) { toast('Erro: ' + authErr.message); btn.disabled=false; btn.textContent='Criar conta →'; return; }
 
-    // Guarda dados pra salvar depois que confirmar o email
+    // Salva dados no sessionStorage pra sobreviver ao reload do link de confirmação
     cadastroTemp = { uid: authData.user.id, nome, apelido, email, cep, numero: num, rua: E.rua, bairro: E.bairro, cidade: E.cidade, uf: E.uf, lat: E.lat, lon: E.lon };
+    sessionStorage.setItem('vc_cadastro', JSON.stringify(cadastroTemp));
     E.nome = apelido; E.apelido = apelido;
 
     btn.disabled=false; btn.textContent='Criar conta →';
@@ -1113,11 +1136,11 @@ async function irFeed(){
   if(!uid){ irTela('t-bv'); return; }
   E.userId = uid;
 
-  const d = cadastroTemp;
+  // Recupera dados do sessionStorage se existir
+  const d = JSON.parse(sessionStorage.getItem('vc_cadastro')||'{}');
 
-  // Sempre salva/atualiza o perfil com os dados preenchidos + raio escolhido
   await sb.from('usuarios').upsert({
-    id: uid,
+    id:      uid,
     nome:    d.nome    || E.nome    || '',
     apelido: d.apelido || E.apelido || '',
     email:   d.email   || session?.user?.email || '',
@@ -1128,9 +1151,12 @@ async function irFeed(){
     cidade:  d.cidade  || E.cidade || '',
     uf:      d.uf      || E.uf     || '',
     raio:    E.raio,
-    lat:     d.lat     || E.lat,
-    lon:     d.lon     || E.lon
+    lat:     d.lat     || E.lat    || null,
+    lon:     d.lon     || E.lon    || null
   }, { onConflict: 'id' });
+
+  // Limpa dados temporários
+  sessionStorage.removeItem('vc_cadastro');
 
   await carregarPerfil(uid);
   await carregarPosts();
