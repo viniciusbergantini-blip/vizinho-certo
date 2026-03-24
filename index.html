@@ -330,7 +330,7 @@
       </div>
       <div class="ig" id="num-wrap" style="display:none;">
         <label>Número da sua casa</label>
-        <input type="tel" id="inp-num" placeholder="Ex: 142"/>
+        <input type="tel" id="inp-num" placeholder="Ex: 142" onblur="geocodificarComNumero(this.value)"/>
       </div>
       <button class="btnp" id="btn-cadastrar" onclick="irRaio()">Criar conta →</button>
       <div style="text-align:center;margin-top:12px;">
@@ -1062,6 +1062,7 @@ async function buscaCEP(cep){
     addrEl.value=(logr?logr+', ':'')+bairro+(d.localidade?' — '+d.localidade+'/'+d.uf:'');
     if(numWrap) numWrap.style.display='';
     E.rua=logr; E.bairro=bairro||d.localidade; E.cidade=d.localidade; E.uf=d.uf; E.cep=cep;
+    // Geocodifica só com a rua por enquanto — vai atualizar com número quando o usuário digitar
     geocodificar(logr,'',d.localidade,d.uf).then(c=>{if(c){E.lat=c.lat;E.lon=c.lon;}});
   }catch(e){
     addrEl.value='CEP '+cep.slice(0,5)+'-'+cep.slice(5)+' encontrado';
@@ -1069,6 +1070,12 @@ async function buscaCEP(cep){
     E.bairro='Meu bairro'; E.cidade='Minha cidade'; E.uf='BR'; E.cep=cep;
   }
 }
+async function geocodificarComNumero(num){
+  if(!num || !E.rua) return;
+  const c = await geocodificar(E.rua, num, E.cidade, E.uf);
+  if(c){ E.lat=c.lat; E.lon=c.lon; }
+}
+
 async function geocodificar(rua,numero,cidade,uf){
   try{
     const q=encodeURIComponent((rua?rua+(numero?' '+numero:'')+(', '):'')+cidade+', '+uf+', Brasil');
