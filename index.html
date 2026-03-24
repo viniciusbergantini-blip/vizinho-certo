@@ -853,7 +853,7 @@ async function carregarPosts(){
   const { data, error } = await sb
     .from('posts')
     .select('*, comentarios(*)')
-    .order('created_at', { ascending: false })
+    .order('criado_em', { ascending: false })
     .limit(50);
 
   if(error){ console.error(error); E.posts=[]; render(); return; }
