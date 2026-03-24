@@ -583,7 +583,14 @@ window.addEventListener('DOMContentLoaded', async () => {
     E.userId = session.user.id;
     const { data: perfil } = await sb.from('usuarios').select('*').eq('id', session.user.id).single();
 
-    if(!perfil){ irTela('t-raio'); return; }
+    if(!perfil || !perfil.apelido){ 
+      // Perfil vazio ou inexistente — preenche email no form e vai pro cadastro
+      irTela('t-bv');
+      mostrarCadastro();
+      document.getElementById('inp-email').value = session.user.email;
+      toast('Complete seu cadastro para continuar! 👋');
+      return; 
+    }
 
     E.nome    = perfil.apelido || perfil.nome || 'Vizinho';
     E.apelido = perfil.apelido || perfil.nome || 'Vizinho';
@@ -1013,11 +1020,12 @@ async function irFeed(){
   if(!perfil){
     // Novo usuário — salva perfil com raio escolhido agora
     const d = cadastroTemp;
-    await sb.from('usuarios').insert({
+    // Salva/atualiza perfil completo
+    await sb.from('usuarios').upsert({
       id: uid,
       nome: d.nome || E.nome,
       apelido: d.apelido || E.apelido,
-      email: d.email || '',
+      email: d.email || session?.user?.email || '',
       cep: d.cep || E.cep,
       numero: d.numero || '',
       rua: d.rua || E.rua,
@@ -1027,7 +1035,7 @@ async function irFeed(){
       raio: E.raio,
       lat: d.lat || E.lat,
       lon: d.lon || E.lon
-    });
+    }, { onConflict: 'id' });
   } else {
     // Usuário existente — só atualiza o raio
     await sb.from('usuarios').update({ raio: E.raio }).eq('id', uid);
