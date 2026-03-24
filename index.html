@@ -590,49 +590,19 @@ window.addEventListener('DOMContentLoaded', async () => {
   verificarRetornoPagamento();
 
   try {
-    // Trata token de confirmação de email na URL
-    const hash = window.location.hash;
-    if(hash && hash.includes('access_token')){
-      // Supabase vai processar automaticamente, espera um momento
-      await new Promise(r => setTimeout(r, 1500));
-    }
-
     const { data: { session } } = await sb.auth.getSession();
 
-    if(!session || !session.user){
-      irTela('t-bv'); return;
-    }
-
-    if(!session.user.email_confirmed_at){
-      document.getElementById('conf-email').textContent = session.user.email;
-      irTela('t-confirmar'); return;
-    }
+    if(!session || !session.user){ irTela('t-bv'); return; }
 
     E.userId = session.user.id;
     const { data: perfil } = await sb.from('usuarios').select('*').eq('id', session.user.id).single();
 
     if(!perfil || !perfil.apelido){
-      // Perfil vazio — verifica se tem dados no sessionStorage (vindo do link de confirmação)
-      const saved = JSON.parse(sessionStorage.getItem('vc_cadastro')||'{}');
-      if(saved.apelido){
-        // Tem dados salvos — vai direto pra tela de raio
-        E.nome = saved.apelido;
-        E.apelido = saved.apelido;
-        E.bairro = saved.bairro || '';
-        E.cidade = saved.cidade || '';
-        E.uf = saved.uf || '';
-        E.rua = saved.rua || '';
-        E.cep = saved.cep || '';
-        E.lat = saved.lat || null;
-        E.lon = saved.lon || null;
-        irTela('t-raio');
-      } else {
-        // Sem dados — pede pra completar cadastro
-        irTela('t-bv');
-        mostrarCadastro();
-        document.getElementById('inp-email').value = session.user.email;
-        toast('Complete seu cadastro para continuar! 👋');
-      }
+      // Perfil incompleto — vai pro cadastro
+      irTela('t-bv');
+      mostrarCadastro();
+      document.getElementById('inp-email').value = session.user.email;
+      toast('Complete seu cadastro para continuar! 👋');
       return;
     }
 
@@ -687,8 +657,8 @@ function mostrarCadastro(){
   document.getElementById('card-cadastro').style.display='';
 }
 
-// Dados temporários do cadastro — persiste no sessionStorage
-let cadastroTemp = JSON.parse(sessionStorage.getItem('vc_cadastro')||'{}');
+// Dados temporários do cadastro
+let cadastroTemp = {};
 
 async function irRaio(){
   const nome    = document.getElementById('inp-nome').value.trim();
@@ -698,29 +668,32 @@ async function irRaio(){
   const cep     = document.getElementById('inp-cep').value.replace(/[^0-9]/g,'');
   const num     = document.getElementById('inp-num').value.trim();
 
-  if(!nome)           { toast('Digite seu nome completo!'); return; }
-  if(!apelido)        { toast('Digite como quer ser chamado(a)!'); return; }
+  if(!nome)                        { toast('Digite seu nome completo!'); return; }
+  if(!apelido)                     { toast('Digite como quer ser chamado(a)!'); return; }
   if(!email||!email.includes('@')) { toast('Digite um email válido!'); return; }
   if(!senha||senha.length<6)       { toast('Senha deve ter pelo menos 6 caracteres!'); return; }
-  if(cep.length!==8)  { toast('Digite um CEP válido!'); return; }
-  if(!E.bairro)       { toast('Aguarde o CEP ser validado...'); return; }
-  if(!num)            { toast('Digite o número da sua casa!'); return; }
+  if(cep.length!==8)               { toast('Digite um CEP válido!'); return; }
+  if(!E.bairro)                    { toast('Aguarde o CEP ser validado...'); return; }
+  if(!num)                         { toast('Digite o número da sua casa!'); return; }
 
   const btn = document.getElementById('btn-cadastrar');
   btn.disabled = true; btn.textContent = 'Criando conta...';
 
   try {
     const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
-    if (authErr) { toast('Erro: ' + authErr.message); btn.disabled=false; btn.textContent='Criar conta →'; return; }
+    if(authErr){ toast('Erro: ' + authErr.message); btn.disabled=false; btn.textContent='Criar conta →'; return; }
 
-    // Salva dados no sessionStorage pra sobreviver ao reload do link de confirmação
-    cadastroTemp = { uid: authData.user.id, nome, apelido, email, cep, numero: num, rua: E.rua, bairro: E.bairro, cidade: E.cidade, uf: E.uf, lat: E.lat, lon: E.lon };
-    sessionStorage.setItem('vc_cadastro', JSON.stringify(cadastroTemp));
-    E.nome = apelido; E.apelido = apelido;
+    E.userId  = authData.user.id;
+    E.nome    = apelido;
+    E.apelido = apelido;
+    E.bairro  = E.bairro;
+    E.cidade  = E.cidade;
+
+    // Salva dados pro irFeed usar
+    cadastroTemp = { nome, apelido, email, cep, numero: num, rua: E.rua, bairro: E.bairro, cidade: E.cidade, uf: E.uf, lat: E.lat, lon: E.lon };
 
     btn.disabled=false; btn.textContent='Criar conta →';
-    document.getElementById('conf-email').textContent = email;
-    irTela('t-confirmar');
+    irTela('t-raio');
 
   } catch(e) {
     toast('Erro inesperado: ' + e.message);
@@ -1136,8 +1109,7 @@ async function irFeed(){
   if(!uid){ irTela('t-bv'); return; }
   E.userId = uid;
 
-  // Recupera dados do sessionStorage se existir
-  const d = JSON.parse(sessionStorage.getItem('vc_cadastro')||'{}');
+  const d = cadastroTemp;
 
   await sb.from('usuarios').upsert({
     id:      uid,
@@ -1155,7 +1127,7 @@ async function irFeed(){
     lon:     d.lon     || E.lon    || null
   }, { onConflict: 'id' });
 
-  // Limpa dados temporários
+  cadastroTemp = {};
   sessionStorage.removeItem('vc_cadastro');
 
   await carregarPerfil(uid);
