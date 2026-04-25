@@ -708,16 +708,56 @@ async function salvarEndereco(){
 
 async function carregarPosts(){
   document.getElementById('feed').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando feed...</div>';
-  const { data, error } = await sb
-    .from('posts')
-    .select('*, comentarios(*)')
-    .order('criado_em', { ascending: false })
-    .limit(50);
+
+  let query = sb.from('posts').select('*, comentarios(*)').order('criado_em', { ascending: false }).limit(50);
+
+  // Filtra por distância se tiver coordenadas do usuário
+  if(E.lat && E.lon && E.raio){
+    const { data, error } = await sb.rpc('posts_no_raio', {
+      user_lat: E.lat,
+      user_lon: E.lon,
+      raio_metros: E.raio
+    });
+    if(!error && data){
+      // Busca comentários dos posts filtrados
+      const ids = data.map(p => p.id);
+      if(ids.length > 0){
+        const { data: comData } = await sb.from('comentarios').select('*').in('post_id', ids);
+        const comMap = {};
+        (comData||[]).forEach(c => { if(!comMap[c.post_id]) comMap[c.post_id]=[]; comMap[c.post_id].push(c); });
+        E.posts = data.map(p => ({
+          id: p.id,
+          nome: p.apelido_autor || 'Vizinho',
+          dist: formatarDistancia(p.distancia_metros),
+          tipo: p.tipo,
+          txt:  p.texto,
+          ap:   p.apoios || 0,
+          apd:  false,
+          av:   (p.apelido_autor||'V').charAt(0).toUpperCase(),
+          cor:  COR[Math.abs(hashStr(p.id+'')) % COR.length],
+          foto_url: p.foto_url || null,
+          usuario_id: p.usuario_id,
+          coms: (comMap[p.id]||[]).map(c=>({
+            nome: c.apelido_autor||'Vizinho',
+            dist: '0m',
+            txt:  c.texto,
+            av:   (c.apelido_autor||'V').charAt(0).toUpperCase(),
+            cor:  COR[Math.abs(hashStr(c.id+'')) % COR.length]
+          }))
+        }));
+        if(E.posts.length === 0) E.posts = postsBoasVindas();
+        render(); return;
+      }
+    }
+  }
+
+  // Fallback: sem coordenadas, mostra todos
+  const { data, error } = await query;
   if(error){ console.error(error); E.posts=[]; render(); return; }
   E.posts = (data||[]).map(p => ({
     id: p.id,
     nome: p.apelido_autor || 'Vizinho',
-    dist: p.distancia || '0m',
+    dist: '0m',
     tipo: p.tipo,
     txt:  p.texto,
     ap:   p.apoios || 0,
@@ -725,7 +765,7 @@ async function carregarPosts(){
     av:   (p.apelido_autor||'V').charAt(0).toUpperCase(),
     cor:  COR[Math.abs(hashStr(p.id+'')) % COR.length],
     foto_url: p.foto_url || null,
-    usuario_id: p.usuario_id, // ← guarda para checar no render
+    usuario_id: p.usuario_id,
     coms: (p.comentarios||[]).map(c=>({
       nome: c.apelido_autor||'Vizinho',
       dist: '0m',
@@ -734,14 +774,22 @@ async function carregarPosts(){
       cor:  COR[Math.abs(hashStr(c.id+'')) % COR.length]
     }))
   }));
-  if(E.posts.length === 0){
-    E.posts = [
-      {id:'bv1',nome:'Vizinho Certo',dist:'',tipo:'info',txt:'👋 Bem-vindo ao Vizinho Certo! Você é um dos primeiros da sua rua. Faça seu primeiro post e convide seus vizinhos!',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]},
-      {id:'bv2',nome:'Vizinho Certo',dist:'',tipo:'aviso',txt:'📲 Compartilhe o Vizinho Certo com seus vizinhos! Mande o link pelo WhatsApp: vizinhocerto.com.br',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]},
-      {id:'bv3',nome:'Vizinho Certo',dist:'',tipo:'info',txt:'🔒 Sua privacidade é prioridade. Seu endereço exato nunca é mostrado a ninguém.',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]}
-    ];
-  }
+  if(E.posts.length === 0) E.posts = postsBoasVindas();
   render();
+}
+
+function formatarDistancia(metros){
+  if(!metros && metros !== 0) return '0m';
+  if(metros < 1000) return Math.round(metros)+'m';
+  return (metros/1000).toFixed(1)+'km';
+}
+
+function postsBoasVindas(){
+  return [
+    {id:'bv1',nome:'Vizinho Certo',dist:'',tipo:'info',txt:'👋 Bem-vindo ao Vizinho Certo! Você é um dos primeiros da sua rua. Faça seu primeiro post e convide seus vizinhos!',ap:0,apd:false,av:'V',cor:'#2D6A4F',usuario_id:null,coms:[]},
+    {id:'bv2',nome:'Vizinho Certo',dist:'',tipo:'aviso',txt:'📲 Compartilhe o Vizinho Certo com seus vizinhos! Mande o link pelo WhatsApp: vizinhocerto.com.br',ap:0,apd:false,av:'V',cor:'#2D6A4F',usuario_id:null,coms:[]},
+    {id:'bv3',nome:'Vizinho Certo',dist:'',tipo:'info',txt:'🔒 Sua privacidade é prioridade. Seu endereço exato nunca é mostrado a ninguém.',ap:0,apd:false,av:'V',cor:'#2D6A4F',usuario_id:null,coms:[]}
+  ];
 }
 
 function hashStr(s){ let h=0; for(let i=0;i<s.length;i++) h=Math.imul(31,h)+s.charCodeAt(i)|0; return h; }
