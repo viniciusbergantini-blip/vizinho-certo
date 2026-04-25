@@ -529,6 +529,8 @@ const SUPABASE_URL = 'https://xurtdibicsxmouvzfxvb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1cnRkaWJpY3N4bW91dnpmeHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNjcsImV4cCI6MjA4OTg3MTM2N30.WQ36EsY2JHP5G4VvLAfRNv7j4RjArne1sjbRS_tfvUU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+let modoRecuperacaoSenha = false;
+
 const PALAVROES=['idiota','burro','imbecil','merda','fdp','filho da','viado','vadia','puta','vagabundo','cretino','otário','lixo'];
 const COR=['#5E60CE','#E76F51','#2D6A4F','#D4A017','#48CAE4'];
 const E={
@@ -542,13 +544,14 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // Registra ANTES do getSession pra capturar PASSWORD_RECOVERY
   sb.auth.onAuthStateChange(async (event, session) => {
-    if(event === 'SIGNED_OUT'){ irTela('t-bv'); return; }
-    if(event === 'PASSWORD_RECOVERY'){ irTela('t-nova-senha'); return; }
-    // Ignora SIGNED_IN se estiver na tela de nova senha
-    if(event === 'SIGNED_IN'){
-      const telaAtiva = document.querySelector('.tela.ativa');
-      if(telaAtiva && telaAtiva.id === 't-nova-senha') return;
+    if(event === 'SIGNED_OUT'){ modoRecuperacaoSenha=false; irTela('t-bv'); return; }
+    if(event === 'PASSWORD_RECOVERY'){ 
+      modoRecuperacaoSenha = true;
+      irTela('t-nova-senha'); 
+      return; 
     }
+    // Ignora SIGNED_IN se estiver em modo de recuperação
+    if(event === 'SIGNED_IN' && modoRecuperacaoSenha) return;
   });
 
   try {
@@ -556,8 +559,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     if(!session || !session.user){ irTela('t-bv'); return; }
 
     // Se veio de link de reset, não vai pro feed
-    const hash = window.location.hash;
-    if(hash && hash.includes('type=recovery')){ irTela('t-nova-senha'); return; }
+    if(modoRecuperacaoSenha){ irTela('t-nova-senha'); return; }
 
     E.userId = session.user.id;
     const { data: perfil } = await sb.from('usuarios').select('*').eq('id', session.user.id).single();
@@ -618,6 +620,7 @@ async function salvarNovaSenha(){
   const { error } = await sb.auth.updateUser({ password: senha });
   if(error){ toast('Erro: ' + error.message); btn.disabled=false; btn.textContent='Salvar nova senha →'; return; }
   toast('Senha atualizada! ✅');
+  modoRecuperacaoSenha = false;
   btn.disabled=false; btn.textContent='Salvar nova senha →';
   // Vai pro feed
   const { data: { session } } = await sb.auth.getSession();
