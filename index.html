@@ -539,9 +539,21 @@ const E={
 window.addEventListener('DOMContentLoaded', async () => {
   atuRaio(150);
   verificarRetornoPagamento();
+
+  // Registra ANTES do getSession pra capturar PASSWORD_RECOVERY
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if(event === 'SIGNED_OUT'){ irTela('t-bv'); }
+    if(event === 'PASSWORD_RECOVERY'){ irTela('t-nova-senha'); }
+  });
+
   try {
     const { data: { session } } = await sb.auth.getSession();
     if(!session || !session.user){ irTela('t-bv'); return; }
+
+    // Se veio de link de reset, não vai pro feed
+    const hash = window.location.hash;
+    if(hash && hash.includes('type=recovery')){ irTela('t-nova-senha'); return; }
+
     E.userId = session.user.id;
     const { data: perfil } = await sb.from('usuarios').select('*').eq('id', session.user.id).single();
     if(!perfil || !perfil.apelido){
@@ -569,13 +581,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     console.error('Erro no init:', e);
     irTela('t-bv');
   }
-  sb.auth.onAuthStateChange(async (event, session) => {
-    if(event === 'SIGNED_OUT'){ irTela('t-bv'); }
-    if(event === 'PASSWORD_RECOVERY'){
-      // Usuário clicou no link de reset de senha
-      irTela('t-nova-senha');
-    }
-  });
 });
 
 async function reenviarEmail(){
