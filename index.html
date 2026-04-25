@@ -361,6 +361,25 @@
   </div>
 </div>
 
+<!-- TELA NOVA SENHA -->
+<div class="tela" id="t-nova-senha">
+  <div style="background:var(--verde);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;position:relative;overflow:hidden;">
+    <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(82,183,136,0.15);top:-80px;right:-100px;"></div>
+    <div style="position:relative;z-index:1;width:100%;max-width:380px;">
+      <div style="text-align:center;margin-bottom:2rem;">
+        <div style="font-size:64px;margin-bottom:1rem;">🔐</div>
+        <div style="font-family:'Fraunces',serif;font-size:28px;color:var(--creme);margin-bottom:8px;">Nova senha</div>
+        <div style="font-size:14px;color:rgba(254,250,224,0.7);">Digite sua nova senha abaixo.</div>
+      </div>
+      <div class="card">
+        <div class="ig"><label>Nova senha</label><input type="password" id="nova-senha" placeholder="Mínimo 6 caracteres"/></div>
+        <div class="ig"><label>Confirmar senha</label><input type="password" id="conf-senha" placeholder="Repita a senha"/></div>
+        <button class="btnp" id="btn-nova-senha" onclick="salvarNovaSenha()">Salvar nova senha →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="tela" id="t-feed">
   <div class="fh">
     <div><h1>Vizinho Certo</h1><p id="fsub">Carregando...</p></div>
@@ -550,8 +569,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     console.error('Erro no init:', e);
     irTela('t-bv');
   }
-  sb.auth.onAuthStateChange((event) => {
+  sb.auth.onAuthStateChange(async (event, session) => {
     if(event === 'SIGNED_OUT'){ irTela('t-bv'); }
+    if(event === 'PASSWORD_RECOVERY'){
+      // Usuário clicou no link de reset de senha
+      irTela('t-nova-senha');
+    }
   });
 });
 
@@ -573,6 +596,26 @@ async function recuperarSenha(){
   });
   if(error){ toast('Erro: ' + error.message); return; }
   toast('Email de recuperação enviado! Verifique sua caixa. 📬');
+}
+
+async function salvarNovaSenha(){
+  const senha = document.getElementById('nova-senha').value;
+  const conf  = document.getElementById('conf-senha').value;
+  if(!senha || senha.length < 6){ toast('Senha deve ter pelo menos 6 caracteres!'); return; }
+  if(senha !== conf){ toast('As senhas não coincidem!'); return; }
+  const btn = document.getElementById('btn-nova-senha');
+  btn.disabled=true; btn.textContent='Salvando...';
+  const { error } = await sb.auth.updateUser({ password: senha });
+  if(error){ toast('Erro: ' + error.message); btn.disabled=false; btn.textContent='Salvar nova senha →'; return; }
+  toast('Senha atualizada! ✅');
+  btn.disabled=false; btn.textContent='Salvar nova senha →';
+  // Vai pro feed
+  const { data: { session } } = await sb.auth.getSession();
+  if(session){
+    await carregarPerfil(session.user.id);
+    await carregarPosts();
+    irTela('t-feed');
+  }
 }
 
 let cadastroTemp = {};
