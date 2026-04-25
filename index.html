@@ -542,8 +542,13 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   // Registra ANTES do getSession pra capturar PASSWORD_RECOVERY
   sb.auth.onAuthStateChange(async (event, session) => {
-    if(event === 'SIGNED_OUT'){ irTela('t-bv'); }
-    if(event === 'PASSWORD_RECOVERY'){ irTela('t-nova-senha'); }
+    if(event === 'SIGNED_OUT'){ irTela('t-bv'); return; }
+    if(event === 'PASSWORD_RECOVERY'){ irTela('t-nova-senha'); return; }
+    // Ignora SIGNED_IN se estiver na tela de nova senha
+    if(event === 'SIGNED_IN'){
+      const telaAtiva = document.querySelector('.tela.ativa');
+      if(telaAtiva && telaAtiva.id === 't-nova-senha') return;
+    }
   });
 
   try {
