@@ -513,7 +513,7 @@ const PALAVROES=['idiota','burro','imbecil','merda','fdp','filho da','viado','va
 const COR=['#5E60CE','#E76F51','#2D6A4F','#D4A017','#48CAE4'];
 const E={
   userId:null, nome:'', apelido:'', bairro:'', cidade:'', uf:'', rua:'', cep:'', lat:null, lon:null,
-  raio:150, tipo:'problema', filtro:'tudo', abCom:new Set(), abOq:new Set(), posts:[]
+  raio:150, tipo:'problema', filtro:'tudo', abCom:new Set(), abOq:new Set(), posts:[], fotoUrl:null
 };
 
 window.addEventListener('DOMContentLoaded', async () => {
@@ -634,9 +634,40 @@ async function carregarPerfil(uid){
     E.lat     = data.lat;
     E.lon     = data.lon;
     E.raio    = data.raio    || 150;
+    E.fotoUrl = data.foto_url || null;
   }
   document.getElementById('fsub').textContent = `${E.cidade||E.bairro||'Minha cidade'} · ${E.raio}m`;
-  document.getElementById('fav').textContent  = E.nome.charAt(0).toUpperCase();
+  // Atualiza avatar no header com foto se tiver
+  const favEl = document.getElementById('fav');
+  if(E.fotoUrl){
+    favEl.innerHTML = `<img src="${E.fotoUrl}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">`;
+    favEl.style.padding = '0';
+  } else {
+    favEl.textContent = E.nome.charAt(0).toUpperCase();
+    favEl.style.padding = '';
+  }
+}
+
+async function uploadFotoPerfil(input){
+  const file = input.files[0];
+  if(!file) return;
+  if(file.size > 5*1024*1024){ toast('Foto muito grande! Máximo 5MB.'); return; }
+  toast('Enviando foto...');
+  try{
+    const ext = file.name.split('.').pop()||'jpg';
+    const path = `perfis/${E.userId}.${ext}`;
+    const { error } = await sb.storage.from('fotos').upload(path, file, { contentType: file.type, upsert: true });
+    if(error) throw error;
+    const { data } = sb.storage.from('fotos').getPublicUrl(path);
+    const url = data.publicUrl + '?t=' + Date.now();
+    await sb.from('usuarios').update({ foto_url: url }).eq('id', E.userId);
+    E.fotoUrl = url;
+    toast('Foto atualizada! 📸');
+    // Recarrega a aba perfil
+    navTab('perfil', document.querySelector('.nitem:last-child'));
+  } catch(e){
+    toast('Erro ao enviar foto: ' + e.message);
+  }
 }
 
 async function sair(){
@@ -1097,10 +1128,18 @@ function navTab(tab,el){
     carregarVizinhos();
   } else if(tab==='perfil'){
     srvEl.style.display='';
+    const fotoHtml = E.fotoUrl 
+      ? `<img src="${E.fotoUrl}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--verde-claro);cursor:pointer;" onclick="document.getElementById('perfil-foto-input').click()" title="Trocar foto">`
+      : `<div onclick="document.getElementById('perfil-foto-input').click()" style="width:72px;height:72px;border-radius:50%;background:#D8F3DC;display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:32px;color:#2D6A4F;cursor:pointer;border:2px dashed var(--verde-claro);position:relative;" title="Adicionar foto">
+          ${E.nome.charAt(0).toUpperCase()||'?'}
+          <div style="position:absolute;bottom:0;right:0;width:22px;height:22px;background:var(--verde);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;">📷</div>
+        </div>`;
     srvEl.innerHTML=`<div style="padding:2rem 1rem;">
       <div style="text-align:center;margin-bottom:1.5rem;">
-        <div style="width:72px;height:72px;border-radius:50%;background:#D8F3DC;display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:32px;color:#2D6A4F;margin:0 auto 12px;">${E.nome.charAt(0).toUpperCase()||'?'}</div>
-        <div style="font-size:18px;font-weight:500;color:var(--texto);">${E.nome||'—'}</div>
+        <input type="file" id="perfil-foto-input" accept="image/*" style="display:none;" onchange="uploadFotoPerfil(this)">
+        ${fotoHtml}
+        <div style="font-size:11px;color:var(--texto-muted);margin-top:6px;">Toque para ${E.fotoUrl?'trocar':'adicionar'} foto</div>
+        <div style="font-size:18px;font-weight:500;color:var(--texto);margin-top:8px;">${E.nome||'—'}</div>
         <div style="font-size:13px;color:var(--texto-muted);margin-top:4px;">${E.cidade||'—'}</div>
       </div>
       <div style="background:var(--branco);border-radius:12px;border:1px solid var(--borda);overflow:hidden;">
@@ -1153,8 +1192,11 @@ async function carregarVizinhos(){
     const inicial = (v.apelido||'V').charAt(0).toUpperCase();
     const cor = COR[Math.abs(hashStr(v.id+'')) % COR.length];
     const dist = formatarDistancia(v.distancia_metros);
+    const avatarHtml = v.foto_url
+      ? `<img src="${v.foto_url}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+      : `<div style="width:46px;height:46px;border-radius:50%;background:${cor}20;color:${cor};display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:20px;font-weight:600;flex-shrink:0;">${inicial}</div>`;
     return `<div style="background:var(--branco);border-radius:var(--radius);border:1px solid var(--borda);padding:1rem 1.25rem;display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-      <div style="width:46px;height:46px;border-radius:50%;background:${cor}20;color:${cor};display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:20px;font-weight:600;flex-shrink:0;">${inicial}</div>
+      ${avatarHtml}
       <div style="flex:1;">
         <div style="font-size:15px;font-weight:500;color:var(--texto);">${v.apelido||'Vizinho'}</div>
         <div style="font-size:12px;color:var(--texto-muted);margin-top:2px;">${v.bairro||v.cidade||''}</div>
