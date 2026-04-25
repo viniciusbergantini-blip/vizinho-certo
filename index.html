@@ -1093,7 +1093,8 @@ function navTab(tab,el){
     srvEl.style.display=''; renderServicos();
   } else if(tab==='vizinhos'){
     srvEl.style.display='';
-    srvEl.innerHTML='<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;"><div style="font-size:48px;margin-bottom:1rem;">🏘️</div><div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Seus vizinhos aparecem aqui</div><p style="font-size:13px;line-height:1.6;">Quando outras pessoas se cadastrarem no mesmo raio, os perfis aparecem aqui.</p><div style="margin-top:1.5rem;background:var(--verde-bg);border-radius:12px;padding:1rem;font-size:13px;color:#1B4D37;margin-bottom:1rem;">📲 <strong>vizinhocerto.com.br</strong></div><button onclick="compartilharApp()" style="width:100%;padding:14px;background:#2D6A4F;color:white;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><span>📤</span> Compartilhar com vizinhos</button></div>';
+    srvEl.innerHTML='<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Buscando vizinhos...</div>';
+    carregarVizinhos();
   } else if(tab==='perfil'){
     srvEl.style.display='';
     srvEl.innerHTML=`<div style="padding:2rem 1rem;">
@@ -1118,6 +1119,58 @@ function compartilharApp(){
   const texto='Oi! Estou usando o Vizinho Certo — um app pra conectar vizinhos da mesma rua. Entra aí: https://vizinhocerto.com.br';
   if(navigator.share){navigator.share({title:'Vizinho Certo',text:texto,url:'https://vizinhocerto.com.br'});}
   else{navigator.clipboard.writeText('https://vizinhocerto.com.br').then(()=>toast('Link copiado! 📋'));}
+}
+
+async function carregarVizinhos(){
+  const srvEl = document.getElementById('servicos-tab');
+
+  if(!E.lat || !E.lon){
+    srvEl.innerHTML=`<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;">
+      <div style="font-size:48px;margin-bottom:1rem;">📍</div>
+      <div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Endereço não encontrado</div>
+      <p style="font-size:13px;line-height:1.6;">Atualize seu endereço no perfil para ver seus vizinhos.</p>
+    </div>`;
+    return;
+  }
+
+  const { data, error } = await sb.rpc('vizinhos_no_raio', {
+    user_lat: E.lat, user_lon: E.lon,
+    raio_metros: E.raio, user_id: E.userId
+  });
+
+  if(error || !data || data.length === 0){
+    srvEl.innerHTML=`<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;">
+      <div style="font-size:48px;margin-bottom:1rem;">🏘️</div>
+      <div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Nenhum vizinho ainda</div>
+      <p style="font-size:13px;line-height:1.6;">Você é um dos primeiros na sua rua! Compartilhe o app com seus vizinhos.</p>
+      <div style="margin-top:1.5rem;background:var(--verde-bg);border-radius:12px;padding:1rem;font-size:13px;color:#1B4D37;margin-bottom:1rem;">📲 <strong>vizinhocerto.com.br</strong></div>
+      <button onclick="compartilharApp()" style="width:100%;padding:14px;background:#2D6A4F;color:white;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><span>📤</span> Compartilhar com vizinhos</button>
+    </div>`;
+    return;
+  }
+
+  const cards = data.map(v => {
+    const inicial = (v.apelido||'V').charAt(0).toUpperCase();
+    const cor = COR[Math.abs(hashStr(v.id+'')) % COR.length];
+    const dist = formatarDistancia(v.distancia_metros);
+    return `<div style="background:var(--branco);border-radius:var(--radius);border:1px solid var(--borda);padding:1rem 1.25rem;display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+      <div style="width:46px;height:46px;border-radius:50%;background:${cor}20;color:${cor};display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:20px;font-weight:600;flex-shrink:0;">${inicial}</div>
+      <div style="flex:1;">
+        <div style="font-size:15px;font-weight:500;color:var(--texto);">${v.apelido||'Vizinho'}</div>
+        <div style="font-size:12px;color:var(--texto-muted);margin-top:2px;">${v.bairro||v.cidade||''}</div>
+      </div>
+      <div style="font-size:12px;font-weight:500;color:var(--verde);background:var(--verde-bg);padding:4px 10px;border-radius:20px;">a ${dist}</div>
+    </div>`;
+  }).join('');
+
+  srvEl.innerHTML=`<div style="padding:1rem 1rem 5rem;">
+    <div style="background:linear-gradient(135deg,#2D6A4F,#52B788);padding:1.25rem;border-radius:var(--radius);margin-bottom:1rem;">
+      <div style="font-family:Fraunces,serif;font-size:20px;color:white;margin-bottom:4px;">Seus Vizinhos</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.7);">${data.length} vizinho${data.length!==1?'s':''} no raio de ${E.raio}m</div>
+    </div>
+    ${cards}
+    <button onclick="compartilharApp()" style="width:100%;padding:12px;background:var(--branco);color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;margin-top:6px;">📤 Convidar mais vizinhos</button>
+  </div>`;
 }
 
 function renderServicos(){
