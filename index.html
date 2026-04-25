@@ -418,10 +418,10 @@
         <div class="tipo-card" onclick="selTipoAnun('⚡','Eletricista',this)"><div class="tipo-card-icon">⚡</div><div class="tipo-card-label">Eletricista</div></div>
         <div class="tipo-card" onclick="selTipoAnun('🧹','Diarista',this)"><div class="tipo-card-icon">🧹</div><div class="tipo-card-label">Diarista</div></div>
         <div class="tipo-card" onclick="selTipoAnun('🍕','Comércio',this)"><div class="tipo-card-icon">🍕</div><div class="tipo-card-label">Comércio local</div></div>
-        <div class="tipo-card" onclick="selTipoAnun('👶','Cuidadora',this)"><div class="tipo-card-icon">👶</div><div class="tipo-card-label">Cuidadora / Babá</div></div>
-        <div class="tipo-card" onclick="selTipoAnun('🏠','Imobiliária',this)"><div class="tipo-card-icon">🏠</div><div class="tipo-card-label">Imobiliária</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🧵','Costureira',this)"><div class="tipo-card-icon">🧵</div><div class="tipo-card-label">Costureira</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🌿','Jardineiro',this)"><div class="tipo-card-icon">🌿</div><div class="tipo-card-label">Jardineiro</div></div>
         <div class="tipo-card" onclick="selTipoAnun('🏗️','Pedreiro',this)"><div class="tipo-card-icon">🏗️</div><div class="tipo-card-label">Pedreiro / Pintor</div></div>
-        <div class="tipo-card" onclick="selTipoAnun('✂️','Outro',this)"><div class="tipo-card-icon">✂️</div><div class="tipo-card-label">Outro serviço</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🔨','Marido de Aluguel',this)"><div class="tipo-card-icon">🔨</div><div class="tipo-card-label">Marido de Aluguel</div></div>
       </div>
       <div class="anun-nav"><button class="anun-back" onclick="fecharAnun()">Cancelar</button><button class="anun-next" id="anun-n1" onclick="anunStep(2)" disabled>Continuar →</button></div>
     </div>
@@ -850,6 +850,11 @@ async function carregarPosts(){
             cor:  COR[Math.abs(hashStr(c.id+'')) % COR.length]
           }))
         }));
+        // Carrega fotos de perfil dos autores
+        await carregarFotosPerfil(data.map(p=>p.usuario_id));
+        // Restaura apoios do localStorage
+        const apoiosLocais = getApoiosLocais();
+        E.posts.forEach(p => { if(apoiosLocais.includes(p.id)) p.apd = true; });
         if(E.posts.length === 0) E.posts = postsBoasVindas();
         render(); return;
       }
@@ -897,7 +902,21 @@ function postsBoasVindas(){
   ];
 }
 
+async function carregarFotosPerfil(userIds){
+  const ids = [...new Set(userIds.filter(Boolean))];
+  if(!ids.length) return;
+  const { data } = await sb.from('usuarios').select('id, foto_url').in('id', ids);
+  (data||[]).forEach(u => { if(u.foto_url) fotoPerfilCache[u.id] = u.foto_url; });
+  // Inclui a foto do próprio usuário
+  if(E.userId && E.fotoUrl) fotoPerfilCache[E.userId] = E.fotoUrl;
+}
+
 function hashStr(s){ let h=0; for(let i=0;i<s.length;i++) h=Math.imul(31,h)+s.charCodeAt(i)|0; return h; }
+
+// Apoios persistidos no localStorage
+function getApoiosLocais(){ try{ return JSON.parse(localStorage.getItem('vc_apoios')||'[]'); } catch(e){ return []; } }
+function salvarApoioLocal(id){ const a=getApoiosLocais(); if(!a.includes(id)){ a.push(id); localStorage.setItem('vc_apoios', JSON.stringify(a)); } }
+function removerApoioLocal(id){ const a=getApoiosLocais().filter(x=>x!==id); localStorage.setItem('vc_apoios', JSON.stringify(a)); }
 
 async function postar(){
   const txt = document.getElementById('ptxt').value.trim();
@@ -942,6 +961,7 @@ async function postar(){
 async function apoiar(id){
   const p = E.posts.find(x=>x.id===id); if(!p) return;
   p.apd = !p.apd; p.ap += p.apd ? 1 : -1;
+  if(p.apd) salvarApoioLocal(id); else removerApoioLocal(id);
   if(typeof id === 'string' && id.startsWith('bv')) { render(); return; }
   await sb.from('posts').update({ apoios: p.ap }).eq('id', id);
   render();
@@ -974,15 +994,51 @@ async function envCom(id){
 // ============================================================
 const TL={problema:'🚧 Problema',aviso:'⚠️ Aviso',ajuda:'🤝 Ajuda',info:'💬 Info'};
 const TC={problema:'t-pr',aviso:'t-av',ajuda:'t-aj',info:'t-in'};
+const fotoPerfilCache = {};
+
 const OQ={
-  calcada:{titulo:'Calçada danificada',acoes:[{i:'📞',t:'<strong>156 — Central da Prefeitura:</strong> Ligue e registre com o endereço exato.',tel:'156'},{i:'📱',t:'<strong>App 156 ou e-Cidadão:</strong> Registre com foto para ter comprovante digital.'},{i:'✊',t:'<strong>Abaixo-assinado:</strong> Quanto mais vizinhos apoiarem, maior o peso.'}]},
-  buraco:{titulo:'Buraco na rua / asfalto',acoes:[{i:'📞',t:'<strong>156 — Secretaria de Obras:</strong> Informe rua, número e tamanho aproximado.',tel:'156'},{i:'📷',t:'<strong>Documente com foto:</strong> Tire fotos com data e hora ativados antes de ligar.'},{i:'⚠️',t:'<strong>Se for perigoso:</strong> Sinalize o buraco enquanto aguarda o conserto.'}]},
-  iluminacao:{titulo:'Iluminação pública',acoes:[{i:'📞',t:'<strong>0800 722 9900 — COPEL:</strong> Número gratuito para reportar poste apagado.',tel:'08007229900'},{i:'📍',t:'<strong>Anote o número do poste:</strong> Está na placa metálica.'},{i:'⏱️',t:'<strong>Prazo legal:</strong> A concessionária tem 48h para resolver.'}]},
-  lixo:{titulo:'Lixo / entulho irregular',acoes:[{i:'📞',t:'<strong>156 — Limpeza Urbana:</strong> Denuncie descarte irregular.',tel:'156'},{i:'📸',t:'<strong>Tire foto como prova.</strong>'},{i:'♻️',t:'<strong>Entulho de obra:</strong> É responsabilidade do dono da obra.'}]},
-  agua:{titulo:'Problema de água / esgoto',acoes:[{i:'📞',t:'<strong>0800 722 0195 — SANEPAR:</strong> Falta de água, vazamento ou esgoto.',tel:'08007220195'},{i:'⏱️',t:'<strong>Vazamento na rua:</strong> Prioridade máxima — ligue imediatamente.'},{i:'📋',t:'<strong>Guarde o protocolo</strong> para acionar a agência reguladora se necessário.'}]},
-  seguranca:{titulo:'Segurança / suspeita',acoes:[{i:'📞',t:'<strong>190 — Polícia Militar:</strong> Situações em andamento.',tel:'190'},{i:'📞',t:'<strong>153 — Guarda Municipal:</strong> Ocorrências de menor urgência.',tel:'153'},{i:'🚫',t:'<strong>Não confronte:</strong> Registre descrição e placa se possível.'}]},
-  default:{titulo:'Como resolver',acoes:[{i:'📞',t:'<strong>156 — Central da Prefeitura de Maringá:</strong> Canal geral para problemas urbanos.',tel:'156'},{i:'🤖',t:'<strong>Gere o pedido formal:</strong> Use o botão abaixo para criar um ofício.'},{i:'✊',t:'<strong>Coletivize:</strong> Mais apoios = mais pressão.'}]}
+  calcada:{titulo:'Calçada danificada',acoes:[
+    {i:'📞',t:'<strong>Ligue para a prefeitura da sua cidade</strong> e registre com o endereço exato.',google:'prefeitura telefone ouvidoria obras'},
+    {i:'📱',t:'<strong>App 156 ou e-Cidadão:</strong> Registre com foto para ter comprovante digital.'},
+    {i:'✊',t:'<strong>Abaixo-assinado:</strong> Quanto mais vizinhos apoiarem, maior o peso.'}
+  ]},
+  buraco:{titulo:'Buraco na rua / asfalto',acoes:[
+    {i:'📞',t:'<strong>Ligue para a prefeitura</strong> — Secretaria de Obras. Informe rua e tamanho do buraco.',google:'prefeitura secretaria obras telefone'},
+    {i:'📷',t:'<strong>Documente com foto</strong> com data e hora ativados antes de ligar.'},
+    {i:'⚠️',t:'<strong>Se for perigoso:</strong> Sinalize o buraco enquanto aguarda o conserto.'}
+  ]},
+  iluminacao:{titulo:'Iluminação pública',acoes:[
+    {i:'📞',t:'<strong>Ligue para a concessionária de energia</strong> da sua cidade para reportar poste apagado.',google:'concessionaria energia eletrica telefone'},
+    {i:'📍',t:'<strong>Anote o número do poste:</strong> Está na placa metálica. Facilita muito o atendimento.'},
+    {i:'⏱️',t:'<strong>Prazo legal:</strong> A concessionária tem 48h para resolver após o registro.'}
+  ]},
+  lixo:{titulo:'Lixo / entulho irregular',acoes:[
+    {i:'📞',t:'<strong>Ligue para a prefeitura</strong> — Limpeza Urbana. Denuncie descarte irregular.',google:'prefeitura limpeza urbana telefone'},
+    {i:'📸',t:'<strong>Tire foto como prova</strong> antes de ligar.'},
+    {i:'♻️',t:'<strong>Entulho de obra:</strong> É responsabilidade do dono da obra — a prefeitura pode autuar.'}
+  ]},
+  agua:{titulo:'Problema de água / esgoto',acoes:[
+    {i:'📞',t:'<strong>Ligue para a companhia de saneamento</strong> da sua cidade.',google:'saneamento basico agua esgoto telefone'},
+    {i:'⏱️',t:'<strong>Vazamento na rua:</strong> Prioridade máxima — ligue imediatamente.'},
+    {i:'📋',t:'<strong>Guarde o protocolo</strong> para acionar a agência reguladora se necessário.'}
+  ]},
+  barulho:{titulo:'Barulho / perturbação do sossego',acoes:[
+    {i:'📞',t:'<strong>190 — Polícia Militar:</strong> Para perturbações graves ou som alto após meia-noite.',tel:'190'},
+    {i:'📞',t:'<strong>153 — Guarda Municipal:</strong> Para reclamações de barulho e perturbação do sossego.',tel:'153'},
+    {i:'🤝',t:'<strong>Tente conversar primeiro</strong> com o vizinho de forma respeitosa — muitas vezes resolve sem conflito.'}
+  ]},
+  seguranca:{titulo:'Segurança / suspeita',acoes:[
+    {i:'📞',t:'<strong>190 — Polícia Militar:</strong> Situações em andamento ou ameaças imediatas.',tel:'190'},
+    {i:'📞',t:'<strong>153 — Guarda Municipal:</strong> Ocorrências de menor urgência no bairro.',tel:'153'},
+    {i:'🚫',t:'<strong>Não confronte:</strong> Registre descrição e placa se possível.'}
+  ]},
+  default:{titulo:'Como resolver',acoes:[
+    {i:'📞',t:'<strong>Ligue para a prefeitura da sua cidade</strong> — canal geral para problemas urbanos.',google:'prefeitura telefone ouvidoria'},
+    {i:'🤖',t:'<strong>Gere o pedido formal:</strong> Use o botão abaixo para criar um ofício.'},
+    {i:'✊',t:'<strong>Coletivize:</strong> Mais apoios = mais pressão.'}
+  ]}
 };
+
 function detectOq(txt){
   const t=txt.toLowerCase();
   if(/cal[çc]ada|passeio/.test(t)) return 'calcada';
@@ -990,10 +1046,16 @@ function detectOq(txt){
   if(/luz|poste|ilumina|escuro|apagad/.test(t)) return 'iluminacao';
   if(/lixo|entulho|sujeira/.test(t)) return 'lixo';
   if(/[áa]gua|vazamento|esgoto/.test(t)) return 'agua';
+  if(/barulho|som alto|festa|pertuba|sossego|vizinho bar/.test(t)) return 'barulho';
   if(/assalto|roubo|suspeito|ladr|segur/.test(t)) return 'seguranca';
   return 'default';
 }
 function temPalavrão(t){return PALAVROES.some(p=>t.toLowerCase().includes(p));}
+
+function buscarNoGoogle(termo){
+  const cidade = encodeURIComponent((E.cidade||'') + ' ' + termo);
+  window.open('https://www.google.com/search?q='+cidade, '_blank');
+}
 
 function render(){
   const lista = document.getElementById('feed');
@@ -1003,11 +1065,14 @@ function render(){
     const cA = E.abCom.has(p.id), oA = E.abOq.has(p.id);
     const db = p.tipo==='problema' ? OQ[detectOq(p.txt)] : null;
     const coms = p.coms.map(c=>`<div class="com"><div class="cav" style="background:${c.cor}20;color:${c.cor}">${c.av}</div><div><span class="cnome">${c.nome}</span> <span class="cdist">· ${c.dist}</span><div class="ctxt">${c.txt}</div></div></div>`).join('');
-    // ← CORREÇÃO: meu calculado dinamicamente com E.userId atual
     const eMeu = p.usuario_id === E.userId;
+    const fotoAutor = fotoPerfilCache[p.usuario_id];
+    const avatarHtml = fotoAutor
+      ? `<img src="${fotoAutor}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+      : `<div class="pav" style="background:${p.cor}20;color:${p.cor}">${p.av}</div>`;
     return `<div class="pc" id="pc${p.id}">
       <div class="pm">
-        <div class="ph"><div class="pav" style="background:${p.cor}20;color:${p.cor}">${p.av}</div><div><div class="pnome">${p.nome}</div><div class="pdist">${p.dist ? 'a '+p.dist+' de você' : ''}</div></div><span class="ptag ${TC[p.tipo]}">${TL[p.tipo]}</span></div>
+        <div class="ph">${avatarHtml}<div><div class="pnome">${p.nome}</div><div class="pdist">${p.dist ? 'a '+p.dist+' de você' : ''}</div></div><span class="ptag ${TC[p.tipo]}">${TL[p.tipo]}</span></div>
         <div class="ptxt">${p.txt}</div>
         ${p.foto_url ? `<img class="post-foto" src="${p.foto_url}" alt="Foto do post" loading="lazy" onclick="verFoto('${p.foto_url}')">` : ''}
         <div class="pac">
@@ -1019,7 +1084,10 @@ function render(){
       </div>
       ${db?`<div class="oqf ${oA?'vis':''}" id="oq${p.id}">
         <div class="oqlbl">💡 O que fazer — ${db.titulo}</div>
-        ${db.acoes.map(a=>`<div class="oqi"><div class="oqic">${a.i}</div><div class="oqtx">${a.t}${a.tel?`<br><button class="btntel" onclick="ligar('${a.tel}')">📞 Ligar agora</button>`:''}</div></div>`).join('')}
+        ${db.acoes.map(a=>`<div class="oqi"><div class="oqic">${a.i}</div><div class="oqtx">${a.t}
+          ${a.tel?`<br><button class="btntel" onclick="ligar('${a.tel}')">📞 Ligar agora</button>`:''}
+          ${a.google?`<br><button class="btntel" style="background:var(--laranja);" onclick="buscarNoGoogle('${a.google}')">🔍 Buscar contato da minha cidade</button>`:''}
+        </div></div>`).join('')}
         <div style="margin-top:10px;"><button class="bia" style="border-color:var(--verde-claro);color:var(--verde);" onclick="abrirIA('${p.id}')">🤖 Gerar pedido formal</button></div>
       </div>`:''}
       <div class="carea">${cA?`<div class="clista">${coms||'<div style="padding:12px;font-size:13px;color:var(--texto-muted);">Seja o primeiro a comentar!</div>'}</div><div class="cform"><textarea class="cinput" id="ci${p.id}" placeholder="Comente com respeito..." rows="1"></textarea><button class="cenv" onclick="envCom('${p.id}')">Enviar</button></div>`:''}</div>
@@ -1182,7 +1250,7 @@ function copiarIA(){navigator.clipboard.writeText(document.getElementById('iatx'
 
 const SERVICOS=[];
 let catAtiva='todos';
-const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Cuidadora','Imobiliária'];
+const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Costureira','Jardineiro','Pedreiro','Marido de Aluguel'];
 
 function navTab(tab,el){
   document.querySelectorAll('.nitem').forEach(n=>n.classList.remove('at'));
