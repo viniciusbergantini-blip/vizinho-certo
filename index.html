@@ -580,8 +580,15 @@ window.addEventListener('DOMContentLoaded', async () => {
     E.lat     = perfil.lat;
     E.lon     = perfil.lon;
     E.raio    = perfil.raio    || 150;
+    E.fotoUrl = perfil.foto_url || null;
     document.getElementById('fsub').textContent = `${E.cidade||E.bairro||'Minha cidade'} · ${E.raio}m`;
-    document.getElementById('fav').textContent  = E.nome.charAt(0).toUpperCase();
+    const favEl = document.getElementById('fav');
+    if(E.fotoUrl){
+      favEl.innerHTML = `<img src="${E.fotoUrl}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">`;
+      favEl.style.padding = '0';
+    } else {
+      favEl.textContent = E.nome.charAt(0).toUpperCase();
+    }
     await carregarPosts();
     irTela('t-feed');
   } catch(e) {
