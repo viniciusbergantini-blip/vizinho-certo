@@ -26,16 +26,12 @@
   body{font-family:'DM Sans',sans-serif;background:var(--creme);color:var(--texto);min-height:100vh;padding-bottom:65px;}
   .tela{display:none;min-height:100vh;padding-bottom:65px;}
   .tela.ativa{display:flex;flex-direction:column;}
-
-  /* LOADING */
   #t-loading{background:var(--verde);align-items:center;justify-content:center;}
   .loading-logo{font-family:'Fraunces',serif;font-size:44px;color:var(--creme);text-align:center;}
   .loading-logo span{color:var(--verde-claro);}
   .loading-dots{display:flex;gap:8px;justify-content:center;margin-top:24px;}
   .ld{width:10px;height:10px;border-radius:50%;background:var(--verde-claro);animation:pp 1.2s infinite;}
   .ld:nth-child(2){animation-delay:.2s}.ld:nth-child(3){animation-delay:.4s}
-
-  /* BOAS VINDAS */
   #t-bv{background:var(--verde);align-items:center;justify-content:center;padding:2rem;text-align:center;position:relative;overflow:hidden;}
   #t-bv::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:rgba(82,183,136,0.15);top:-100px;right:-150px;}
   #t-bv::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(231,111,81,0.12);bottom:-50px;left:-80px;}
@@ -54,8 +50,6 @@
   .btnp:hover{background:#1B4D37;}
   .btnp:disabled{background:#aaa;cursor:not-allowed;}
   .disclaimer{font-size:11px;color:rgba(254,250,224,0.45);margin-top:16px;}
-
-  /* RAIO */
   #t-raio{background:var(--creme);}
   .rh{background:var(--verde);padding:2rem 1.5rem 3rem;position:relative;overflow:hidden;}
   .rh::after{content:'';position:absolute;bottom:-20px;left:0;right:0;height:40px;background:var(--creme);border-radius:40px 40px 0 0;}
@@ -80,8 +74,6 @@
   .ro{display:flex;gap:8px;flex-wrap:wrap;}
   .rc3{padding:6px 14px;border-radius:20px;border:1.5px solid var(--borda);background:var(--branco);font-size:13px;font-weight:500;color:var(--texto-muted);cursor:pointer;transition:all .15s;}
   .rc3.ativo{background:var(--verde);color:var(--creme);border-color:var(--verde);}
-
-  /* FEED */
   #t-feed{background:var(--creme);}
   .fh{background:var(--verde);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
   .fh h1{font-family:'Fraunces',serif;font-size:20px;color:var(--creme);}
@@ -92,8 +84,6 @@
   .ftab{padding:12px 16px;font-size:13px;font-weight:500;color:var(--texto-muted);white-space:nowrap;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
   .ftab.ativo{color:var(--verde);border-bottom-color:var(--verde);}
   .fb{padding:1rem 1rem 5rem;flex:1;}
-
-  /* POST */
   .pc{background:var(--branco);border-radius:var(--radius);border:1px solid var(--borda);margin-bottom:12px;animation:fu .3s ease;overflow:hidden;}
   @keyframes fu{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
   .pm{padding:1rem 1.25rem;}
@@ -136,8 +126,6 @@
   .cinput{flex:1;padding:8px 12px;border:1.5px solid var(--borda);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--texto);background:var(--branco);outline:none;resize:none;}
   .cinput:focus{border-color:var(--verde-claro);}
   .cenv{padding:8px 14px;background:var(--verde);color:var(--creme);border:none;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;}
-
-  /* MODAIS */
   .moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:flex-end;justify-content:center;}
   .moverlay.ab{display:flex;}
   .msheet{background:var(--creme);border-radius:24px 24px 0 0;padding:1.5rem;width:100%;max-width:480px;animation:su .3s ease;}
@@ -152,8 +140,6 @@
   .mac{display:flex;gap:10px;}
   .bcanc{flex:1;padding:12px;border:1.5px solid var(--borda);border-radius:var(--radius-sm);background:transparent;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--texto-muted);cursor:pointer;}
   .bpost{flex:2;padding:12px;background:var(--verde);color:var(--creme);border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;}
-
-  /* IA MODAL */
   .iam{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center;padding:1.5rem;}
   .iam.ab{display:flex;}
   .iac{background:var(--creme);border-radius:var(--radius);padding:1.5rem;width:100%;max-width:400px;animation:fu .3s ease;}
@@ -167,8 +153,6 @@
   .iaa{display:flex;gap:8px;}
   .bcop{flex:1;padding:10px;background:var(--verde);color:var(--creme);border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;}
   .bfch{padding:10px 16px;border:1.5px solid var(--borda);border-radius:var(--radius-sm);background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--texto-muted);cursor:pointer;}
-
-  /* FAB + NAV */
   .fab{position:fixed;bottom:74px;right:24px;width:56px;height:56px;border-radius:50%;background:var(--laranja);color:white;border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(231,111,81,.4);display:flex;align-items:center;justify-content:center;transition:transform .2s;z-index:100;}
   .fab:hover{transform:scale(1.08);}
   .bnav{background:var(--branco);border-top:1px solid var(--borda);display:flex;position:fixed;bottom:0;left:0;right:0;z-index:150;}
@@ -177,8 +161,6 @@
   .nitem svg{width:22px;height:22px;}
   .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--texto);color:var(--creme);padding:10px 20px;border-radius:20px;font-size:13px;opacity:0;transition:all .3s;z-index:500;white-space:nowrap;}
   .toast.vis{opacity:1;transform:translateX(-50%) translateY(0);}
-
-  /* SERVIÇOS */
   .srv-header{background:linear-gradient(135deg,#2D6A4F,#52B788);padding:1.25rem;margin-bottom:1rem;border-radius:var(--radius);}
   .srv-header h2{font-family:"Fraunces",serif;font-size:20px;color:white;margin-bottom:4px;}
   .srv-header p{font-size:12px;color:rgba(255,255,255,.7);}
@@ -207,8 +189,6 @@
   .srv-anunciar p{font-size:13px;color:var(--texto-muted);margin-bottom:10px;line-height:1.5;}
   .srv-anunciar strong{color:var(--texto);font-weight:500;}
   .srv-btn-anunciar{padding:10px 20px;background:#2D6A4F;color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
-
-  /* ANUNCIANTE */
   .anun-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:flex-end;justify-content:center;}
   .anun-overlay.ab{display:flex;}
   .anun-sheet{background:var(--creme);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;animation:su .3s ease;}
@@ -258,8 +238,6 @@
   .anun-next{flex:2;padding:12px;background:#2D6A4F;color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .2s;}
   .anun-next:hover{background:#1B4D37;}
   .anun-next:disabled{background:var(--borda);cursor:not-allowed;}
-
-  /* PÂNICO */
   .panico-fab{position:fixed;bottom:74px;left:16px;width:52px;height:52px;border-radius:50%;background:#C0392B;color:white;border:3px solid #922B21;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(192,57,43,.5);display:none;align-items:center;justify-content:center;z-index:100;animation:panicoIdle 2.5s infinite;}
   .panico-fab.visivel{display:flex;}
   @keyframes panicoIdle{0%,100%{box-shadow:0 4px 16px rgba(192,57,43,.5)}50%{box-shadow:0 4px 24px rgba(192,57,43,.8)}}
@@ -285,8 +263,6 @@
   .panico-fechar{width:100%;padding:12px;background:transparent;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:1rem;}
   .alerta-confirmacao{background:rgba(82,183,136,.15);border:1px solid rgba(82,183,136,.3);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:#52B788;text-align:center;margin-bottom:1rem;display:none;}
   .alerta-confirmacao.vis{display:block;}
-
-  /* FOTO UPLOAD */
   .foto-area{margin-bottom:12px;}
   .foto-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;border:2px dashed var(--borda);border-radius:var(--radius-sm);background:var(--branco);color:var(--texto-muted);font-size:13px;font-weight:500;cursor:pointer;width:100%;transition:all .2s;font-family:'DM Sans',sans-serif;}
   .foto-btn:hover{border-color:var(--verde-claro);color:var(--verde);background:#F0FBF4;}
@@ -294,9 +270,7 @@
   .foto-preview img{width:100%;max-height:220px;object-fit:cover;display:block;border-radius:var(--radius-sm);}
   .foto-remove{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.6);color:white;border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
   .foto-loading{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--verde);padding:8px 0;}
-  /* FOTO NO FEED */
   .post-foto{width:100%;max-height:280px;object-fit:cover;display:block;border-top:1px solid var(--borda);}
-
   html,body{height:100%;overflow-x:hidden;}
   @media(max-width:479px){.tela{width:100%;min-height:100vh;}.bv-inner{padding:0 1rem;}.card{border-radius:var(--radius);margin:0;}input,textarea,select{font-size:16px!important;}}
   @media(min-width:480px){.tela{max-width:420px;margin:0 auto}body{background:#E8E0CC}.fab{right:calc(50% - 210px + 24px)}.panico-fab{left:calc(50% - 210px + 16px)!important;right:auto!important}}
@@ -304,18 +278,15 @@
 </head>
 <body>
 
-<!-- TELA LOADING -->
 <div class="tela ativa" id="t-loading">
   <div class="loading-logo">Vizinho<br><span>Certo</span></div>
   <div class="loading-dots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
 </div>
 
-<!-- TELA CADASTRO/LOGIN -->
 <div class="tela" id="t-bv">
   <div class="bv-inner">
     <div class="logo">Vizinho<br><span>Certo</span></div>
     <div class="tagline">Sua rua. Seus vizinhos. Do seu jeito.</div>
-
     <div class="card" id="card-cadastro">
       <h2>Criar conta</h2>
       <p>Crie sua conta gratuita para se conectar com seus vizinhos.</p>
@@ -324,33 +295,19 @@
       <div class="ig"><label>E-mail</label><input type="email" id="inp-email" placeholder="Ex: maria@email.com"/></div>
       <div class="ig"><label>Senha</label><input type="password" id="inp-senha" placeholder="Mínimo 6 caracteres"/></div>
       <div class="ig"><label>CEP</label><input type="tel" id="inp-cep" placeholder="Ex: 87010-000" maxlength="9" oninput="formataCEP(this)"/></div>
-      <div class="ig" id="cep-resultado" style="display:none;">
-        <label>Rua encontrada</label>
-        <input type="text" id="inp-cep-addr" readonly style="background:#F0FBF4;color:#2D6A4F;font-weight:500;"/>
-      </div>
-      <div class="ig" id="num-wrap" style="display:none;">
-        <label>Número da sua casa</label>
-        <input type="text" id="inp-num" placeholder="Ex: 142 ou 332B" onblur="geocodificarComNumero(this.value)"/>
-      </div>
+      <div class="ig" id="cep-resultado" style="display:none;"><label>Rua encontrada</label><input type="text" id="inp-cep-addr" readonly style="background:#F0FBF4;color:#2D6A4F;font-weight:500;"/></div>
+      <div class="ig" id="num-wrap" style="display:none;"><label>Número da sua casa</label><input type="text" id="inp-num" placeholder="Ex: 142 ou 332B" onblur="geocodificarComNumero(this.value)"/></div>
       <button class="btnp" id="btn-cadastrar" onclick="irRaio()">Criar conta →</button>
-      <div style="text-align:center;margin-top:12px;">
-        <span style="font-size:13px;color:var(--texto-muted);">Já tem conta? </span>
-        <span style="font-size:13px;color:#2D6A4F;font-weight:500;cursor:pointer;" onclick="mostrarLogin()">Entrar</span>
-      </div>
+      <div style="text-align:center;margin-top:12px;"><span style="font-size:13px;color:var(--texto-muted);">Já tem conta? </span><span style="font-size:13px;color:#2D6A4F;font-weight:500;cursor:pointer;" onclick="mostrarLogin()">Entrar</span></div>
     </div>
-
     <div class="card" id="card-login" style="display:none;">
       <h2>Entrar</h2>
       <p>Bem-vindo de volta!</p>
       <div class="ig"><label>E-mail</label><input type="email" id="login-email" placeholder="seu@email.com"/></div>
       <div class="ig"><label>Senha</label><input type="password" id="login-senha" placeholder="Sua senha"/></div>
       <button class="btnp" id="btn-login" onclick="fazerLogin()">Entrar →</button>
-      <div style="text-align:center;margin-top:12px;">
-        <span style="font-size:13px;color:var(--texto-muted);">Não tem conta? </span>
-        <span style="font-size:13px;color:#2D6A4F;font-weight:500;cursor:pointer;" onclick="mostrarCadastro()">Criar conta</span>
-      </div>
+      <div style="text-align:center;margin-top:12px;"><span style="font-size:13px;color:var(--texto-muted);">Não tem conta? </span><span style="font-size:13px;color:#2D6A4F;font-weight:500;cursor:pointer;" onclick="mostrarCadastro()">Criar conta</span></div>
     </div>
-
     <div class="disclaimer" style="background:rgba(82,183,136,0.15);border:1px solid rgba(82,183,136,0.3);border-radius:10px;padding:10px 14px;margin-top:16px;position:relative;z-index:1;display:flex;align-items:center;gap:8px;max-width:380px;">
       <span style="font-size:18px;">🔒</span>
       <span style="font-size:13px;color:rgba(254,250,224,0.9);line-height:1.5;"><strong style="color:white;">Seu endereço exato nunca é mostrado</strong> a outros usuários. Só calculamos a distância entre vizinhos.</span>
@@ -358,7 +315,6 @@
   </div>
 </div>
 
-<!-- TELA RAIO -->
 <div class="tela" id="t-raio">
   <div class="rh"><h2>Defina seu raio</h2><p>Quanto de vizinhança você quer acompanhar?</p></div>
   <div class="rb">
@@ -388,14 +344,13 @@
   </div>
 </div>
 
-<!-- TELA CONFIRMAR EMAIL -->
 <div class="tela" id="t-confirmar">
   <div style="background:var(--verde);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;position:relative;overflow:hidden;">
     <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(82,183,136,0.15);top:-80px;right:-100px;"></div>
     <div style="position:relative;z-index:1;width:100%;max-width:380px;text-align:center;">
       <div style="font-size:64px;margin-bottom:1.5rem;">📬</div>
       <div style="font-family:'Fraunces',serif;font-size:28px;color:var(--creme);margin-bottom:12px;">Confirme seu email</div>
-      <div style="font-size:15px;color:rgba(254,250,224,0.75);line-height:1.6;margin-bottom:2rem;">Enviamos um link de confirmação para <strong id="conf-email" style="color:var(--creme);">seu email</strong>.<br><br>Clique no link para ativar sua conta e entrar na vizinhança.</div>
+      <div style="font-size:15px;color:rgba(254,250,224,0.75);line-height:1.6;margin-bottom:2rem;">Enviamos um link de confirmação para <strong id="conf-email" style="color:var(--creme);">seu email</strong>.</div>
       <div style="background:rgba(255,255,255,0.1);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.5rem;">
         <div style="font-size:13px;color:rgba(254,250,224,0.6);margin-bottom:8px;">Não recebeu o email?</div>
         <button onclick="reenviarEmail()" style="background:transparent;border:1.5px solid rgba(254,250,224,0.4);color:var(--creme);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">Reenviar email →</button>
@@ -405,7 +360,6 @@
   </div>
 </div>
 
-<!-- TELA FEED -->
 <div class="tela" id="t-feed">
   <div class="fh">
     <div><h1>Vizinho Certo</h1><p id="fsub">Carregando...</p></div>
@@ -429,7 +383,6 @@
   <button class="panico-fab visivel" id="panico-fab" onclick="abrirPanico()" title="Emergência">🆘</button>
 </div>
 
-<!-- MODAL ANUNCIANTE -->
 <div class="anun-overlay" id="manun">
   <div class="anun-sheet">
     <div style="padding:1rem 1.5rem 0;"><div class="anun-handle"></div>
@@ -485,7 +438,6 @@
   </div>
 </div>
 
-<!-- MODAL PÂNICO -->
 <div class="panico-overlay" id="mpanico">
   <div class="panico-sheet">
     <div class="panico-topo"><div class="panico-icone">🆘</div><div><div class="panico-titulo">Emergência</div><div class="panico-sub">Alertar vizinhos e acionar ajuda</div></div></div>
@@ -502,7 +454,6 @@
   </div>
 </div>
 
-<!-- MODAL POST -->
 <div class="moverlay" id="mpost">
   <div class="msheet">
     <div class="mhandle"></div>
@@ -532,7 +483,6 @@
   </div>
 </div>
 
-<!-- MODAL IA -->
 <div class="iam" id="mia">
   <div class="iac">
     <div class="iah"><div style="font-size:24px;">🤖</div><div class="iatit" id="iatit">Gerando pedido...</div></div>
@@ -541,40 +491,24 @@
   </div>
 </div>
 
-<!-- MODAL ALTERAR ENDEREÇO -->
 <div class="moverlay" id="m-endereco">
   <div class="msheet">
     <div class="mhandle"></div>
     <div class="mtitle">📍 Alterar endereço</div>
     <div class="ig"><label>CEP</label><input type="tel" id="end-cep" placeholder="Ex: 87010-000" maxlength="9" oninput="formataCEPEnd(this)"/></div>
-    <div class="ig" id="end-cep-resultado" style="display:none;">
-      <label>Rua encontrada</label>
-      <input type="text" id="end-cep-addr" readonly style="background:#F0FBF4;color:#2D6A4F;font-weight:500;"/>
-    </div>
-    <div class="ig" id="end-num-wrap" style="display:none;">
-      <label>Número da sua casa</label>
-      <input type="text" id="end-num" placeholder="Ex: 142 ou 332B"/>
-    </div>
-    <div class="mac">
-      <button class="bcanc" onclick="fecharAlterarEndereco()">Cancelar</button>
-      <button class="bpost" onclick="salvarEndereco()">Salvar →</button>
-    </div>
+    <div class="ig" id="end-cep-resultado" style="display:none;"><label>Rua encontrada</label><input type="text" id="end-cep-addr" readonly style="background:#F0FBF4;color:#2D6A4F;font-weight:500;"/></div>
+    <div class="ig" id="end-num-wrap" style="display:none;"><label>Número da sua casa</label><input type="text" id="end-num" placeholder="Ex: 142 ou 332B"/></div>
+    <div class="mac"><button class="bcanc" onclick="fecharAlterarEndereco()">Cancelar</button><button class="bpost" onclick="salvarEndereco()">Salvar →</button></div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// ============================================================
-// SUPABASE INIT
-// ============================================================
 const SUPABASE_URL = 'https://xurtdibicsxmouvzfxvb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1cnRkaWJpY3N4bW91dnpmeHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNjcsImV4cCI6MjA4OTg3MTM2N30.WQ36EsY2JHP5G4VvLAfRNv7j4RjArne1sjbRS_tfvUU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ============================================================
-// ESTADO GLOBAL
-// ============================================================
 const PALAVROES=['idiota','burro','imbecil','merda','fdp','filho da','viado','vadia','puta','vagabundo','cretino','otário','lixo'];
 const COR=['#5E60CE','#E76F51','#2D6A4F','#D4A017','#48CAE4'];
 const E={
@@ -582,30 +516,21 @@ const E={
   raio:150, tipo:'problema', filtro:'tudo', abCom:new Set(), abOq:new Set(), posts:[]
 };
 
-// ============================================================
-// INIT — verifica sessão ao carregar
-// ============================================================
 window.addEventListener('DOMContentLoaded', async () => {
   atuRaio(150);
   verificarRetornoPagamento();
-
   try {
     const { data: { session } } = await sb.auth.getSession();
-
     if(!session || !session.user){ irTela('t-bv'); return; }
-
     E.userId = session.user.id;
     const { data: perfil } = await sb.from('usuarios').select('*').eq('id', session.user.id).single();
-
     if(!perfil || !perfil.apelido){
-      // Perfil incompleto — vai pro cadastro
       irTela('t-bv');
       mostrarCadastro();
       document.getElementById('inp-email').value = session.user.email;
       toast('Complete seu cadastro para continuar! 👋');
       return;
     }
-
     E.nome    = perfil.apelido || perfil.nome || 'Vizinho';
     E.apelido = perfil.apelido || perfil.nome || 'Vizinho';
     E.bairro  = perfil.bairro  || '';
@@ -616,48 +541,29 @@ window.addEventListener('DOMContentLoaded', async () => {
     E.lat     = perfil.lat;
     E.lon     = perfil.lon;
     E.raio    = perfil.raio    || 150;
-
     document.getElementById('fsub').textContent = `${E.cidade||E.bairro||'Minha cidade'} · ${E.raio}m`;
     document.getElementById('fav').textContent  = E.nome.charAt(0).toUpperCase();
-
     await carregarPosts();
     irTela('t-feed');
-
   } catch(e) {
     console.error('Erro no init:', e);
     irTela('t-bv');
   }
-
   sb.auth.onAuthStateChange((event) => {
     if(event === 'SIGNED_OUT'){ irTela('t-bv'); }
   });
 });
 
-// ============================================================
-// AUTH
-// ============================================================
 async function reenviarEmail(){
   const email = document.getElementById('conf-email').textContent;
   const { error } = await sb.auth.resend({ type: 'signup', email });
   if(error){ toast('Erro ao reenviar: ' + error.message); return; }
-  toast('Email reenviado! Verifique sua caixa de entrada. 📬');
+  toast('Email reenviado! 📬');
 }
+function mostrarLoginDireto(){ mostrarLogin(); irTela('t-bv'); }
+function mostrarLogin(){ document.getElementById('card-cadastro').style.display='none'; document.getElementById('card-login').style.display=''; }
+function mostrarCadastro(){ document.getElementById('card-login').style.display='none'; document.getElementById('card-cadastro').style.display=''; }
 
-function mostrarLoginDireto(){
-  mostrarLogin();
-  irTela('t-bv');
-}
-
-function mostrarLogin(){
-  document.getElementById('card-cadastro').style.display='none';
-  document.getElementById('card-login').style.display='';
-}
-function mostrarCadastro(){
-  document.getElementById('card-login').style.display='none';
-  document.getElementById('card-cadastro').style.display='';
-}
-
-// Dados temporários do cadastro
 let cadastroTemp = {};
 
 async function irRaio(){
@@ -667,7 +573,6 @@ async function irRaio(){
   const senha   = document.getElementById('inp-senha').value;
   const cep     = document.getElementById('inp-cep').value.replace(/[^0-9]/g,'');
   const num     = document.getElementById('inp-num').value.trim();
-
   if(!nome)                        { toast('Digite seu nome completo!'); return; }
   if(!apelido)                     { toast('Digite como quer ser chamado(a)!'); return; }
   if(!email||!email.includes('@')) { toast('Digite um email válido!'); return; }
@@ -675,26 +580,16 @@ async function irRaio(){
   if(cep.length!==8)               { toast('Digite um CEP válido!'); return; }
   if(!E.bairro)                    { toast('Aguarde o CEP ser validado...'); return; }
   if(!num)                         { toast('Digite o número da sua casa!'); return; }
-
   const btn = document.getElementById('btn-cadastrar');
   btn.disabled = true; btn.textContent = 'Criando conta...';
-
   try {
     const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
     if(authErr){ toast('Erro: ' + authErr.message); btn.disabled=false; btn.textContent='Criar conta →'; return; }
-
-    E.userId  = authData.user.id;
-    E.nome    = apelido;
-    E.apelido = apelido;
-    E.bairro  = E.bairro;
-    E.cidade  = E.cidade;
-
-    // Salva dados pro irFeed usar
+    E.userId = authData.user.id;
+    E.nome = apelido; E.apelido = apelido;
     cadastroTemp = { nome, apelido, email, cep, numero: num, rua: E.rua, bairro: E.bairro, cidade: E.cidade, uf: E.uf, lat: E.lat, lon: E.lon };
-
     btn.disabled=false; btn.textContent='Criar conta →';
     irTela('t-raio');
-
   } catch(e) {
     toast('Erro inesperado: ' + e.message);
     btn.disabled=false; btn.textContent='Criar conta →';
@@ -705,10 +600,8 @@ async function fazerLogin(){
   const email = document.getElementById('login-email').value.trim();
   const senha = document.getElementById('login-senha').value;
   if(!email||!senha){ toast('Preencha email e senha!'); return; }
-
   const btn = document.getElementById('btn-login');
   btn.disabled=true; btn.textContent='Entrando...';
-
   const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
   if(error){
     if(error.message.includes('Email not confirmed')){
@@ -720,17 +613,11 @@ async function fazerLogin(){
     }
     btn.disabled=false; btn.textContent='Entrar →'; return;
   }
-
   await carregarPerfil(data.user.id);
-  // Verifica se é novo usuário (sem perfil salvo ainda)
   const { data: perfil } = await sb.from('usuarios').select('id,raio').eq('id', data.user.id).single();
   btn.disabled=false; btn.textContent='Entrar →';
-  if(!perfil){
-    irTela('t-raio');
-  } else {
-    await carregarPosts();
-    irTela('t-feed');
-  }
+  if(!perfil || !perfil.id){ irTela('t-raio'); }
+  else { await carregarPosts(); irTela('t-feed'); }
 }
 
 async function carregarPerfil(uid){
@@ -748,7 +635,7 @@ async function carregarPerfil(uid){
     E.lon     = data.lon;
     E.raio    = data.raio    || 150;
   }
-  document.getElementById('fsub').textContent = `${E.cidade||E.bairro} · raio de ${E.raio}m`;
+  document.getElementById('fsub').textContent = `${E.cidade||E.bairro||'Minha cidade'} · ${E.raio}m`;
   document.getElementById('fav').textContent  = E.nome.charAt(0).toUpperCase();
 }
 
@@ -765,11 +652,7 @@ function alterarRaio(){
   irTela('t-raio');
 }
 
-// ============================================================
-// ALTERAR ENDEREÇO
-// ============================================================
 let endTemp = {};
-
 function abrirAlterarEndereco(){
   document.getElementById('m-endereco').classList.add('ab');
   document.getElementById('end-cep').value = '';
@@ -777,18 +660,13 @@ function abrirAlterarEndereco(){
   document.getElementById('end-num-wrap').style.display = 'none';
   endTemp = {};
 }
-
-function fecharAlterarEndereco(){
-  document.getElementById('m-endereco').classList.remove('ab');
-}
-
+function fecharAlterarEndereco(){ document.getElementById('m-endereco').classList.remove('ab'); }
 function formataCEPEnd(el){
   let v = el.value.replace(/\D/g,'');
   if(v.length>5) v = v.slice(0,5)+'-'+v.slice(5,8);
   el.value = v;
   if(v.replace('-','').length===8) buscaCEPEnd(v.replace('-',''));
 }
-
 async function buscaCEPEnd(cep){
   const addrEl = document.getElementById('end-cep-addr');
   const resEl  = document.getElementById('end-cep-resultado');
@@ -809,55 +687,33 @@ async function buscaCEPEnd(cep){
     endTemp = { cep, rua:'', bairro:'Meu bairro', cidade:'Minha cidade', uf:'BR' };
   }
 }
-
 async function salvarEndereco(){
   const num = document.getElementById('end-num').value.trim();
   if(!endTemp.cep){ toast('Digite e aguarde o CEP ser validado!'); return; }
   if(!num){ toast('Digite o número da sua casa!'); return; }
-
   const btn = document.querySelector('#m-endereco .bpost');
   btn.disabled=true; btn.textContent='Salvando...';
-
   await sb.from('usuarios').update({
-    cep:    endTemp.cep,
-    rua:    endTemp.rua,
-    numero: num,
-    bairro: endTemp.bairro,
-    cidade: endTemp.cidade,
-    uf:     endTemp.uf,
-    lat:    endTemp.lat || null,
-    lon:    endTemp.lon || null
+    cep: endTemp.cep, rua: endTemp.rua, numero: num,
+    bairro: endTemp.bairro, cidade: endTemp.cidade, uf: endTemp.uf,
+    lat: endTemp.lat || null, lon: endTemp.lon || null
   }).eq('id', E.userId);
-
-  E.cep    = endTemp.cep;
-  E.rua    = endTemp.rua;
-  E.bairro = endTemp.bairro;
-  E.cidade = endTemp.cidade;
-  E.uf     = endTemp.uf;
-  E.lat    = endTemp.lat;
-  E.lon    = endTemp.lon;
-
+  E.cep=endTemp.cep; E.rua=endTemp.rua; E.bairro=endTemp.bairro;
+  E.cidade=endTemp.cidade; E.uf=endTemp.uf; E.lat=endTemp.lat; E.lon=endTemp.lon;
   document.getElementById('fsub').textContent = `${E.cidade||E.bairro} · ${E.raio}m`;
-
   btn.disabled=false; btn.textContent='Salvar →';
   fecharAlterarEndereco();
   toast('Endereço atualizado! 📍');
 }
 
-// ============================================================
-// POSTS — Supabase
-// ============================================================
 async function carregarPosts(){
   document.getElementById('feed').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando feed...</div>';
-
   const { data, error } = await sb
     .from('posts')
     .select('*, comentarios(*)')
     .order('criado_em', { ascending: false })
     .limit(50);
-
   if(error){ console.error(error); E.posts=[]; render(); return; }
-
   E.posts = (data||[]).map(p => ({
     id: p.id,
     nome: p.apelido_autor || 'Vizinho',
@@ -869,7 +725,7 @@ async function carregarPosts(){
     av:   (p.apelido_autor||'V').charAt(0).toUpperCase(),
     cor:  COR[Math.abs(hashStr(p.id+'')) % COR.length],
     foto_url: p.foto_url || null,
-    meu: p.usuario_id === E.userId,
+    usuario_id: p.usuario_id, // ← guarda para checar no render
     coms: (p.comentarios||[]).map(c=>({
       nome: c.apelido_autor||'Vizinho',
       dist: '0m',
@@ -878,8 +734,6 @@ async function carregarPosts(){
       cor:  COR[Math.abs(hashStr(c.id+'')) % COR.length]
     }))
   }));
-
-  // Posts de boas vindas se feed vazio
   if(E.posts.length === 0){
     E.posts = [
       {id:'bv1',nome:'Vizinho Certo',dist:'',tipo:'info',txt:'👋 Bem-vindo ao Vizinho Certo! Você é um dos primeiros da sua rua. Faça seu primeiro post e convide seus vizinhos!',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]},
@@ -887,7 +741,6 @@ async function carregarPosts(){
       {id:'bv3',nome:'Vizinho Certo',dist:'',tipo:'info',txt:'🔒 Sua privacidade é prioridade. Seu endereço exato nunca é mostrado a ninguém.',ap:0,apd:false,av:'V',cor:'#2D6A4F',coms:[]}
     ];
   }
-
   render();
 }
 
@@ -895,40 +748,39 @@ function hashStr(s){ let h=0; for(let i=0;i<s.length;i++) h=Math.imul(31,h)+s.ch
 
 async function postar(){
   const txt = document.getElementById('ptxt').value.trim();
-  if(!txt){ toast('Escreva algo antes!'); return; }
-  if(temPalavrão(txt)){ toast('⚠️ Revise o texto — sem palavrões.'); return; }
+  if(!txt && !fotoFile){ toast('Escreva algo ou adicione uma foto!'); return; }
+  if(txt && temPalavrão(txt)){ toast('⚠️ Revise o texto — sem palavrões.'); return; }
   if(!E.userId){ toast('Você precisa estar logado!'); return; }
-
+  const btn = document.querySelector('.bpost');
+  btn.disabled=true; btn.textContent='Publicando...';
+  let uploadedUrl = null;
+  if(fotoFile){
+    document.getElementById('foto-loading').style.display='flex';
+    try{ uploadedUrl = await uploadFoto(fotoFile); }
+    catch(e){
+      toast('Erro ao enviar foto: ' + e.message);
+      document.getElementById('foto-loading').style.display='none';
+      btn.disabled=false; btn.textContent='Publicar →'; return;
+    }
+    document.getElementById('foto-loading').style.display='none';
+  }
   const { data, error } = await sb.from('posts').insert({
-    usuario_id:   E.userId,
-    apelido_autor: E.apelido,
-    tipo:         tipoAt,
-    texto:        txt,
-    bairro:       E.bairro,
-    cidade:       E.cidade,
-    cep:          E.cep,
-    lat:          E.lat,
-    lon:          E.lon,
-    apoios:       0
+    usuario_id: E.userId, apelido_autor: E.apelido,
+    tipo: tipoAt, texto: txt || '',
+    bairro: E.bairro, cidade: E.cidade, cep: E.cep,
+    lat: E.lat, lon: E.lon, apoios: 0, foto_url: uploadedUrl
   }).select().single();
-
+  btn.disabled=false; btn.textContent='Publicar →';
   if(error){ toast('Erro ao publicar: ' + error.message); return; }
-
   fecharM();
   E.filtro='tudo';
   document.querySelectorAll('.ftab').forEach((t,i)=>t.classList.toggle('ativo',i===0));
-
-  // Adiciona localmente pra ser imediato
   E.posts.unshift({
-    id: data.id,
-    nome: E.apelido,
-    dist: '0m',
-    tipo: tipoAt,
-    txt,
-    ap: 0, apd: false,
+    id: data.id, nome: E.apelido, dist:'0m', tipo:tipoAt,
+    txt: txt||'', ap:0, apd:false,
     av: E.apelido.charAt(0).toUpperCase(),
     cor: COR[Math.abs(hashStr(data.id+'')) % COR.length],
-    coms: []
+    foto_url: uploadedUrl, usuario_id: E.userId, coms:[]
   });
   render();
   toast('Publicado! 🎉');
@@ -936,10 +788,7 @@ async function postar(){
 
 async function apoiar(id){
   const p = E.posts.find(x=>x.id===id); if(!p) return;
-  p.apd = !p.apd;
-  p.ap  += p.apd ? 1 : -1;
-
-  // Atualiza no banco só se for post real (não boas-vindas)
+  p.apd = !p.apd; p.ap += p.apd ? 1 : -1;
   if(typeof id === 'string' && id.startsWith('bv')) { render(); return; }
   await sb.from('posts').update({ apoios: p.ap }).eq('id', id);
   render();
@@ -953,45 +802,34 @@ async function envCom(id){
   if(temPalavrão(txt)){ toast('⚠️ Mantenha o respeito, por favor.'); return; }
   if(txt.length>300){ toast('Máximo 300 caracteres.'); return; }
   if(!E.userId){ toast('Você precisa estar logado!'); return; }
-
   const p = E.posts.find(x=>x.id===id); if(!p) return;
-
-  // Posts de boas-vindas: só local
   if(typeof id === 'string' && id.startsWith('bv')){
     p.coms.push({nome:E.apelido,dist:'0m',txt,av:E.apelido.charAt(0).toUpperCase(),cor:COR[Math.floor(Math.random()*COR.length)]});
     render(); toast('Comentário publicado! 💬'); return;
   }
-
   const { error } = await sb.from('comentarios').insert({
-    post_id:      id,
-    usuario_id:   E.userId,
-    apelido_autor: E.apelido,
-    texto:        txt
+    post_id: id, usuario_id: E.userId, apelido_autor: E.apelido, texto: txt
   });
-
   if(error){ toast('Erro ao comentar: ' + error.message); return; }
-
   p.coms.push({nome:E.apelido,dist:'0m',txt,av:E.apelido.charAt(0).toUpperCase(),cor:COR[Math.floor(Math.random()*COR.length)]});
   render();
   toast('Comentário publicado! 💬');
 }
 
 // ============================================================
-// RENDER
+// RENDER — meu calculado dinamicamente com E.userId
 // ============================================================
 const TL={problema:'🚧 Problema',aviso:'⚠️ Aviso',ajuda:'🤝 Ajuda',info:'💬 Info'};
 const TC={problema:'t-pr',aviso:'t-av',ajuda:'t-aj',info:'t-in'};
-
 const OQ={
-  calcada:{titulo:'Calçada danificada',acoes:[{i:'📞',t:'<strong>156 — Central da Prefeitura:</strong> Ligue e registre com o endereço exato. Anote o número do protocolo.',tel:'156'},{i:'📱',t:'<strong>App 156 ou e-Cidadão:</strong> Registre com foto para ter comprovante digital.'},{i:'✊',t:'<strong>Abaixo-assinado:</strong> Quanto mais vizinhos apoiarem, maior o peso.'}]},
+  calcada:{titulo:'Calçada danificada',acoes:[{i:'📞',t:'<strong>156 — Central da Prefeitura:</strong> Ligue e registre com o endereço exato.',tel:'156'},{i:'📱',t:'<strong>App 156 ou e-Cidadão:</strong> Registre com foto para ter comprovante digital.'},{i:'✊',t:'<strong>Abaixo-assinado:</strong> Quanto mais vizinhos apoiarem, maior o peso.'}]},
   buraco:{titulo:'Buraco na rua / asfalto',acoes:[{i:'📞',t:'<strong>156 — Secretaria de Obras:</strong> Informe rua, número e tamanho aproximado.',tel:'156'},{i:'📷',t:'<strong>Documente com foto:</strong> Tire fotos com data e hora ativados antes de ligar.'},{i:'⚠️',t:'<strong>Se for perigoso:</strong> Sinalize o buraco enquanto aguarda o conserto.'}]},
-  iluminacao:{titulo:'Iluminação pública',acoes:[{i:'📞',t:'<strong>0800 722 9900 — COPEL:</strong> Número gratuito para reportar poste apagado.',tel:'08007229900'},{i:'📍',t:'<strong>Anote o número do poste:</strong> Está na placa metálica. Facilita muito o atendimento.'},{i:'⏱️',t:'<strong>Prazo legal:</strong> A concessionária tem 48h para resolver após o registro.'}]},
-  lixo:{titulo:'Lixo / entulho irregular',acoes:[{i:'📞',t:'<strong>156 — Limpeza Urbana:</strong> Denuncie descarte irregular ou falta de coleta.',tel:'156'},{i:'📸',t:'<strong>Tire foto como prova:</strong> Especialmente se houver endereço identificável.'},{i:'♻️',t:'<strong>Entulho de obra:</strong> É responsabilidade do dono da obra.'}]},
-  agua:{titulo:'Problema de água / esgoto',acoes:[{i:'📞',t:'<strong>0800 722 0195 — SANEPAR:</strong> Falta de água, vazamento ou esgoto a céu aberto.',tel:'08007220195'},{i:'⏱️',t:'<strong>Vazamento na rua:</strong> Prioridade máxima — ligue imediatamente.'},{i:'📋',t:'<strong>Guarde o protocolo:</strong> Se não resolverem, você pode acionar a agência reguladora.'}]},
-  seguranca:{titulo:'Segurança / suspeita',acoes:[{i:'📞',t:'<strong>190 — Polícia Militar:</strong> Situações em andamento ou ameaças imediatas.',tel:'190'},{i:'📞',t:'<strong>153 — Guarda Municipal:</strong> Ocorrências de menor urgência no bairro.',tel:'153'},{i:'🚫',t:'<strong>Não confronte:</strong> Registre descrição e placa se possível.'}]},
+  iluminacao:{titulo:'Iluminação pública',acoes:[{i:'📞',t:'<strong>0800 722 9900 — COPEL:</strong> Número gratuito para reportar poste apagado.',tel:'08007229900'},{i:'📍',t:'<strong>Anote o número do poste:</strong> Está na placa metálica.'},{i:'⏱️',t:'<strong>Prazo legal:</strong> A concessionária tem 48h para resolver.'}]},
+  lixo:{titulo:'Lixo / entulho irregular',acoes:[{i:'📞',t:'<strong>156 — Limpeza Urbana:</strong> Denuncie descarte irregular.',tel:'156'},{i:'📸',t:'<strong>Tire foto como prova.</strong>'},{i:'♻️',t:'<strong>Entulho de obra:</strong> É responsabilidade do dono da obra.'}]},
+  agua:{titulo:'Problema de água / esgoto',acoes:[{i:'📞',t:'<strong>0800 722 0195 — SANEPAR:</strong> Falta de água, vazamento ou esgoto.',tel:'08007220195'},{i:'⏱️',t:'<strong>Vazamento na rua:</strong> Prioridade máxima — ligue imediatamente.'},{i:'📋',t:'<strong>Guarde o protocolo</strong> para acionar a agência reguladora se necessário.'}]},
+  seguranca:{titulo:'Segurança / suspeita',acoes:[{i:'📞',t:'<strong>190 — Polícia Militar:</strong> Situações em andamento.',tel:'190'},{i:'📞',t:'<strong>153 — Guarda Municipal:</strong> Ocorrências de menor urgência.',tel:'153'},{i:'🚫',t:'<strong>Não confronte:</strong> Registre descrição e placa se possível.'}]},
   default:{titulo:'Como resolver',acoes:[{i:'📞',t:'<strong>156 — Central da Prefeitura de Maringá:</strong> Canal geral para problemas urbanos.',tel:'156'},{i:'🤖',t:'<strong>Gere o pedido formal:</strong> Use o botão abaixo para criar um ofício.'},{i:'✊',t:'<strong>Coletivize:</strong> Mais apoios = mais pressão.'}]}
 };
-
 function detectOq(txt){
   const t=txt.toLowerCase();
   if(/cal[çc]ada|passeio/.test(t)) return 'calcada';
@@ -1008,11 +846,12 @@ function render(){
   const lista = document.getElementById('feed');
   const ps = E.filtro==='tudo' ? E.posts : E.posts.filter(p=>p.tipo===E.filtro);
   if(!ps.length){ lista.innerHTML='<div style="text-align:center;padding:3rem 1rem;color:var(--texto-muted);font-size:14px;">Nenhum post aqui ainda.<br>Seja o primeiro! 🏡</div>'; return; }
-
   const rows = ps.map(p=>{
     const cA = E.abCom.has(p.id), oA = E.abOq.has(p.id);
     const db = p.tipo==='problema' ? OQ[detectOq(p.txt)] : null;
     const coms = p.coms.map(c=>`<div class="com"><div class="cav" style="background:${c.cor}20;color:${c.cor}">${c.av}</div><div><span class="cnome">${c.nome}</span> <span class="cdist">· ${c.dist}</span><div class="ctxt">${c.txt}</div></div></div>`).join('');
+    // ← CORREÇÃO: meu calculado dinamicamente com E.userId atual
+    const eMeu = p.usuario_id === E.userId;
     return `<div class="pc" id="pc${p.id}">
       <div class="pm">
         <div class="ph"><div class="pav" style="background:${p.cor}20;color:${p.cor}">${p.av}</div><div><div class="pnome">${p.nome}</div><div class="pdist">${p.dist ? 'a '+p.dist+' de você' : ''}</div></div><span class="ptag ${TC[p.tipo]}">${TL[p.tipo]}</span></div>
@@ -1022,7 +861,7 @@ function render(){
           <button class="bapoiar ${p.apd?'ap':''}" onclick="apoiar('${p.id}')">${p.apd?'✓':'+'} <span id="ac${p.id}">${p.ap}</span> apoio${p.ap!==1?'s':''}</button>
           ${db?`<button class="boq" onclick="togOq('${p.id}')">💡 O que fazer</button>`:''}
           <button class="bcom" onclick="togCom('${p.id}')">💬 ${p.coms.length?p.coms.length+' com.':'Comentar'}</button>
-          ${p.meu?`<button class="bia" style="border-color:#E24B4A;color:#A32D2D;margin-left:auto;" onclick="excluirPost('${p.id}')">🗑️</button>`:''}
+          ${eMeu?`<button class="bia" style="border-color:#E24B4A;color:#A32D2D;margin-left:auto;" onclick="excluirPost('${p.id}')">🗑️</button>`:''}
         </div>
       </div>
       ${db?`<div class="oqf ${oA?'vis':''}" id="oq${p.id}">
@@ -1040,8 +879,10 @@ function togOq(id){E.abOq.has(id)?E.abOq.delete(id):E.abOq.add(id);render();}
 function togCom(id){E.abCom.has(id)?E.abCom.delete(id):E.abCom.add(id);render();setTimeout(()=>{const el=document.getElementById('ci'+id);if(el)el.focus();},100);}
 function filtrar(f,el){E.filtro=f;document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('ativo'));el.classList.add('ativo');render();}
 
+// ← CORREÇÃO: apaga comentários antes do post (foreign key)
 async function excluirPost(id){
   if(!confirm('Excluir este post?')) return;
+  await sb.from('comentarios').delete().eq('post_id', id);
   const { error } = await sb.from('posts').delete().eq('id', id).eq('usuario_id', E.userId);
   if(error){ toast('Erro ao excluir: ' + error.message); return; }
   E.posts = E.posts.filter(p => p.id != id);
@@ -1049,9 +890,6 @@ async function excluirPost(id){
   toast('Post excluído! 🗑️');
 }
 
-// ============================================================
-// CEP / GEO
-// ============================================================
 function formataCEP(el){
   let v=el.value.replace(/\D/g,'');
   if(v.length>5) v=v.slice(0,5)+'-'+v.slice(5,8);
@@ -1073,7 +911,6 @@ async function buscaCEP(cep){
     addrEl.value=(logr?logr+', ':'')+bairro+(d.localidade?' — '+d.localidade+'/'+d.uf:'');
     if(numWrap) numWrap.style.display='';
     E.rua=logr; E.bairro=bairro||d.localidade; E.cidade=d.localidade; E.uf=d.uf; E.cep=cep;
-    // Geocodifica só com a rua por enquanto — vai atualizar com número quando o usuário digitar
     geocodificar(logr,'',d.localidade,d.uf).then(c=>{if(c){E.lat=c.lat;E.lon=c.lon;}});
   }catch(e){
     addrEl.value='CEP '+cep.slice(0,5)+'-'+cep.slice(5)+' encontrado';
@@ -1086,22 +923,16 @@ async function geocodificarComNumero(num){
   const c = await geocodificar(E.rua, num, E.cidade, E.uf);
   if(c){ E.lat=c.lat; E.lon=c.lon; }
 }
-
 async function geocodificar(rua,numero,cidade,uf){
   try{
     const q=encodeURIComponent((rua?rua+(numero?' '+numero:'')+(', '):'')+cidade+', '+uf+', Brasil');
-    const r=await fetch('https://nominatim.openstreetmap.org/search?q='+q+'&format=json&limit=1',{
-      headers:{'Accept-Language':'pt-BR','User-Agent':'VizinhoCerto/1.0'}
-    });
+    const r=await fetch('https://nominatim.openstreetmap.org/search?q='+q+'&format=json&limit=1',{headers:{'Accept-Language':'pt-BR','User-Agent':'VizinhoCerto/1.0'}});
     const d=await r.json();
     if(d&&d[0]) return {lat:parseFloat(d[0].lat),lon:parseFloat(d[0].lon)};
   }catch(e){}
   return null;
 }
 
-// ============================================================
-// RAIO
-// ============================================================
 const VD=[0.35,0.42,0.62,0.58,0.85,0.92];
 function atuRaio(v){
   v=parseInt(v); E.raio=v;
@@ -1118,36 +949,21 @@ function atuRaio(v){
 }
 function setR(v,el){document.getElementById('rs').value=v;document.querySelectorAll('.rc3').forEach(c=>c.classList.remove('ativo'));el.classList.add('ativo');atuRaio(v);}
 
-// ============================================================
-// FEED / TELAS
-// ============================================================
 async function irFeed(){
   const { data: { session } } = await sb.auth.getSession();
   const uid = E.userId || (session && session.user.id);
   if(!uid){ irTela('t-bv'); return; }
   E.userId = uid;
-
   const d = cadastroTemp;
-
   await sb.from('usuarios').upsert({
-    id:      uid,
-    nome:    d.nome    || E.nome    || '',
-    apelido: d.apelido || E.apelido || '',
-    email:   d.email   || session?.user?.email || '',
-    cep:     d.cep     || E.cep    || '',
-    numero:  d.numero  || '',
-    rua:     d.rua     || E.rua    || '',
-    bairro:  d.bairro  || E.bairro || '',
-    cidade:  d.cidade  || E.cidade || '',
-    uf:      d.uf      || E.uf     || '',
-    raio:    E.raio,
-    lat:     d.lat     || E.lat    || null,
-    lon:     d.lon     || E.lon    || null
+    id: uid, nome: d.nome||E.nome||'', apelido: d.apelido||E.apelido||'',
+    email: d.email||session?.user?.email||'', cep: d.cep||E.cep||'',
+    numero: d.numero||'', rua: d.rua||E.rua||'', bairro: d.bairro||E.bairro||'',
+    cidade: d.cidade||E.cidade||'', uf: d.uf||E.uf||'', raio: E.raio,
+    lat: d.lat||E.lat||null, lon: d.lon||E.lon||null
   }, { onConflict: 'id' });
-
   cadastroTemp = {};
   sessionStorage.removeItem('vc_cadastro');
-
   await carregarPerfil(uid);
   await carregarPosts();
   irTela('t-feed');
@@ -1158,46 +974,32 @@ function irTela(id){
   document.getElementById(id).classList.add('ativa');
   window.scrollTo(0,0);
 }
-
 function ligar(n){toast('Abrindo discador... 📞');setTimeout(()=>window.open('tel:'+n),500);}
 
-// ============================================================
-// FOTO UPLOAD
-// ============================================================
-let fotoFile = null;
-let fotoUrl  = null;
-
+let fotoFile = null, fotoUrl = null;
 function previewFoto(input){
-  const file = input.files[0];
-  if(!file) return;
-  if(file.size > 10 * 1024 * 1024){ toast('Foto muito grande! Máximo 10MB.'); return; }
+  const file = input.files[0]; if(!file) return;
+  if(file.size > 10*1024*1024){ toast('Foto muito grande! Máximo 10MB.'); return; }
   fotoFile = file;
   const reader = new FileReader();
-  reader.onload = e => {
-    document.getElementById('foto-img').src = e.target.result;
-    document.getElementById('foto-preview').style.display = '';
-  };
+  reader.onload = e => { document.getElementById('foto-img').src = e.target.result; document.getElementById('foto-preview').style.display = ''; };
   reader.readAsDataURL(file);
 }
-
 function removerFoto(){
-  fotoFile = null; fotoUrl = null;
-  document.getElementById('foto-input').value = '';
-  document.getElementById('foto-preview').style.display = 'none';
-  document.getElementById('foto-img').src = '';
+  fotoFile=null; fotoUrl=null;
+  document.getElementById('foto-input').value='';
+  document.getElementById('foto-preview').style.display='none';
+  document.getElementById('foto-img').src='';
 }
-
 async function uploadFoto(file){
-  const ext  = file.name.split('.').pop() || 'jpg';
+  const ext = file.name.split('.').pop()||'jpg';
   const path = `posts/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
   const { error } = await sb.storage.from('fotos').upload(path, file, { contentType: file.type, upsert: false });
   if(error) throw error;
   const { data } = sb.storage.from('fotos').getPublicUrl(path);
   return data.publicUrl;
 }
-
 function verFoto(url){
-  // Abre foto em fullscreen simples
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;';
   overlay.innerHTML = `<img src="${url}" style="max-width:95vw;max-height:90vh;border-radius:12px;object-fit:contain;">`;
@@ -1205,100 +1007,26 @@ function verFoto(url){
   document.body.appendChild(overlay);
 }
 
-// ============================================================
-// POST MODAL
-// ============================================================
 let tipoAt='problema';
 function abrirM(){document.getElementById('mpost').classList.add('ab');}
-function fecharM(){
-  document.getElementById('mpost').classList.remove('ab');
-  document.getElementById('ptxt').value='';
-  removerFoto();
-}
+function fecharM(){ document.getElementById('mpost').classList.remove('ab'); document.getElementById('ptxt').value=''; removerFoto(); }
 function selTipo(t,el){tipoAt=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('at'));el.classList.add('at');}
 
-async function postar(){
-  const txt = document.getElementById('ptxt').value.trim();
-  if(!txt && !fotoFile){ toast('Escreva algo ou adicione uma foto!'); return; }
-  if(txt && temPalavrão(txt)){ toast('⚠️ Revise o texto — sem palavrões.'); return; }
-  if(!E.userId){ toast('Você precisa estar logado!'); return; }
-
-  const btn = document.querySelector('.bpost');
-  btn.disabled=true; btn.textContent='Publicando...';
-
-  let uploadedUrl = null;
-  if(fotoFile){
-    document.getElementById('foto-loading').style.display='flex';
-    try{ uploadedUrl = await uploadFoto(fotoFile); }
-    catch(e){
-      toast('Erro ao enviar foto: ' + e.message);
-      document.getElementById('foto-loading').style.display='none';
-      btn.disabled=false; btn.textContent='Publicar →'; return;
-    }
-    document.getElementById('foto-loading').style.display='none';
-  }
-
-  const { data, error } = await sb.from('posts').insert({
-    usuario_id:    E.userId,
-    apelido_autor: E.apelido,
-    tipo:          tipoAt,
-    texto:         txt || '',
-    bairro:        E.bairro,
-    cidade:        E.cidade,
-    cep:           E.cep,
-    lat:           E.lat,
-    lon:           E.lon,
-    apoios:        0,
-    foto_url:      uploadedUrl
-  }).select().single();
-
-  btn.disabled=false; btn.textContent='Publicar →';
-  if(error){ toast('Erro ao publicar: ' + error.message); return; }
-
-  fecharM();
-  E.filtro='tudo';
-  document.querySelectorAll('.ftab').forEach((t,i)=>t.classList.toggle('ativo',i===0));
-  E.posts.unshift({
-    id: data.id, nome: E.apelido, dist:'0m', tipo:tipoAt,
-    txt: txt||'', ap:0, apd:false,
-    av: E.apelido.charAt(0).toUpperCase(),
-    cor: COR[Math.abs(hashStr(data.id+'')) % COR.length],
-    foto_url: uploadedUrl, coms:[], meu: true
-  });
-  render();
-  toast('Publicado! 🎉');
-}
-
-// ============================================================
-// IA MODAL
-// ============================================================
 async function abrirIA(id){
   const p=E.posts.find(x=>x.id==id); if(!p) return;
   document.getElementById('mia').classList.add('ab');
   document.getElementById('iatit').textContent='Gerando pedido formal...';
   document.getElementById('iatx').innerHTML='<div class="ial"><div class="iad"></div><div class="iad"></div><div class="iad"></div></div>';
   try{
-    const resp=await fetch('/api/gerar-pedido',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({texto:p.txt,bairro:E.bairro||'meu bairro',apoios:p.ap})
-    });
+    const resp=await fetch('/api/gerar-pedido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({texto:p.txt,bairro:E.bairro||'meu bairro',apoios:p.ap})});
     const data=await resp.json();
-    if(data.texto){
-      document.getElementById('iatit').textContent='Pedido pronto para enviar!';
-      document.getElementById('iatx').textContent=data.texto;
-    } else {
-      document.getElementById('iatit').textContent='Erro';
-      document.getElementById('iatx').textContent=JSON.stringify(data);
-    }
+    if(data.texto){ document.getElementById('iatit').textContent='Pedido pronto para enviar!'; document.getElementById('iatx').textContent=data.texto; }
+    else { document.getElementById('iatit').textContent='Erro'; document.getElementById('iatx').textContent=JSON.stringify(data); }
   }catch(e){document.getElementById('iatx').textContent='Erro: '+e.message;}
 }
 function fecharIA(){document.getElementById('mia').classList.remove('ab');}
 function copiarIA(){navigator.clipboard.writeText(document.getElementById('iatx').textContent).then(()=>toast('Copiado! 📋'));}
 
-// ============================================================
-// NAV TABS
-// ============================================================
 const SERVICOS=[];
 let catAtiva='todos';
 const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Cuidadora','Imobiliária'];
@@ -1329,7 +1057,7 @@ function navTab(tab,el){
       <div style="background:var(--branco);border-radius:12px;border:1px solid var(--borda);overflow:hidden;">
         <div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Raio atual</span><span style="font-weight:500;">${E.raio}m</span></div>
         <div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Bairro</span><span style="font-weight:500;">${E.bairro||'—'}</span></div>
-        <div style="padding:14px 16px;display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Posts publicados</span><span style="font-weight:500;">${E.posts.filter(p=>p.nome===E.apelido).length}</span></div>
+        <div style="padding:14px 16px;display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Posts publicados</span><span style="font-weight:500;">${E.posts.filter(p=>p.usuario_id===E.userId).length}</span></div>
       </div>
       <button onclick="alterarRaio()" style="width:100%;margin-top:1rem;padding:12px;background:#2D6A4F;color:white;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">🎯 Alterar raio de vizinhança</button>
       <button onclick="abrirAlterarEndereco()" style="width:100%;margin-top:10px;padding:12px;background:var(--branco);color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">📍 Alterar endereço</button>
@@ -1364,9 +1092,6 @@ function renderServicos(){
 }
 function setcat(cat){catAtiva=cat;renderServicos();}
 
-// ============================================================
-// ANUNCIANTE
-// ============================================================
 const anunState={tipo:'',icon:'',nome:'',desc:'',tel:'',dias:0,preco:0,pgto:'pix'};
 function abrirAnun(){document.getElementById('manun').classList.add('ab');anunStep(1);}
 function fecharAnun(){document.getElementById('manun').classList.remove('ab');}
@@ -1389,8 +1114,7 @@ function anunValidaDados(){
   if(!n){toast('Digite o nome do negócio!');return;}
   if(!d){toast('Escreva uma descrição!');return;}
   if(!t){toast('Digite seu telefone!');return;}
-  anunState.nome=n;anunState.desc=d;anunState.tel=t;
-  anunStep(3);
+  anunState.nome=n;anunState.desc=d;anunState.tel=t;anunStep(3);
 }
 function selPlano(dias,centavos,el){
   anunState.dias=dias;anunState.preco=centavos;
@@ -1411,8 +1135,7 @@ function renderResumo(){
 function selPgto(met,el){
   anunState.pgto=met;
   document.querySelectorAll('.pgto-btn').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel');
-  renderPgto();
+  el.classList.add('sel');renderPgto();
 }
 function renderPgto(){
   const preco=(anunState.preco/100).toFixed(2).replace('.',',');
@@ -1435,11 +1158,7 @@ async function anunFinalizar(){
   btn.textContent='Abrindo pagamento...';btn.disabled=true;
   try{
     const retorno=window.location.href.split('?')[0];
-    const resp=await fetch('/api/checkout',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({nome:anunState.nome,tipo:anunState.tipo,dias:anunState.dias,preco:anunState.preco,icon:anunState.icon,desc:anunState.desc,tel:anunState.tel,retorno})
-    });
+    const resp=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:anunState.nome,tipo:anunState.tipo,dias:anunState.dias,preco:anunState.preco,icon:anunState.icon,desc:anunState.desc,tel:anunState.tel,retorno})});
     const data=await resp.json();
     if(data.url){window.location.href=data.url;}
     else{throw new Error('sem link de pagamento');}
@@ -1449,9 +1168,6 @@ async function anunFinalizar(){
   }
 }
 
-// ============================================================
-// PÂNICO
-// ============================================================
 function abrirPanico(){
   document.getElementById('mpanico').classList.add('ab');
   document.getElementById('alerta-conf').classList.remove('vis');
@@ -1463,8 +1179,6 @@ async function enviarAlerta(){
   const btn=document.getElementById('btn-alertar');
   if(btn.disabled) return;
   btn.disabled=true;btn.innerHTML='⏳ Enviando alerta...';
-
-  // Salva alerta como post no Supabase
   const txt=`🆘 ALERTA DE EMERGÊNCIA — ${E.nome} acionou o botão de pânico nas proximidades. Fique atento e verifique se pode ajudar. Polícia 190 | SAMU 192 | Bombeiros 193.`;
   if(E.userId){
     await sb.from('posts').insert({
@@ -1473,7 +1187,6 @@ async function enviarAlerta(){
       bairro:E.bairro, cidade:E.cidade, cep:E.cep, lat:E.lat, lon:E.lon, apoios:0
     });
   }
-
   setTimeout(()=>{
     const vc=Math.floor(3+(E.raio/100));
     document.getElementById('alerta-count').textContent=vc;
@@ -1483,9 +1196,6 @@ async function enviarAlerta(){
   },1200);
 }
 
-// ============================================================
-// TOAST + RETORNO PAGAMENTO
-// ============================================================
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('vis');setTimeout(()=>t.classList.remove('vis'),2500);}
 
 function verificarRetornoPagamento(){
