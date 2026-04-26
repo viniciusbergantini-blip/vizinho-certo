@@ -11,7 +11,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   (async () => {
-    const isAppRoute = window.location.pathname.startsWith('/app');
+    const appUrl = window.location.protocol === 'file:' ? 'app.html' : '/app';
+    const isAppRoute = window.location.pathname.startsWith('/app') || window.location.pathname.endsWith('/app.html');
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
     if(isAppRoute) return;
@@ -22,11 +23,17 @@
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1cnRkaWJpY3N4bW91dnpmeHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNjcsImV4cCI6MjA4OTg3MTM2N30.WQ36EsY2JHP5G4VvLAfRNv7j4RjArne1sjbRS_tfvUU'
       );
       const { data: { session } } = await sb.auth.getSession();
-      if(session || isStandalone) window.location.replace('/app');
+      if(session || isStandalone) window.location.replace(appUrl);
     } catch(e) {
-      if(isStandalone) window.location.replace('/app');
+      if(isStandalone) window.location.replace(appUrl);
     }
   })();
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if(window.location.protocol !== 'file:'){
+      document.querySelectorAll('[data-app-link]').forEach(link => link.setAttribute('href', '/app'));
+    }
+  });
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -552,7 +559,7 @@
 <section class="hero">
   <nav class="nav">
     <a href="/" class="nav-logo">Vizinho<span>Certo</span></a>
-    <a href="/app" class="nav-cta">Entrar no app →</a>
+    <a href="app.html" data-app-link class="nav-cta">Entrar no app →</a>
   </nav>
 
   <div class="hero-content">
@@ -567,7 +574,7 @@
       Conecte-se com quem mora na sua rua de verdade. Reporte problemas, peça ajuda e faça sua vizinhança mais segura e unida.
     </p>
     <div class="hero-actions">
-      <a href="/app" class="btn-primary">🏘️ Criar conta grátis</a>
+      <a href="app.html" data-app-link class="btn-primary">🏘️ Criar conta grátis</a>
       <a href="#instalar" class="btn-secondary">Como instalar</a>
     </div>
   </div>
@@ -727,7 +734,7 @@
 <section class="cta-final reveal">
   <h2 class="cta-final-title">Sua rua merece mais do que um grupo de WhatsApp</h2>
   <p class="cta-final-sub">Gratuito. Sem anúncios. Só vizinhos de verdade.</p>
-  <a href="/app" class="btn-white">🏘️ Entrar no Vizinho Certo</a>
+  <a href="app.html" data-app-link class="btn-white">🏘️ Entrar no Vizinho Certo</a>
 </section>
 
 <!-- FOOTER -->
