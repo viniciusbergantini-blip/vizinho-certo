@@ -535,12 +535,108 @@ const PALAVROES=['idiota','burro','imbecil','merda','fdp','filho da','viado','va
 const COR=['#5E60CE','#E76F51','#2D6A4F','#D4A017','#48CAE4'];
 const E={
   userId:null, nome:'', apelido:'', bairro:'', cidade:'', uf:'', rua:'', cep:'', lat:null, lon:null,
-  raio:150, tipo:'problema', filtro:'tudo', abCom:new Set(), abOq:new Set(), posts:[], fotoUrl:null
+  raio:150, geoStatus:'indisponivel', geoLabel:'LocalizaÃ§Ã£o nÃ£o definida',
+  tipo:'problema', filtro:'tudo', abCom:new Set(), abOq:new Set(), posts:[], fotoUrl:null
 };
+
+function temCoordenadas(){
+  return Number.isFinite(Number(E.lat)) && Number.isFinite(Number(E.lon));
+}
+
+function aproximarCoordenada(valor){
+  if(!Number.isFinite(Number(valor))) return null;
+  return Number(Number(valor).toFixed(3));
+}
+
+function aplicarCoordenadas(c, status='preciso', label='LocalizaÃ§Ã£o confirmada'){
+  if(!c || !Number.isFinite(Number(c.lat)) || !Number.isFinite(Number(c.lon))){
+    E.lat=null; E.lon=null; E.geoStatus='aproximado'; E.geoLabel='LocalizaÃ§Ã£o aproximada por bairro/cidade';
+    return false;
+  }
+  E.lat=aproximarCoordenada(c.lat);
+  E.lon=aproximarCoordenada(c.lon);
+  E.geoStatus=status;
+  E.geoLabel=label;
+  return true;
+}
+
+async function garantirGeolocalizacao(numero){
+  if(temCoordenadas()) return true;
+  if(E.rua || E.cidade){
+    const c = await geocodificar(E.rua, numero||'', E.cidade, E.uf);
+    if(aplicarCoordenadas(c)) return true;
+  }
+  E.geoStatus='aproximado';
+  E.geoLabel='Filtro por bairro/cidade';
+  return false;
+}
+
+function normalizarTextoGeo(valor){
+  return (valor||'').trim();
+}
+
+function configurarCadastroGuiado(){
+  const card = document.getElementById('card-cadastro');
+  const cep = document.getElementById('inp-cep')?.closest('.ig');
+  const resultado = document.getElementById('cep-resultado');
+  const numero = document.getElementById('num-wrap');
+  const nome = document.getElementById('inp-nome')?.closest('.ig');
+  const apelido = document.getElementById('inp-apelido')?.closest('.ig');
+  const email = document.getElementById('inp-email')?.closest('.ig');
+  const senha = document.getElementById('inp-senha')?.closest('.ig');
+  const botao = document.getElementById('btn-cadastrar');
+  if(!card || !cep || !resultado || !numero || !nome || !apelido || !email || !senha || !botao) return;
+
+  let complemento = document.getElementById('comp-wrap');
+  if(!complemento){
+    complemento = document.createElement('div');
+    complemento.className = 'ig';
+    complemento.id = 'comp-wrap';
+    complemento.style.display = 'none';
+    complemento.innerHTML = '<label>Complemento</label><input type="text" id="inp-comp" placeholder="Apto, bloco, fundos (opcional)" maxlength="60"/>';
+  }
+
+  let dados = document.getElementById('cadastro-dados');
+  if(!dados){
+    dados = document.createElement('div');
+    dados.id = 'cadastro-dados';
+    dados.style.display = 'none';
+  }
+
+  const intro = card.querySelector('p');
+  if(intro) intro.textContent = 'Digite seu CEP para localizarmos sua vizinhanca automaticamente.';
+  resultado.querySelector('label').textContent = 'Endereco encontrado';
+
+  card.insertBefore(cep, nome);
+  card.insertBefore(resultado, nome);
+  card.insertBefore(numero, nome);
+  card.insertBefore(complemento, nome);
+  card.insertBefore(dados, nome);
+  [nome, apelido, email, senha, botao].forEach(el => dados.appendChild(el));
+  resetarCadastroEndereco();
+}
+
+function resetarCadastroEndereco(){
+  ['cep-resultado','num-wrap','comp-wrap','cadastro-dados'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.display = 'none';
+  });
+  const addrEl = document.getElementById('inp-cep-addr');
+  if(addrEl) addrEl.value = '';
+}
+
+function liberarCadastroEndereco(){
+  ['cep-resultado','num-wrap','comp-wrap','cadastro-dados'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.style.display = '';
+  });
+  document.getElementById('inp-num')?.focus();
+}
 
 window.addEventListener('DOMContentLoaded', async () => {
   atuRaio(150);
   verificarRetornoPagamento();
+  configurarCadastroGuiado();
 
   // Registra ANTES do getSession pra capturar PASSWORD_RECOVERY
   sb.auth.onAuthStateChange(async (event, session) => {
@@ -647,6 +743,7 @@ async function irRaio(){
   const senha   = document.getElementById('inp-senha').value;
   const cep     = document.getElementById('inp-cep').value.replace(/[^0-9]/g,'');
   const num     = document.getElementById('inp-num').value.trim();
+  const comp    = document.getElementById('inp-comp')?.value.trim() || '';
   if(!nome)                        { toast('Digite seu nome completo!'); return; }
   if(!apelido)                     { toast('Digite como quer ser chamado(a)!'); return; }
   if(!email||!email.includes('@')) { toast('Digite um email válido!'); return; }
@@ -655,13 +752,16 @@ async function irRaio(){
   if(!E.bairro)                    { toast('Aguarde o CEP ser validado...'); return; }
   if(!num)                         { toast('Digite o número da sua casa!'); return; }
   const btn = document.getElementById('btn-cadastrar');
-  btn.disabled = true; btn.textContent = 'Criando conta...';
+  btn.disabled = true; btn.textContent = 'Validando endereÃ§o...';
   try {
+    const geoOk = await garantirGeolocalizacao(num);
+    if(!geoOk) toast('Vamos usar bairro/cidade enquanto a coordenada nÃ£o estiver precisa.');
+    btn.textContent = 'Criando conta...';
     const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
     if(authErr){ toast('Erro: ' + authErr.message); btn.disabled=false; btn.textContent='Criar conta →'; return; }
     E.userId = authData.user.id;
     E.nome = apelido; E.apelido = apelido;
-    cadastroTemp = { nome, apelido, email, cep, numero: num, rua: E.rua, bairro: E.bairro, cidade: E.cidade, uf: E.uf, lat: E.lat, lon: E.lon };
+    cadastroTemp = { nome, apelido, email, cep, numero: num, complemento: comp, rua: E.rua, bairro: E.bairro, cidade: E.cidade, uf: E.uf, lat: E.lat, lon: E.lon };
     btn.disabled=false; btn.textContent='Criar conta →';
     irTela('t-raio');
   } catch(e) {
@@ -785,7 +885,8 @@ async function buscaCEPEnd(cep){
     addrEl.value = (d.logradouro?d.logradouro+', ':'')+d.bairro+' — '+d.localidade+'/'+d.uf;
     numWrap.style.display = '';
     endTemp = { cep, rua: d.logradouro||'', bairro: d.bairro||d.localidade, cidade: d.localidade, uf: d.uf };
-    geocodificar(d.logradouro,'',d.localidade,d.uf).then(c=>{ if(c){ endTemp.lat=c.lat; endTemp.lon=c.lon; }});
+    const c = await geocodificar(d.logradouro,'',d.localidade,d.uf);
+    if(c){ endTemp.lat=aproximarCoordenada(c.lat); endTemp.lon=aproximarCoordenada(c.lon); }
   } catch(e){
     addrEl.value = 'CEP encontrado';
     numWrap.style.display = '';
@@ -798,6 +899,10 @@ async function salvarEndereco(){
   if(!num){ toast('Digite o número da sua casa!'); return; }
   const btn = document.querySelector('#m-endereco .bpost');
   btn.disabled=true; btn.textContent='Salvando...';
+  if(!endTemp.lat || !endTemp.lon){
+    const c = await geocodificar(endTemp.rua, num, endTemp.cidade, endTemp.uf);
+    if(c){ endTemp.lat=aproximarCoordenada(c.lat); endTemp.lon=aproximarCoordenada(c.lon); }
+  }
   await sb.from('usuarios').update({
     cep: endTemp.cep, rua: endTemp.rua, numero: num,
     bairro: endTemp.bairro, cidade: endTemp.cidade, uf: endTemp.uf,
@@ -805,6 +910,8 @@ async function salvarEndereco(){
   }).eq('id', E.userId);
   E.cep=endTemp.cep; E.rua=endTemp.rua; E.bairro=endTemp.bairro;
   E.cidade=endTemp.cidade; E.uf=endTemp.uf; E.lat=endTemp.lat; E.lon=endTemp.lon;
+  E.geoStatus=temCoordenadas()?'preciso':'aproximado';
+  E.geoLabel=temCoordenadas()?'LocalizaÃ§Ã£o confirmada':'Filtro por bairro/cidade';
   document.getElementById('fsub').textContent = `${E.cidade||E.bairro} · ${E.raio}m`;
   btn.disabled=false; btn.textContent='Salvar →';
   fecharAlterarEndereco();
@@ -814,10 +921,8 @@ async function salvarEndereco(){
 async function carregarPosts(){
   document.getElementById('feed').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando feed...</div>';
 
-  let query = sb.from('posts').select('*, comentarios(*)').order('criado_em', { ascending: false }).limit(50);
-
   // Filtra por distância se tiver coordenadas do usuário
-  if(E.lat && E.lon && E.raio){
+  if(temCoordenadas() && E.raio){
     const { data, error } = await sb.rpc('posts_no_raio', {
       user_lat: E.lat,
       user_lon: E.lon,
@@ -826,6 +931,7 @@ async function carregarPosts(){
     if(!error && data){
       // Busca comentários dos posts filtrados
       const ids = data.map(p => p.id);
+      if(ids.length === 0){ E.posts = postsBoasVindas(); render(); return; }
       if(ids.length > 0){
         const { data: comData } = await sb.from('comentarios').select('*').in('post_id', ids);
         const comMap = {};
@@ -861,13 +967,31 @@ async function carregarPosts(){
     }
   }
 
-  // Fallback: sem coordenadas, mostra todos
+  await carregarPostsPorBairro();
+}
+
+async function carregarPostsPorBairro(){
+  const bairro = normalizarTextoGeo(E.bairro);
+  const cidade = normalizarTextoGeo(E.cidade);
+  if(!bairro && !cidade){
+    E.posts = postsBoasVindas();
+    render();
+    toast('Atualize seu endereÃ§o para ver posts prÃ³ximos.');
+    return;
+  }
+
+  let query = sb.from('posts').select('*, comentarios(*)').order('criado_em', { ascending: false }).limit(50);
+  if(bairro) query = query.eq('bairro', bairro);
+  else query = query.eq('cidade', cidade);
+
   const { data, error } = await query;
-  if(error){ console.error(error); E.posts=[]; render(); return; }
+  if(error){ console.error(error); E.posts=[]; render(); toast('NÃ£o conseguimos carregar posts prÃ³ximos agora.'); return; }
+  E.geoStatus = temCoordenadas() ? E.geoStatus : 'aproximado';
+  E.geoLabel = bairro ? 'Filtro por bairro' : 'Filtro por cidade';
   E.posts = (data||[]).map(p => ({
     id: p.id,
     nome: p.apelido_autor || 'Vizinho',
-    dist: '0m',
+    dist: bairro ? 'no seu bairro' : 'na sua cidade',
     tipo: p.tipo,
     txt:  p.texto,
     ap:   p.apoios || 0,
@@ -884,6 +1008,9 @@ async function carregarPosts(){
       cor:  COR[Math.abs(hashStr(c.id+'')) % COR.length]
     }))
   }));
+  await carregarFotosPerfil((data||[]).map(p=>p.usuario_id));
+  const apoiosLocais = getApoiosLocais();
+  E.posts.forEach(p => { if(apoiosLocais.includes(p.id)) p.apd = true; });
   if(E.posts.length === 0) E.posts = postsBoasVindas();
   render();
 }
@@ -940,7 +1067,7 @@ async function postar(){
     usuario_id: E.userId, apelido_autor: E.apelido,
     tipo: tipoAt, texto: txt || '',
     bairro: E.bairro, cidade: E.cidade, cep: E.cep,
-    lat: E.lat, lon: E.lon, apoios: 0, foto_url: uploadedUrl
+    lat: aproximarCoordenada(E.lat), lon: aproximarCoordenada(E.lon), apoios: 0, foto_url: uploadedUrl
   }).select().single();
   btn.disabled=false; btn.textContent='Publicar →';
   if(error){ toast('Erro ao publicar: ' + error.message); return; }
@@ -1115,12 +1242,14 @@ function formataCEP(el){
   let v=el.value.replace(/\D/g,'');
   if(v.length>5) v=v.slice(0,5)+'-'+v.slice(5,8);
   el.value=v;
+  if(v.replace('-','').length<8) resetarCadastroEndereco();
   if(v.replace('-','').length===8) buscaCEP(v.replace('-',''));
 }
 async function buscaCEP(cep){
   const addrEl=document.getElementById('inp-cep-addr');
   const resEl=document.getElementById('cep-resultado');
   const numWrap=document.getElementById('num-wrap');
+  E.lat=null; E.lon=null; E.geoStatus='indisponivel'; E.geoLabel='Validando endereÃ§o';
   addrEl.value='Buscando endereço...';
   resEl.style.display='';
   try{
@@ -1130,26 +1259,34 @@ async function buscaCEP(cep){
     const logr=d.logradouro||'';
     const bairro=d.bairro||d.localidade||'';
     addrEl.value=(logr?logr+', ':'')+bairro+(d.localidade?' — '+d.localidade+'/'+d.uf:'');
-    if(numWrap) numWrap.style.display='';
+    liberarCadastroEndereco();
     E.rua=logr; E.bairro=bairro||d.localidade; E.cidade=d.localidade; E.uf=d.uf; E.cep=cep;
-    geocodificar(logr,'',d.localidade,d.uf).then(c=>{if(c){E.lat=c.lat;E.lon=c.lon;}});
+    const c = await geocodificar(logr,'',d.localidade,d.uf);
+    aplicarCoordenadas(c, 'aproximado', c?'LocalizaÃ§Ã£o aproximada pela rua':'Filtro por bairro/cidade');
   }catch(e){
-    addrEl.value='CEP '+cep.slice(0,5)+'-'+cep.slice(5)+' encontrado';
-    if(numWrap) numWrap.style.display='';
-    E.bairro='Meu bairro'; E.cidade='Minha cidade'; E.uf='BR'; E.cep=cep;
+    resetarCadastroEndereco();
+    E.bairro=''; E.cidade=''; E.uf=''; E.cep='';
+    toast('Nao foi possivel buscar este CEP agora.');
   }
 }
 async function geocodificarComNumero(num){
   if(!num || !E.rua) return;
   const c = await geocodificar(E.rua, num, E.cidade, E.uf);
-  if(c){ E.lat=c.lat; E.lon=c.lon; }
+  aplicarCoordenadas(c, c?'preciso':'aproximado', c?'LocalizaÃ§Ã£o confirmada':'Filtro por bairro/cidade');
 }
 async function geocodificar(rua,numero,cidade,uf){
   try{
     const q=encodeURIComponent((rua?rua+(numero?' '+numero:'')+(', '):'')+cidade+', '+uf+', Brasil');
+    const cacheKey='vc_geo_'+q;
+    const cached=localStorage.getItem(cacheKey);
+    if(cached) return JSON.parse(cached);
     const r=await fetch('https://nominatim.openstreetmap.org/search?q='+q+'&format=json&limit=1',{headers:{'Accept-Language':'pt-BR','User-Agent':'VizinhoCerto/1.0'}});
     const d=await r.json();
-    if(d&&d[0]) return {lat:parseFloat(d[0].lat),lon:parseFloat(d[0].lon)};
+    if(d&&d[0]){
+      const coord={lat:parseFloat(d[0].lat),lon:parseFloat(d[0].lon)};
+      localStorage.setItem(cacheKey, JSON.stringify(coord));
+      return coord;
+    }
   }catch(e){}
   return null;
 }
@@ -1181,7 +1318,7 @@ async function irFeed(){
     email: d.email||session?.user?.email||'', cep: d.cep||E.cep||'',
     numero: d.numero||'', rua: d.rua||E.rua||'', bairro: d.bairro||E.bairro||'',
     cidade: d.cidade||E.cidade||'', uf: d.uf||E.uf||'', raio: E.raio,
-    lat: d.lat||E.lat||null, lon: d.lon||E.lon||null
+    lat: aproximarCoordenada(d.lat||E.lat), lon: aproximarCoordenada(d.lon||E.lon)
   }, { onConflict: 'id' });
   cadastroTemp = {};
   sessionStorage.removeItem('vc_cadastro');
@@ -1469,7 +1606,7 @@ async function enviarAlerta(){
     await sb.from('posts').insert({
       usuario_id:E.userId, apelido_autor:E.apelido,
       tipo:'aviso', texto:txt,
-      bairro:E.bairro, cidade:E.cidade, cep:E.cep, lat:E.lat, lon:E.lon, apoios:0
+      bairro:E.bairro, cidade:E.cidade, cep:E.cep, lat:aproximarCoordenada(E.lat), lon:aproximarCoordenada(E.lon), apoios:0
     });
   }
   setTimeout(()=>{
