@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vizinho Certo • Indaiatuba</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--v:#1B4D37;--vl:#52B788;--vb:#D8F3DC;--o:#E76F51;--c:#FEFAE0;--ce:#F0E9D2;--t:#1B1B1B;--tm:#5C5C5C;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--c);color:var(--t);overflow-x:hidden;}
+.hero{min-height:100svh;background:var(--v);display:flex;flex-direction:column;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 15% 50%, rgba(82,183,136,0.15) 0%, transparent 55%),radial-gradient(ellipse at 85% 20%, rgba(231,111,81,0.10) 0%, transparent 45%),radial-gradient(ellipse at 65% 85%, rgba(82,183,136,0.10) 0%, transparent 40%);}
+.hero::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);background-size:64px 64px;}
+.bg-cidade{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Fraunces',serif;font-size:clamp(60px,14vw,160px);font-weight:900;color:transparent;-webkit-text-stroke:2px rgba(82,183,136,0.35);text-shadow:0 0 120px rgba(82,183,136,0.15);letter-spacing:-3px;white-space:nowrap;user-select:none;pointer-events:none;line-height:1;z-index:1;}
+nav{position:relative;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:1.5rem 2rem;}
+.logo{font-family:'Fraunces',serif;font-size:18px;font-weight:700;color:var(--c);text-decoration:none;}
+.logo span{color:var(--vl);}
+.btn-nav{background:var(--o);color:#fff;padding:9px 20px;border-radius:5px;text-decoration:none;font-size:13px;font-weight:500;}
+.hero-body{flex:1;position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem 1.5rem 4rem;}
+.badge-gratis{display:inline-block;background:var(--vl);color:var(--v);font-family:'Fraunces',serif;font-size:13px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:5px 16px;border-radius:4px;margin-bottom:1.25rem;}
+.badge-cidade{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--vl);margin-bottom:2rem;}
+.badge-cidade::before,.badge-cidade::after{content:'';display:block;width:28px;height:1px;background:rgba(82,183,136,0.5);}
+.hero-titulo{font-family:'Fraunces',serif;font-size:clamp(38px,7vw,64px);font-weight:900;line-height:1.05;color:var(--c);margin-bottom:1.25rem;max-width:640px;}
+.hero-titulo em{font-style:italic;color:var(--vl);}
+.hero-titulo s{text-decoration-color:rgba(254,250,224,0.15);color:rgba(254,250,224,0.25);font-weight:300;}
+.hero-sub{font-size:16px;color:rgba(254,250,224,0.58);line-height:1.75;max-width:400px;margin-bottom:2.5rem;font-weight:300;}
+.hero-ctas{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;}
+.btn-main{display:inline-flex;align-items:center;gap:8px;background:var(--o);color:#fff;padding:14px 28px;border-radius:5px;font-size:15px;font-weight:500;text-decoration:none;box-shadow:0 4px 24px rgba(231,111,81,.5);transition:transform .2s;}
+.btn-main:hover{transform:translateY(-2px);}
+.btn-link{display:inline-flex;align-items:center;gap:6px;color:rgba(254,250,224,0.45);font-size:14px;text-decoration:none;padding:14px 4px;border-bottom:1px solid rgba(254,250,224,0.12);transition:color .2s;}
+.btn-link:hover{color:var(--c);}
+.hero-stats{position:relative;z-index:2;display:flex;border-top:1px solid rgba(255,255,255,0.09);}
+.stat{flex:1;padding:1.1rem 1.5rem;border-right:1px solid rgba(255,255,255,0.09);}
+.stat:last-child{border-right:none;}
+.stat-n{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--vl);}
+.stat-l{font-size:11px;color:rgba(254,250,224,0.28);margin-top:2px;letter-spacing:.4px;}
+.wrap{max-width:960px;margin:0 auto;}
+.sec{padding:5rem 2rem;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;}
+@media(max-width:660px){.grid2{grid-template-columns:1fr;gap:2.5rem;}}
+.eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--o);margin-bottom:.75rem;font-weight:500;}
+.titulo-sec{font-family:'Fraunces',serif;font-size:clamp(24px,4vw,34px);font-weight:700;color:var(--v);line-height:1.2;margin-bottom:.75rem;}
+.texto{font-size:15px;color:var(--tm);line-height:1.75;font-weight:300;}
+.chat{background:#fff;border-radius:14px;box-shadow:0 16px 48px rgba(0,0,0,0.10);overflow:hidden;}
+.chat-head{background:#075E54;padding:.75rem 1rem;display:flex;align-items:center;gap:10px;}
+.chat-av{width:30px;height:30px;border-radius:50%;background:#128C7E;display:flex;align-items:center;justify-content:center;font-size:13px;}
+.chat-nome{font-size:12px;font-weight:500;color:#fff;}
+.chat-cont{font-size:10px;color:rgba(255,255,255,.45);}
+.chat-body{padding:.75rem;background:#ECE5DD;display:flex;flex-direction:column;gap:5px;}
+.bub{display:inline-block;padding:6px 10px;border-radius:8px;font-size:12px;line-height:1.5;max-width:85%;}
+.bub.r{background:#fff;color:#111;align-self:flex-start;border-bottom-left-radius:2px;}
+.bub.s{background:#DCF8C6;color:#111;align-self:flex-end;border-bottom-right-radius:2px;}
+.bub-nome{font-size:10px;color:#075E54;margin-bottom:1px;font-weight:600;}
+.chat-caos{margin:3px 0 0;background:#FFF8E1;border-radius:5px;padding:5px 8px;font-size:11px;color:#856404;text-align:center;}
+.feat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;max-width:860px;margin:0 auto;}
+.feat{background:var(--c);border-radius:10px;padding:1.5rem;text-align:left;border:1px solid rgba(0,0,0,0.06);transition:transform .2s;}
+.feat:hover{transform:translateY(-4px);}
+.feat-ico{font-size:26px;margin-bottom:.75rem;display:block;}
+.feat-t{font-family:'Fraunces',serif;font-size:16px;font-weight:700;color:var(--v);margin-bottom:4px;}
+.feat-d{font-size:13px;color:var(--tm);line-height:1.65;font-weight:300;}
+.os-grid{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:2rem;}
+.os{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:1.25rem 1.5rem;max-width:250px;flex:1;text-align:left;}
+.os-t{font-size:13px;font-weight:500;color:var(--c);margin-bottom:8px;}
+.os-s{font-size:12px;color:rgba(254,250,224,0.48);line-height:2.1;}
+.os-s strong{color:rgba(254,250,224,0.85);}
+.aviso{background:rgba(231,111,81,0.12);border:1px solid rgba(231,111,81,0.2);border-radius:8px;padding:.9rem 1.5rem;max-width:460px;margin:0 auto;font-size:13px;color:rgba(254,250,224,0.62);line-height:1.65;}
+.aviso strong{color:var(--o);}
+.btn-cta{display:inline-flex;align-items:center;gap:10px;background:#fff;color:var(--o);padding:16px 34px;border-radius:5px;font-size:16px;font-weight:600;text-decoration:none;box-shadow:0 8px 32px rgba(0,0,0,0.18);transition:transform .2s;position:relative;z-index:1;}
+.btn-cta:hover{transform:translateY(-3px);}
+footer{background:#060f0a;padding:2rem;text-align:center;}
+.logo-f{font-family:'Fraunces',serif;font-size:17px;font-weight:700;color:var(--c);}
+.logo-f span{color:var(--vl);}
+footer p{font-size:11px;color:rgba(254,250,224,0.2);margin-top:4px;}
+.r{opacity:0;transform:translateY(24px);transition:opacity .8s ease,transform .8s ease;}
+.r.v{opacity:1;transform:none;}
+@media(max-width:600px){nav{padding:1rem 1.25rem;}.hero-stats{flex-wrap:wrap;}.stat{min-width:50%;}.sec{padding:3rem 1.25rem;}.os-grid{flex-direction:column;align-items:center;}.os{max-width:100%;}.bg-cidade{font-size:clamp(50px,13vw,100px);}}
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="bg-cidade">INDAIATUBA</div>
+  <nav>
+    <a href="/" class="logo">Vizinho<span>Certo</span></a>
+    <a href="/app" class="btn-nav">Entrar →</a>
+  </nav>
+  <div class="hero-body">
+    <div class="badge-gratis">Gratuito</div>
+    <div class="badge-cidade">📍 Indaiatuba · Cidade do Parque · São Paulo</div>
+    <h1 class="hero-titulo">Chega de grupo de<br>WhatsApp de <s>vizinho</s><br><em>Vizinho Certo</em></h1>
+    <p class="hero-sub">Conecte-se com quem mora na sua rua em Indaiatuba. Só vizinhos reais, sem spam, sem bom dia.</p>
+    <div class="hero-ctas">
+      <a href="/app" class="btn-main">🏘️ Criar conta grátis</a>
+      <a href="#instalar" class="btn-link">Como instalar ↓</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-n">Grátis</div><div class="stat-l">Para sempre</div></div>
+    <div class="stat"><div class="stat-n">Só vizinhos</div><div class="stat-l">Da sua rua</div></div>
+    <div class="stat"><div class="stat-n">🔒</div><div class="stat-l">Endereço privado</div></div>
+  </div>
+</section>
+
+<section class="sec r" style="background:var(--ce);">
+  <div class="wrap">
+    <div class="grid2">
+      <div>
+        <div class="eyebrow">O problema</div>
+        <h2 class="titulo-sec">O grupo de WhatsApp de Indaiatuba virou bagunça</h2>
+        <p class="texto">Spam de bom dia, anúncio de feira e 300 mensagens por dia. Sua reclamação real se perde no meio.</p>
+      </div>
+      <div class="chat">
+        <div class="chat-head"><div class="chat-av">💬</div><div><div class="chat-nome">Moradores Jd. Pompeia — Indaiatuba</div><div class="chat-cont">162 participantes</div></div></div>
+        <div class="chat-body">
+          <div><div class="bub-nome">Dona Helena</div><div class="bub r">Bom diaaaa Indaiatuba 🌺☀️🙏</div></div>
+          <div><div class="bub-nome">Você</div><div class="bub s">Calçada destruída na Rua das Orquídeas, alguém sabe o que fazer?</div></div>
+          <div><div class="bub-nome">Feira do Bairro</div><div class="bub r">🍓 Morango fresquinho hoje!!</div></div>
+          <div><div class="bub-nome">Admin</div><div class="bub r">Pessoal, só assuntos do bairro 🙏</div></div>
+          <div class="chat-caos">⚠️ Sua mensagem se perdeu entre 44 outras</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec r" style="background:#fff;text-align:center;">
+  <div class="wrap">
+    <div class="eyebrow" style="color:var(--vl);">A solução</div>
+    <h2 class="titulo-sec" style="text-align:center;max-width:500px;margin:0 auto .75rem;">Feito para quem mora em Indaiatuba</h2>
+    <p class="texto" style="text-align:center;max-width:400px;margin:0 auto 2.5rem;">Só quem mora perto aparece. Sem spam, sem bom dia.</p>
+    <div class="feat-grid">
+      <div class="feat"><span class="feat-ico">📍</span><div class="feat-t">Só seus vizinhos</div><div class="feat-d">50m a 500m. Só quem mora perto aparece no feed.</div></div>
+      <div class="feat"><span class="feat-ico">🚧</span><div class="feat-t">Reporte problemas</div><div class="feat-d">Buraco, calçada, poste — com foto e pedido por IA.</div></div>
+      <div class="feat"><span class="feat-ico">🆘</span><div class="feat-t">Emergência</div><div class="feat-d">Alerta todos os vizinhos. Polícia, SAMU e Bombeiros.</div></div>
+      <div class="feat"><span class="feat-ico">🔧</span><div class="feat-t">Serviços do bairro</div><div class="feat-d">Encanador, eletricista, diarista — próximos de você.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec r" style="background:var(--v);text-align:center;" id="instalar">
+  <div class="wrap">
+    <div class="eyebrow" style="color:var(--vl);">⚠️ Importante</div>
+    <h2 class="titulo-sec" style="color:var(--c);text-align:center;max-width:460px;margin:0 auto .75rem;">Adicione na tela inicial do celular</h2>
+    <p class="texto" style="color:rgba(254,250,224,0.52);text-align:center;max-width:380px;margin:0 auto 2rem;">Para funcionar como app de verdade, adicione na tela inicial.</p>
+    <div class="os-grid">
+      <div class="os"><div class="os-t">🍎 iPhone (Safari)</div><div class="os-s">1. Abra <strong>vizinhocerto.com.br</strong><br>2. Toque em <strong>compartilhar ⬆</strong><br>3. <strong>"Adicionar à Tela de Início"</strong><br>4. Confirme em <strong>"Adicionar"</strong></div></div>
+      <div class="os"><div class="os-t">🤖 Android (Chrome)</div><div class="os-s">1. Abra <strong>vizinhocerto.com.br</strong><br>2. Toque nos <strong>3 pontinhos ⋮</strong><br>3. <strong>"Adicionar à tela inicial"</strong><br>4. Confirme em <strong>"Adicionar"</strong></div></div>
+    </div>
+    <div class="aviso"><strong>Por que importa?</strong> Sem adicionar, você perde acesso rápido e notificações dos vizinhos. 📱</div>
+  </div>
+</section>
+
+<section class="sec r" style="background:var(--o);text-align:center;position:relative;overflow:hidden;">
+  <div style="position:absolute;width:600px;height:600px;border-radius:50%;background:rgba(255,255,255,0.06);top:-250px;right:-150px;"></div>
+  <div class="wrap" style="position:relative;z-index:1;">
+    <h2 class="titulo-sec" style="color:#fff;text-align:center;max-width:500px;margin:0 auto 1rem;">Indaiatuba merece uma vizinhança mais conectada</h2>
+    <p class="texto" style="color:rgba(255,255,255,.65);text-align:center;margin-bottom:2.5rem;">Gratuito. Sem spam. Só vizinhos de verdade.</p>
+    <a href="/app" class="btn-cta">🏘️ Criar conta grátis em Indaiatuba</a>
+  </div>
+</section>
+
+<footer>
+  <div class="logo-f">Vizinho<span>Certo</span></div>
+  <p>vizinhocerto.com.br · Sua rua. Seus vizinhos. Do seu jeito.</p>
+</footer>
+
+<script>
+const obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('v');}),{threshold:0.1});
+document.querySelectorAll('.r').forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
