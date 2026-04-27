@@ -1,6 +1,9 @@
 {
   "rewrites": [
     { "source": "/app", "destination": "/app.html" },
-    { "source": "/app/(.*)", "destination": "/app.html" }
+    { "source": "/app/(.*)", "destination": "/app.html" },
+    { "source": "/maringa", "destination": "/maringa.html" },
+    { "source": "/londrina", "destination": "/londrina.html" },
+    { "source": "/indaiatuba", "destination": "/indaiatuba.html" }
   ]
 }
