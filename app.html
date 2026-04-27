@@ -447,11 +447,6 @@
       <div class="anun-titulo">Pagamento</div>
       <div class="anun-sub">Após o pagamento seu anúncio entra no ar automaticamente.</div>
       <div class="resumo-box" id="anun-resumo"></div>
-      <div class="pgto-metodos">
-        <button class="pgto-btn sel" onclick="selPgto('pix',this)">📱 Pix</button>
-        <button class="pgto-btn" onclick="selPgto('cartao',this)">💳 Cartão</button>
-        <button class="pgto-btn" onclick="selPgto('boleto',this)">📄 Boleto</button>
-      </div>
       <div id="pgto-area"></div>
       <div class="anun-nav"><button class="anun-back" onclick="anunStep(3)">← Voltar</button><button class="anun-next" onclick="anunFinalizar()">Pagar e publicar →</button></div>
     </div>
@@ -535,108 +530,12 @@ const PALAVROES=['idiota','burro','imbecil','merda','fdp','filho da','viado','va
 const COR=['#5E60CE','#E76F51','#2D6A4F','#D4A017','#48CAE4'];
 const E={
   userId:null, nome:'', apelido:'', bairro:'', cidade:'', uf:'', rua:'', cep:'', lat:null, lon:null,
-  raio:150, geoStatus:'indisponivel', geoLabel:'LocalizaÃ§Ã£o nÃ£o definida',
-  tipo:'problema', filtro:'tudo', abCom:new Set(), abOq:new Set(), posts:[], fotoUrl:null
+  raio:150, tipo:'problema', filtro:'tudo', abCom:new Set(), abOq:new Set(), posts:[], fotoUrl:null
 };
-
-function temCoordenadas(){
-  return Number.isFinite(Number(E.lat)) && Number.isFinite(Number(E.lon));
-}
-
-function aproximarCoordenada(valor){
-  if(!Number.isFinite(Number(valor))) return null;
-  return Number(Number(valor).toFixed(3));
-}
-
-function aplicarCoordenadas(c, status='preciso', label='LocalizaÃ§Ã£o confirmada'){
-  if(!c || !Number.isFinite(Number(c.lat)) || !Number.isFinite(Number(c.lon))){
-    E.lat=null; E.lon=null; E.geoStatus='aproximado'; E.geoLabel='LocalizaÃ§Ã£o aproximada por bairro/cidade';
-    return false;
-  }
-  E.lat=aproximarCoordenada(c.lat);
-  E.lon=aproximarCoordenada(c.lon);
-  E.geoStatus=status;
-  E.geoLabel=label;
-  return true;
-}
-
-async function garantirGeolocalizacao(numero){
-  if(temCoordenadas()) return true;
-  if(E.rua || E.cidade){
-    const c = await geocodificar(E.rua, numero||'', E.cidade, E.uf);
-    if(aplicarCoordenadas(c)) return true;
-  }
-  E.geoStatus='aproximado';
-  E.geoLabel='Filtro por bairro/cidade';
-  return false;
-}
-
-function normalizarTextoGeo(valor){
-  return (valor||'').trim();
-}
-
-function configurarCadastroGuiado(){
-  const card = document.getElementById('card-cadastro');
-  const cep = document.getElementById('inp-cep')?.closest('.ig');
-  const resultado = document.getElementById('cep-resultado');
-  const numero = document.getElementById('num-wrap');
-  const nome = document.getElementById('inp-nome')?.closest('.ig');
-  const apelido = document.getElementById('inp-apelido')?.closest('.ig');
-  const email = document.getElementById('inp-email')?.closest('.ig');
-  const senha = document.getElementById('inp-senha')?.closest('.ig');
-  const botao = document.getElementById('btn-cadastrar');
-  if(!card || !cep || !resultado || !numero || !nome || !apelido || !email || !senha || !botao) return;
-
-  let complemento = document.getElementById('comp-wrap');
-  if(!complemento){
-    complemento = document.createElement('div');
-    complemento.className = 'ig';
-    complemento.id = 'comp-wrap';
-    complemento.style.display = 'none';
-    complemento.innerHTML = '<label>Complemento</label><input type="text" id="inp-comp" placeholder="Apto, bloco, fundos (opcional)" maxlength="60"/>';
-  }
-
-  let dados = document.getElementById('cadastro-dados');
-  if(!dados){
-    dados = document.createElement('div');
-    dados.id = 'cadastro-dados';
-    dados.style.display = 'none';
-  }
-
-  const intro = card.querySelector('p');
-  if(intro) intro.textContent = 'Digite seu CEP para localizarmos sua vizinhanca automaticamente.';
-  resultado.querySelector('label').textContent = 'Endereco encontrado';
-
-  card.insertBefore(cep, nome);
-  card.insertBefore(resultado, nome);
-  card.insertBefore(numero, nome);
-  card.insertBefore(complemento, nome);
-  card.insertBefore(dados, nome);
-  [nome, apelido, email, senha, botao].forEach(el => dados.appendChild(el));
-  resetarCadastroEndereco();
-}
-
-function resetarCadastroEndereco(){
-  ['cep-resultado','num-wrap','comp-wrap','cadastro-dados'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.style.display = 'none';
-  });
-  const addrEl = document.getElementById('inp-cep-addr');
-  if(addrEl) addrEl.value = '';
-}
-
-function liberarCadastroEndereco(){
-  ['cep-resultado','num-wrap','comp-wrap','cadastro-dados'].forEach(id => {
-    const el = document.getElementById(id);
-    if(el) el.style.display = '';
-  });
-  document.getElementById('inp-num')?.focus();
-}
 
 window.addEventListener('DOMContentLoaded', async () => {
   atuRaio(150);
   verificarRetornoPagamento();
-  configurarCadastroGuiado();
 
   // Registra ANTES do getSession pra capturar PASSWORD_RECOVERY
   sb.auth.onAuthStateChange(async (event, session) => {
@@ -743,7 +642,6 @@ async function irRaio(){
   const senha   = document.getElementById('inp-senha').value;
   const cep     = document.getElementById('inp-cep').value.replace(/[^0-9]/g,'');
   const num     = document.getElementById('inp-num').value.trim();
-  const comp    = document.getElementById('inp-comp')?.value.trim() || '';
   if(!nome)                        { toast('Digite seu nome completo!'); return; }
   if(!apelido)                     { toast('Digite como quer ser chamado(a)!'); return; }
   if(!email||!email.includes('@')) { toast('Digite um email válido!'); return; }
@@ -752,16 +650,13 @@ async function irRaio(){
   if(!E.bairro)                    { toast('Aguarde o CEP ser validado...'); return; }
   if(!num)                         { toast('Digite o número da sua casa!'); return; }
   const btn = document.getElementById('btn-cadastrar');
-  btn.disabled = true; btn.textContent = 'Validando endereÃ§o...';
+  btn.disabled = true; btn.textContent = 'Criando conta...';
   try {
-    const geoOk = await garantirGeolocalizacao(num);
-    if(!geoOk) toast('Vamos usar bairro/cidade enquanto a coordenada nÃ£o estiver precisa.');
-    btn.textContent = 'Criando conta...';
     const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
     if(authErr){ toast('Erro: ' + authErr.message); btn.disabled=false; btn.textContent='Criar conta →'; return; }
     E.userId = authData.user.id;
     E.nome = apelido; E.apelido = apelido;
-    cadastroTemp = { nome, apelido, email, cep, numero: num, complemento: comp, rua: E.rua, bairro: E.bairro, cidade: E.cidade, uf: E.uf, lat: E.lat, lon: E.lon };
+    cadastroTemp = { nome, apelido, email, cep, numero: num, rua: E.rua, bairro: E.bairro, cidade: E.cidade, uf: E.uf, lat: E.lat, lon: E.lon };
     btn.disabled=false; btn.textContent='Criar conta →';
     irTela('t-raio');
   } catch(e) {
@@ -885,8 +780,7 @@ async function buscaCEPEnd(cep){
     addrEl.value = (d.logradouro?d.logradouro+', ':'')+d.bairro+' — '+d.localidade+'/'+d.uf;
     numWrap.style.display = '';
     endTemp = { cep, rua: d.logradouro||'', bairro: d.bairro||d.localidade, cidade: d.localidade, uf: d.uf };
-    const c = await geocodificar(d.logradouro,'',d.localidade,d.uf);
-    if(c){ endTemp.lat=aproximarCoordenada(c.lat); endTemp.lon=aproximarCoordenada(c.lon); }
+    geocodificar(d.logradouro,'',d.localidade,d.uf).then(c=>{ if(c){ endTemp.lat=c.lat; endTemp.lon=c.lon; }});
   } catch(e){
     addrEl.value = 'CEP encontrado';
     numWrap.style.display = '';
@@ -899,10 +793,6 @@ async function salvarEndereco(){
   if(!num){ toast('Digite o número da sua casa!'); return; }
   const btn = document.querySelector('#m-endereco .bpost');
   btn.disabled=true; btn.textContent='Salvando...';
-  if(!endTemp.lat || !endTemp.lon){
-    const c = await geocodificar(endTemp.rua, num, endTemp.cidade, endTemp.uf);
-    if(c){ endTemp.lat=aproximarCoordenada(c.lat); endTemp.lon=aproximarCoordenada(c.lon); }
-  }
   await sb.from('usuarios').update({
     cep: endTemp.cep, rua: endTemp.rua, numero: num,
     bairro: endTemp.bairro, cidade: endTemp.cidade, uf: endTemp.uf,
@@ -910,8 +800,6 @@ async function salvarEndereco(){
   }).eq('id', E.userId);
   E.cep=endTemp.cep; E.rua=endTemp.rua; E.bairro=endTemp.bairro;
   E.cidade=endTemp.cidade; E.uf=endTemp.uf; E.lat=endTemp.lat; E.lon=endTemp.lon;
-  E.geoStatus=temCoordenadas()?'preciso':'aproximado';
-  E.geoLabel=temCoordenadas()?'LocalizaÃ§Ã£o confirmada':'Filtro por bairro/cidade';
   document.getElementById('fsub').textContent = `${E.cidade||E.bairro} · ${E.raio}m`;
   btn.disabled=false; btn.textContent='Salvar →';
   fecharAlterarEndereco();
@@ -921,8 +809,10 @@ async function salvarEndereco(){
 async function carregarPosts(){
   document.getElementById('feed').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando feed...</div>';
 
+  let query = sb.from('posts').select('*, comentarios(*)').order('criado_em', { ascending: false }).limit(50);
+
   // Filtra por distância se tiver coordenadas do usuário
-  if(temCoordenadas() && E.raio){
+  if(E.lat && E.lon && E.raio){
     const { data, error } = await sb.rpc('posts_no_raio', {
       user_lat: E.lat,
       user_lon: E.lon,
@@ -931,7 +821,6 @@ async function carregarPosts(){
     if(!error && data){
       // Busca comentários dos posts filtrados
       const ids = data.map(p => p.id);
-      if(ids.length === 0){ E.posts = postsBoasVindas(); render(); return; }
       if(ids.length > 0){
         const { data: comData } = await sb.from('comentarios').select('*').in('post_id', ids);
         const comMap = {};
@@ -952,13 +841,14 @@ async function carregarPosts(){
             nome: c.apelido_autor||'Vizinho',
             dist: '0m',
             txt:  c.texto,
+            usuario_id: c.usuario_id,
             av:   (c.apelido_autor||'V').charAt(0).toUpperCase(),
             cor:  COR[Math.abs(hashStr(c.id+'')) % COR.length]
           }))
         }));
         // Carrega fotos de perfil dos autores
         await carregarFotosPerfil(data.map(p=>p.usuario_id));
-        // Restaura apoios do localStorage
+        // Restaura apoios do localStorage (só marca como apoiado, não soma de novo)
         const apoiosLocais = getApoiosLocais();
         E.posts.forEach(p => { if(apoiosLocais.includes(p.id)) p.apd = true; });
         if(E.posts.length === 0) E.posts = postsBoasVindas();
@@ -967,31 +857,13 @@ async function carregarPosts(){
     }
   }
 
-  await carregarPostsPorBairro();
-}
-
-async function carregarPostsPorBairro(){
-  const bairro = normalizarTextoGeo(E.bairro);
-  const cidade = normalizarTextoGeo(E.cidade);
-  if(!bairro && !cidade){
-    E.posts = postsBoasVindas();
-    render();
-    toast('Atualize seu endereÃ§o para ver posts prÃ³ximos.');
-    return;
-  }
-
-  let query = sb.from('posts').select('*, comentarios(*)').order('criado_em', { ascending: false }).limit(50);
-  if(bairro) query = query.eq('bairro', bairro);
-  else query = query.eq('cidade', cidade);
-
+  // Fallback: sem coordenadas, mostra todos
   const { data, error } = await query;
-  if(error){ console.error(error); E.posts=[]; render(); toast('NÃ£o conseguimos carregar posts prÃ³ximos agora.'); return; }
-  E.geoStatus = temCoordenadas() ? E.geoStatus : 'aproximado';
-  E.geoLabel = bairro ? 'Filtro por bairro' : 'Filtro por cidade';
+  if(error){ console.error(error); E.posts=[]; render(); return; }
   E.posts = (data||[]).map(p => ({
     id: p.id,
     nome: p.apelido_autor || 'Vizinho',
-    dist: bairro ? 'no seu bairro' : 'na sua cidade',
+    dist: '0m',
     tipo: p.tipo,
     txt:  p.texto,
     ap:   p.apoios || 0,
@@ -1004,13 +876,11 @@ async function carregarPostsPorBairro(){
       nome: c.apelido_autor||'Vizinho',
       dist: '0m',
       txt:  c.texto,
+      usuario_id: c.usuario_id,
       av:   (c.apelido_autor||'V').charAt(0).toUpperCase(),
       cor:  COR[Math.abs(hashStr(c.id+'')) % COR.length]
     }))
   }));
-  await carregarFotosPerfil((data||[]).map(p=>p.usuario_id));
-  const apoiosLocais = getApoiosLocais();
-  E.posts.forEach(p => { if(apoiosLocais.includes(p.id)) p.apd = true; });
   if(E.posts.length === 0) E.posts = postsBoasVindas();
   render();
 }
@@ -1067,7 +937,7 @@ async function postar(){
     usuario_id: E.userId, apelido_autor: E.apelido,
     tipo: tipoAt, texto: txt || '',
     bairro: E.bairro, cidade: E.cidade, cep: E.cep,
-    lat: aproximarCoordenada(E.lat), lon: aproximarCoordenada(E.lon), apoios: 0, foto_url: uploadedUrl
+    lat: E.lat, lon: E.lon, apoios: 0, foto_url: uploadedUrl
   }).select().single();
   btn.disabled=false; btn.textContent='Publicar →';
   if(error){ toast('Erro ao publicar: ' + error.message); return; }
@@ -1191,7 +1061,13 @@ function render(){
   const rows = ps.map(p=>{
     const cA = E.abCom.has(p.id), oA = E.abOq.has(p.id);
     const db = p.tipo==='problema' ? OQ[detectOq(p.txt)] : null;
-    const coms = p.coms.map(c=>`<div class="com"><div class="cav" style="background:${c.cor}20;color:${c.cor}">${c.av}</div><div><span class="cnome">${c.nome}</span> <span class="cdist">· ${c.dist}</span><div class="ctxt">${c.txt}</div></div></div>`).join('');
+    const coms = p.coms.map(c=>{
+      const fotoC = fotoPerfilCache[c.usuario_id];
+      const cavHtml = fotoC
+        ? `<img src="${fotoC}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+        : `<div class="cav" style="background:${c.cor}20;color:${c.cor}">${c.av}</div>`;
+      return `<div class="com">${cavHtml}<div><span class="cnome">${c.nome}</span> <span class="cdist">· ${c.dist}</span><div class="ctxt">${c.txt}</div></div></div>`;
+    }).join('');
     const eMeu = p.usuario_id === E.userId;
     const fotoAutor = fotoPerfilCache[p.usuario_id];
     const avatarHtml = fotoAutor
@@ -1242,14 +1118,12 @@ function formataCEP(el){
   let v=el.value.replace(/\D/g,'');
   if(v.length>5) v=v.slice(0,5)+'-'+v.slice(5,8);
   el.value=v;
-  if(v.replace('-','').length<8) resetarCadastroEndereco();
   if(v.replace('-','').length===8) buscaCEP(v.replace('-',''));
 }
 async function buscaCEP(cep){
   const addrEl=document.getElementById('inp-cep-addr');
   const resEl=document.getElementById('cep-resultado');
   const numWrap=document.getElementById('num-wrap');
-  E.lat=null; E.lon=null; E.geoStatus='indisponivel'; E.geoLabel='Validando endereÃ§o';
   addrEl.value='Buscando endereço...';
   resEl.style.display='';
   try{
@@ -1259,34 +1133,26 @@ async function buscaCEP(cep){
     const logr=d.logradouro||'';
     const bairro=d.bairro||d.localidade||'';
     addrEl.value=(logr?logr+', ':'')+bairro+(d.localidade?' — '+d.localidade+'/'+d.uf:'');
-    liberarCadastroEndereco();
+    if(numWrap) numWrap.style.display='';
     E.rua=logr; E.bairro=bairro||d.localidade; E.cidade=d.localidade; E.uf=d.uf; E.cep=cep;
-    const c = await geocodificar(logr,'',d.localidade,d.uf);
-    aplicarCoordenadas(c, 'aproximado', c?'LocalizaÃ§Ã£o aproximada pela rua':'Filtro por bairro/cidade');
+    geocodificar(logr,'',d.localidade,d.uf).then(c=>{if(c){E.lat=c.lat;E.lon=c.lon;}});
   }catch(e){
-    resetarCadastroEndereco();
-    E.bairro=''; E.cidade=''; E.uf=''; E.cep='';
-    toast('Nao foi possivel buscar este CEP agora.');
+    addrEl.value='CEP '+cep.slice(0,5)+'-'+cep.slice(5)+' encontrado';
+    if(numWrap) numWrap.style.display='';
+    E.bairro='Meu bairro'; E.cidade='Minha cidade'; E.uf='BR'; E.cep=cep;
   }
 }
 async function geocodificarComNumero(num){
   if(!num || !E.rua) return;
   const c = await geocodificar(E.rua, num, E.cidade, E.uf);
-  aplicarCoordenadas(c, c?'preciso':'aproximado', c?'LocalizaÃ§Ã£o confirmada':'Filtro por bairro/cidade');
+  if(c){ E.lat=c.lat; E.lon=c.lon; }
 }
 async function geocodificar(rua,numero,cidade,uf){
   try{
     const q=encodeURIComponent((rua?rua+(numero?' '+numero:'')+(', '):'')+cidade+', '+uf+', Brasil');
-    const cacheKey='vc_geo_'+q;
-    const cached=localStorage.getItem(cacheKey);
-    if(cached) return JSON.parse(cached);
     const r=await fetch('https://nominatim.openstreetmap.org/search?q='+q+'&format=json&limit=1',{headers:{'Accept-Language':'pt-BR','User-Agent':'VizinhoCerto/1.0'}});
     const d=await r.json();
-    if(d&&d[0]){
-      const coord={lat:parseFloat(d[0].lat),lon:parseFloat(d[0].lon)};
-      localStorage.setItem(cacheKey, JSON.stringify(coord));
-      return coord;
-    }
+    if(d&&d[0]) return {lat:parseFloat(d[0].lat),lon:parseFloat(d[0].lon)};
   }catch(e){}
   return null;
 }
@@ -1318,7 +1184,7 @@ async function irFeed(){
     email: d.email||session?.user?.email||'', cep: d.cep||E.cep||'',
     numero: d.numero||'', rua: d.rua||E.rua||'', bairro: d.bairro||E.bairro||'',
     cidade: d.cidade||E.cidade||'', uf: d.uf||E.uf||'', raio: E.raio,
-    lat: aproximarCoordenada(d.lat||E.lat), lon: aproximarCoordenada(d.lon||E.lon)
+    lat: d.lat||E.lat||null, lon: d.lon||E.lon||null
   }, { onConflict: 'id' });
   cadastroTemp = {};
   sessionStorage.removeItem('vc_cadastro');
@@ -1494,25 +1360,46 @@ async function carregarVizinhos(){
   </div>`;
 }
 
-function renderServicos(){
+async function renderServicos(){
   const el=document.getElementById('servicos-tab');
-  const fil=catAtiva==='todos'?SERVICOS:SERVICOS.filter(s=>s.tipo===catAtiva);
-  const cats=CATS.map(c=>`<div class="srv-cat ${c===catAtiva?'at':''}" onclick="setcat('${c}',this)">${c==='todos'?'Todos':c}</div>`).join('');
+  el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando serviços...</div>';
+
+  // Busca anúncios ativos do Supabase
+  let query = sb.from('anuncios').select('*').eq('ativo', true).gt('expira_em', new Date().toISOString()).order('destaque', {ascending:false}).order('criado_em', {ascending:false});
+
+  // Filtra por raio se tiver coordenadas
+  const { data: anunData } = await query;
+  let anuncios = anunData || [];
+
+  // Filtra por categoria se necessário
+  const fil = catAtiva==='todos' ? anuncios : anuncios.filter(s=>s.tipo===catAtiva);
+
+  const cats=CATS.map(c=>`<div class="srv-cat ${c===catAtiva?'at':''}" onclick="setcat('${c}')">${c==='todos'?'Todos':c}</div>`).join('');
+
   const cards=fil.map(s=>`<div class="srv-card ${s.destaque?'destaque':''}">
     ${s.destaque?'<div class="srv-destaque-label">★ PARCEIRO DESTAQUE</div>':''}
-    <div class="srv-body"><div class="srv-top"><div class="srv-logo" style="background:${s.bg}">${s.logo}</div>
-    <div class="srv-info"><div class="srv-nome">${s.nome}</div><div class="srv-tipo">${s.tipo}</div><div class="srv-dist">a ${s.dist} de você</div></div></div>
-    <div class="srv-desc">${s.desc}</div>
-    <div class="srv-tags">${s.tags.map(t=>`<span class="srv-tag">${t}</span>`).join('')}</div>
-    <div class="srv-acoes"><button class="srv-btn-wa" onclick="ligar('${s.tel}')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligar('${s.tel}')">📞 Ligar</button></div>
-    </div></div>`).join('');
-  el.innerHTML=`<div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div>
+    <div class="srv-body"><div class="srv-top">
+    <div class="srv-logo" style="background:#E8F5E9">${s.icon||'🏪'}</div>
+    <div class="srv-info">
+      <div class="srv-nome">${s.nome}</div>
+      <div class="srv-tipo">${s.tipo}</div>
+    </div></div>
+    <div class="srv-desc">${s.descricao||''}</div>
+    <div class="srv-tags"><span class="srv-tag">${s.tipo}</span>${s.destaque?'<span class="srv-tag">✓ Verificado</span>':''}</div>
+    <div class="srv-acoes">
+      <button class="srv-btn-wa" onclick="window.open('https://wa.me/55${(s.telefone||'').replace(/[^0-9]/g,'')}','_blank')">💬 WhatsApp</button>
+      <button class="srv-btn-tel" onclick="ligar('${(s.telefone||'').replace(/[^0-9]/g,'')}')">📞 Ligar</button>
+    </div></div></div>`).join('');
+
+  el.innerHTML=`<div style="padding:1rem 1rem 5rem;">
+    <div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div>
     <div class="srv-cats">${cats}</div>
-    <div class="srv-grid">${cards}
+    <div class="srv-grid">${fil.length===0?'<div style="text-align:center;padding:2rem;color:var(--texto-muted);font-size:14px;">Nenhum serviço cadastrado ainda.<br>Seja o primeiro!</div>':cards}
     <div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p>
-    <button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div></div>`;
+    <button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div>
+    </div></div>`;
 }
-function setcat(cat){catAtiva=cat;renderServicos();}
+function setcat(cat){ catAtiva=cat; renderServicos(); }
 
 const anunState={tipo:'',icon:'',nome:'',desc:'',tel:'',dias:0,preco:0,pgto:'pix'};
 function abrirAnun(){document.getElementById('manun').classList.add('ab');anunStep(1);}
@@ -1562,31 +1449,24 @@ function selPgto(met,el){
 function renderPgto(){
   const preco=(anunState.preco/100).toFixed(2).replace('.',',');
   const area=document.getElementById('pgto-area');
-  if(anunState.pgto==='pix'){
-    area.innerHTML=`<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">📱</div><div style="font-weight:500;color:var(--texto);font-size:14px;">Valor: R$ ${preco}</div><div style="font-size:12px;color:var(--texto-muted);margin-top:8px;">Ao clicar em Pagar, você será redirecionado para o Mercado Pago.</div></div>`;
-  } else if(anunState.pgto==='cartao'){
-    area.innerHTML=`<div style="background:var(--branco);border:1.5px solid var(--borda);border-radius:var(--radius-sm);padding:1rem;">
-      <div class="anun-field"><label>Número do cartão</label><input type="tel" placeholder="0000 0000 0000 0000" maxlength="19"/></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div class="anun-field"><label>Validade</label><input type="text" placeholder="MM/AA" maxlength="5"/></div>
-      <div class="anun-field"><label>CVV</label><input type="tel" placeholder="000" maxlength="3"/></div></div>
-      <div class="anun-field" style="margin-bottom:0;"><label>Nome no cartão</label><input type="text" placeholder="NOME SOBRENOME"/></div></div>`;
-  } else {
-    area.innerHTML=`<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">📄</div><div style="font-size:12px;color:var(--texto-muted);">Boleto gerado após confirmação. Vencimento em 3 dias úteis.</div><div style="font-weight:500;color:var(--texto);margin-top:8px;">Valor: R$ ${preco}</div></div>`;
-  }
+  area.innerHTML=`<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">💳</div><div style="font-weight:500;color:var(--texto);font-size:14px;">Valor: R$ ${preco}</div><div style="font-size:12px;color:var(--texto-muted);margin-top:8px;">Ao clicar em Pagar, você será redirecionado para o checkout seguro da Stripe. Aceitamos Pix, cartão de crédito e débito.</div></div>`;
 }
 async function anunFinalizar(){
   const btn=document.querySelector('#as4 .anun-next');
   btn.textContent='Abrindo pagamento...';btn.disabled=true;
   try{
-    const retorno=window.location.href.split('?')[0];
-    const resp=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nome:anunState.nome,tipo:anunState.tipo,dias:anunState.dias,preco:anunState.preco,icon:anunState.icon,desc:anunState.desc,tel:anunState.tel,retorno})});
+    const retorno = window.location.origin + '/app';
+    const resp=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      nome:anunState.nome, tipo:anunState.tipo, dias:anunState.dias, preco:anunState.preco,
+      icon:anunState.icon, desc:anunState.desc, tel:anunState.tel,
+      usuario_id: E.userId, lat: E.lat, lon: E.lon, retorno
+    })});
     const data=await resp.json();
-    if(data.url){window.location.href=data.url;}
-    else{throw new Error('sem link de pagamento');}
+    if(data.url){ window.location.href=data.url; }
+    else{ throw new Error(data.error||'sem link de pagamento'); }
   }catch(e){
-    btn.disabled=false;btn.textContent='Pagar e publicar →';
-    toast('Erro ao conectar com Mercado Pago. Tente novamente.');
+    btn.disabled=false; btn.textContent='Pagar e publicar →';
+    toast('Erro ao conectar com pagamento. Tente novamente.');
   }
 }
 
@@ -1606,7 +1486,7 @@ async function enviarAlerta(){
     await sb.from('posts').insert({
       usuario_id:E.userId, apelido_autor:E.apelido,
       tipo:'aviso', texto:txt,
-      bairro:E.bairro, cidade:E.cidade, cep:E.cep, lat:aproximarCoordenada(E.lat), lon:aproximarCoordenada(E.lon), apoios:0
+      bairro:E.bairro, cidade:E.cidade, cep:E.cep, lat:E.lat, lon:E.lon, apoios:0
     });
   }
   setTimeout(()=>{
@@ -1623,18 +1503,27 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.cla
 function verificarRetornoPagamento(){
   const params=new URLSearchParams(window.location.search);
   if(params.get('pagamento')==='sucesso'){
-    const nome=decodeURIComponent(params.get('nome')||'');
-    const tipo=decodeURIComponent(params.get('tipo')||'');
-    const desc=decodeURIComponent(params.get('desc')||'');
-    const tel=decodeURIComponent(params.get('tel')||'');
-    const icon=decodeURIComponent(params.get('icon')||'🏪');
-    const dias=parseInt(params.get('dias')||'10');
-    if(nome){
-      SERVICOS.unshift({id:Date.now(),nome,tipo,dist:'perto de você',desc,tags:[tipo,'Destaque'],logo:icon,bg:'#E8F5E9',destaque:true,tel:tel.replace(/[^0-9]/g,'')});
-      setTimeout(()=>{alert('🎉 Pagamento confirmado! Seu anúncio está no ar por '+dias+' dias.');window.history.replaceState({},'',window.location.pathname);},500);
-    }
-  } else if(params.get('pagamento')==='falhou'){
-    setTimeout(()=>{alert('Pagamento não aprovado. Tente novamente.');window.history.replaceState({},'',window.location.pathname);},500);
+    window.history.replaceState({},'',window.location.pathname);
+    setTimeout(()=>{
+      // Mostra comprovante
+      const comp = document.createElement('div');
+      comp.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
+      comp.innerHTML=`<div style="background:var(--creme);border-radius:20px;padding:2rem;max-width:380px;width:100%;text-align:center;">
+        <div style="font-size:56px;margin-bottom:1rem;">🎉</div>
+        <div style="font-family:Fraunces,serif;font-size:22px;color:var(--verde);margin-bottom:8px;">Anúncio publicado!</div>
+        <div style="font-size:14px;color:var(--texto-muted);line-height:1.6;margin-bottom:1.5rem;">Seu anúncio já está no ar na aba Serviços para os vizinhos no seu raio. Você receberá um email de confirmação da Stripe.</div>
+        <div style="background:var(--verde-bg);border-radius:12px;padding:1rem;margin-bottom:1.5rem;font-size:13px;color:#1B4D37;line-height:1.8;">
+          <div>✅ Pagamento confirmado</div>
+          <div>✅ Anúncio ativo na aba Serviços</div>
+          <div>✅ Comprovante enviado por email</div>
+        </div>
+        <button onclick="this.closest('div[style]').remove();navTab('servicos',document.getElementById('nav-servicos'));" style="width:100%;padding:12px;background:var(--verde);color:white;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">Ver meu anúncio →</button>
+      </div>`;
+      document.body.appendChild(comp);
+    },500);
+  } else if(params.get('pagamento')==='cancelado'){
+    window.history.replaceState({},'',window.location.pathname);
+    setTimeout(()=>toast('Pagamento cancelado. Tente novamente quando quiser.'),500);
   }
 }
 </script>
