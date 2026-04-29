@@ -841,6 +841,7 @@ async function carregarPosts(){
           av: (p.apelido_autor||'V').charAt(0).toUpperCase(),
           cor: COR[Math.abs(hashStr(p.id+'')) % COR.length],
           foto_url: p.foto_url || null, usuario_id: p.usuario_id,
+          tempo: formatarTempo(p.criado_em),
           coms: (comMap[p.id]||[]).map(c=>({
             nome: c.apelido_autor||'Vizinho', dist: '0m', txt: c.texto, usuario_id: c.usuario_id,
             av: (c.apelido_autor||'V').charAt(0).toUpperCase(),
@@ -861,7 +862,7 @@ async function carregarPosts(){
     id: p.id, nome: p.apelido_autor || 'Vizinho', dist: '0m', tipo: p.tipo, txt: p.texto,
     ap: p.apoios || 0, apd: false, av: (p.apelido_autor||'V').charAt(0).toUpperCase(),
     cor: COR[Math.abs(hashStr(p.id+'')) % COR.length], foto_url: p.foto_url || null,
-    usuario_id: p.usuario_id,
+    usuario_id: p.usuario_id, tempo: formatarTempo(p.criado_em),
     coms: (p.comentarios||[]).map(c=>({
       nome: c.apelido_autor||'Vizinho', dist: '0m', txt: c.texto, usuario_id: c.usuario_id,
       av: (c.apelido_autor||'V').charAt(0).toUpperCase(),
@@ -870,6 +871,18 @@ async function carregarPosts(){
   }));
   if(E.posts.length === 0) E.posts = postsBoasVindas();
   render();
+}
+
+function formatarTempo(criado_em){
+  if(!criado_em) return '';
+  const agora = new Date();
+  const criado = new Date(criado_em);
+  const diff = Math.floor((agora - criado) / 1000);
+  if(diff < 60) return 'agora';
+  if(diff < 3600) return Math.floor(diff/60) + 'min';
+  if(diff < 86400) return Math.floor(diff/3600) + 'h';
+  if(diff < 604800) return Math.floor(diff/86400) + 'd';
+  return criado.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
 }
 
 function formatarDistancia(metros){
@@ -931,6 +944,7 @@ async function postar(){
   });
   render();
   toast('Publicado! 🎉');
+  fetch('/api/notify', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'📢 Nova publicação na sua rua!', corpo: (txt||'').slice(0,80), url:'/app'})}).catch(()=>{});
 }
 
 async function apoiar(id){
@@ -1040,7 +1054,7 @@ function render(){
     const avatarHtml = fotoAutor ? `<img src="${fotoAutor}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : `<div class="pav" style="background:${p.cor}20;color:${p.cor}">${p.av}</div>`;
     return `<div class="pc" id="pc${p.id}">
       <div class="pm">
-        <div class="ph">${avatarHtml}<div><div class="pnome">${p.nome}</div><div class="pdist">${p.dist ? 'a '+p.dist+' de você' : ''}</div></div><span class="ptag ${TC[p.tipo]}">${TL[p.tipo]}</span></div>
+        <div class="ph">${avatarHtml}<div><div class="pnome">${p.nome}</div><div class="pdist">${p.dist ? 'a '+p.dist+' de você' : ''}${p.tempo ? ' · '+p.tempo : ''}</div></div><span class="ptag ${TC[p.tipo]}">${TL[p.tipo]}</span></div>
         <div class="ptxt">${p.txt}</div>
         ${p.foto_url ? `<img class="post-foto" src="${p.foto_url}" alt="Foto do post" loading="lazy" onclick="verFoto('${p.foto_url}')">` : ''}
         <div class="pac">
@@ -1390,6 +1404,7 @@ async function enviarAlerta(){
       tipo:'aviso', texto:txt,
       bairro:E.bairro, cidade:E.cidade, cep:E.cep, lat:E.lat, lon:E.lon, apoios:0
     });
+    fetch('/api/notify', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'🆘 ALERTA DE EMERGÊNCIA!', corpo: E.nome+' acionou o botão de pânico nas proximidades!', url:'/app'})}).catch(()=>{});
   }
   setTimeout(()=>{
     const vc=Math.floor(3+(E.raio/100));
