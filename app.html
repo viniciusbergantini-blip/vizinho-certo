@@ -420,6 +420,7 @@
         <div class="tipo-card" onclick="selTipoAnun('🌿','Jardineiro',this)"><div class="tipo-card-icon">🌿</div><div class="tipo-card-label">Jardineiro</div></div>
         <div class="tipo-card" onclick="selTipoAnun('🏗️','Pedreiro',this)"><div class="tipo-card-icon">🏗️</div><div class="tipo-card-label">Pedreiro / Pintor</div></div>
         <div class="tipo-card" onclick="selTipoAnun('🔨','Marido de Aluguel',this)"><div class="tipo-card-icon">🔨</div><div class="tipo-card-label">Marido de Aluguel</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🛒','Anúncio',this)"><div class="tipo-card-icon">🛒</div><div class="tipo-card-label">Venda / Troca</div></div>
       </div>
       <div class="anun-nav"><button class="anun-back" onclick="fecharAnun()">Cancelar</button><button class="anun-next" id="anun-n1" onclick="anunStep(2)" disabled>Continuar →</button></div>
     </div>
@@ -527,6 +528,7 @@ const VAPID_PUBLIC_KEY = 'BOto1nQHk0YOlsxXe38vEb8OJRvpvX_H-14FSURRIltLVnzt40m7py
 let modoRecuperacaoSenha = false;
 
 const PALAVROES=['idiota','burro','imbecil','merda','fdp','filho da','viado','vadia','puta','vagabundo','cretino','otário','lixo'];
+const PALAVRAS_ANUNCIO=['vendo ','à venda','a venda','compro e vendo','troco por','aceito pix','valor r$','r$ ','reais cada','parcelo em','frete grátis','frete incluso','entrego na sua casa','faço entrega','promoção imperdível','últimas unidades','estoque limitado','aproveite','compre agora','peça já','encomendas abertas'];
 const COR=['#5E60CE','#E76F51','#2D6A4F','#D4A017','#48CAE4'];
 const E={
   userId:null, nome:'', apelido:'', bairro:'', cidade:'', uf:'', rua:'', cep:'', lat:null, lon:null,
@@ -919,6 +921,11 @@ async function postar(){
   const txt = document.getElementById('ptxt').value.trim();
   if(!txt && !fotoFile){ toast('Escreva algo ou adicione uma foto!'); return; }
   if(txt && temPalavrão(txt)){ toast('⚠️ Revise o texto — sem palavrões.'); return; }
+  if(txt && temAnuncio(txt)){
+    toast('🛒 Para anunciar use a aba Serviços!');
+    setTimeout(()=>{ fecharM(); navTab('servicos', document.getElementById('nav-servicos')); abrirAnun(); }, 1500);
+    return;
+  }
   if(!E.userId){ toast('Você precisa estar logado!'); return; }
   const btn = document.querySelector('.bpost');
   btn.disabled=true; btn.textContent='Publicando...';
@@ -976,6 +983,10 @@ async function envCom(id){
   p.coms.push({nome:E.apelido,dist:'0m',txt,av:E.apelido.charAt(0).toUpperCase(),cor:COR[Math.floor(Math.random()*COR.length)]});
   render();
   toast('Comentário publicado! 💬');
+  // Notifica o dono do post (se não for o próprio usuário)
+  if(p.usuario_id && p.usuario_id !== E.userId){
+    fetch('/api/notify', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'💬 '+E.apelido+' comentou no seu post', corpo: txt.slice(0,80), url:'/app', usuario_ids:[p.usuario_id]})}).catch(()=>{});
+  }
 }
 
 const TL={problema:'🚧 Problema',aviso:'⚠️ Aviso',ajuda:'🤝 Ajuda',info:'💬 Info'};
@@ -1037,6 +1048,7 @@ function detectOq(txt){
   return 'default';
 }
 function temPalavrão(t){return PALAVROES.some(p=>t.toLowerCase().includes(p));}
+function temAnuncio(t){return PALAVRAS_ANUNCIO.some(p=>t.toLowerCase().includes(p));}
 function buscarNoGoogle(termo){ const cidade = encodeURIComponent((E.cidade||'') + ' ' + termo); window.open('https://www.google.com/search?q='+cidade, '_blank'); }
 
 function render(){
@@ -1234,7 +1246,7 @@ function copiarIA(){navigator.clipboard.writeText(document.getElementById('iatx'
 
 const SERVICOS=[];
 let catAtiva='todos';
-const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Costureira','Jardineiro','Pedreiro','Marido de Aluguel'];
+const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Costureira','Jardineiro','Pedreiro','Marido de Aluguel','Anúncio'];
 
 function navTab(tab,el){
   document.querySelectorAll('.nitem').forEach(n=>n.classList.remove('at'));
