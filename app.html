@@ -421,6 +421,7 @@
         <div class="tipo-card" onclick="selTipoAnun('🏗️','Pedreiro',this)"><div class="tipo-card-icon">🏗️</div><div class="tipo-card-label">Pedreiro / Pintor</div></div>
         <div class="tipo-card" onclick="selTipoAnun('🔨','Marido de Aluguel',this)"><div class="tipo-card-icon">🔨</div><div class="tipo-card-label">Marido de Aluguel</div></div>
         <div class="tipo-card" onclick="selTipoAnun('🛒','Anúncio',this)"><div class="tipo-card-icon">🛒</div><div class="tipo-card-label">Venda / Troca</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🛠️','Outros Serviços',this)"><div class="tipo-card-icon">🛠️</div><div class="tipo-card-label">Outros Serviços</div></div>
       </div>
       <div class="anun-nav"><button class="anun-back" onclick="fecharAnun()">Cancelar</button><button class="anun-next" id="anun-n1" onclick="anunStep(2)" disabled>Continuar →</button></div>
     </div>
@@ -1246,7 +1247,7 @@ function copiarIA(){navigator.clipboard.writeText(document.getElementById('iatx'
 
 const SERVICOS=[];
 let catAtiva='todos';
-const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Costureira','Jardineiro','Pedreiro','Marido de Aluguel','Anúncio'];
+const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Costureira','Jardineiro','Pedreiro','Marido de Aluguel','Anúncio','Outros Serviços'];
 
 function navTab(tab,el){
   document.querySelectorAll('.nitem').forEach(n=>n.classList.remove('at'));
