@@ -876,7 +876,9 @@ async function carregarPosts(){
 function formatarTempo(criado_em){
   if(!criado_em) return '';
   const agora = new Date();
-  const criado = new Date(criado_em);
+  // Garante que interpreta como UTC se não tiver timezone
+  const str = criado_em.toString().includes('Z') || criado_em.toString().includes('+') ? criado_em : criado_em + 'Z';
+  const criado = new Date(str);
   const diff = Math.floor((agora - criado) / 1000);
   if(diff < 60) return 'agora';
   if(diff < 3600) return Math.floor(diff/60) + 'min';
