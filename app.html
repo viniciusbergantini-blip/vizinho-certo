@@ -178,7 +178,6 @@
   .srv-info{flex:1;}
   .srv-nome{font-size:15px;font-weight:500;color:var(--texto);}
   .srv-tipo{font-size:11px;color:var(--texto-muted);margin-top:1px;}
-  .srv-dist{font-size:11px;font-weight:500;color:#2D6A4F;margin-top:1px;}
   .srv-desc{font-size:13px;color:var(--texto-muted);line-height:1.55;margin-bottom:10px;}
   .srv-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
   .srv-tag{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--verde-bg);color:#2D6A4F;}
@@ -361,7 +360,6 @@
   </div>
 </div>
 
-<!-- TELA NOVA SENHA -->
 <div class="tela" id="t-nova-senha">
   <div style="background:var(--verde);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;position:relative;overflow:hidden;">
     <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(82,183,136,0.15);top:-80px;right:-100px;"></div>
@@ -524,6 +522,8 @@ const SUPABASE_URL = 'https://xurtdibicsxmouvzfxvb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1cnRkaWJpY3N4bW91dnpmeHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNjcsImV4cCI6MjA4OTg3MTM2N30.WQ36EsY2JHP5G4VvLAfRNv7j4RjArne1sjbRS_tfvUU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const VAPID_PUBLIC_KEY = 'BOto1nQHk0YOlsxXe38vEb8OJRvpvX_H-14FSURRIltLVnzt40m7pyh7dwWETdzhvWo8Xk_J6nOll8kQp1Jy8NY';
+
 let modoRecuperacaoSenha = false;
 
 const PALAVROES=['idiota','burro','imbecil','merda','fdp','filho da','viado','vadia','puta','vagabundo','cretino','otário','lixo'];
@@ -533,34 +533,60 @@ const E={
   raio:150, tipo:'problema', filtro:'tudo', abCom:new Set(), abOq:new Set(), posts:[], fotoUrl:null
 };
 
+// ── PUSH NOTIFICATIONS ──
+async function registrarNotificacoes() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+  try {
+    const reg = await navigator.serviceWorker.register('/sw.js');
+    await navigator.serviceWorker.ready;
+    if (Notification.permission === 'denied') return;
+    if (Notification.permission === 'default') {
+      const perm = await Notification.requestPermission();
+      if (perm !== 'granted') return;
+    }
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+      });
+    }
+    if (E.userId) {
+      await sb.from('push_tokens').upsert({
+        usuario_id: E.userId,
+        token: JSON.stringify(sub)
+      }, { onConflict: 'usuario_id,token' });
+    }
+  } catch(e) {
+    console.log('Push não disponível:', e.message);
+  }
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
+}
+
 window.addEventListener('DOMContentLoaded', async () => {
   atuRaio(150);
   verificarRetornoPagamento();
 
-  // Registra ANTES do getSession pra capturar PASSWORD_RECOVERY
   sb.auth.onAuthStateChange(async (event, session) => {
     if(event === 'SIGNED_OUT'){ modoRecuperacaoSenha=false; irTela('t-bv'); return; }
-    if(event === 'PASSWORD_RECOVERY'){ 
-      modoRecuperacaoSenha = true;
-      irTela('t-nova-senha'); 
-      return; 
-    }
-    // Ignora SIGNED_IN se estiver em modo de recuperação
+    if(event === 'PASSWORD_RECOVERY'){ modoRecuperacaoSenha = true; irTela('t-nova-senha'); return; }
     if(event === 'SIGNED_IN' && modoRecuperacaoSenha) return;
   });
 
   try {
     const { data: { session } } = await sb.auth.getSession();
     if(!session || !session.user){ irTela('t-bv'); return; }
-
-    // Se veio de link de reset, não vai pro feed
     if(modoRecuperacaoSenha){ irTela('t-nova-senha'); return; }
-
     E.userId = session.user.id;
     const { data: perfil } = await sb.from('usuarios').select('*').eq('id', session.user.id).single();
     if(!perfil || !perfil.apelido){
-      irTela('t-bv');
-      mostrarCadastro();
+      irTela('t-bv'); mostrarCadastro();
       document.getElementById('inp-email').value = session.user.email;
       toast('Complete seu cadastro para continuar! 👋');
       return;
@@ -586,6 +612,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
     await carregarPosts();
     irTela('t-feed');
+    registrarNotificacoes();
   } catch(e) {
     console.error('Erro no init:', e);
     irTela('t-bv');
@@ -605,9 +632,7 @@ function mostrarCadastro(){ document.getElementById('card-login').style.display=
 async function recuperarSenha(){
   const email = document.getElementById('login-email').value.trim();
   if(!email || !email.includes('@')){ toast('Digite seu email primeiro!'); return; }
-  const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://www.vizinhocerto.com.br'
-  });
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: 'https://www.vizinhocerto.com.br' });
   if(error){ toast('Erro: ' + error.message); return; }
   toast('Email de recuperação enviado! Verifique sua caixa. 📬');
 }
@@ -624,13 +649,8 @@ async function salvarNovaSenha(){
   toast('Senha atualizada! ✅');
   modoRecuperacaoSenha = false;
   btn.disabled=false; btn.textContent='Salvar nova senha →';
-  // Vai pro feed
   const { data: { session } } = await sb.auth.getSession();
-  if(session){
-    await carregarPerfil(session.user.id);
-    await carregarPosts();
-    irTela('t-feed');
-  }
+  if(session){ await carregarPerfil(session.user.id); await carregarPosts(); irTela('t-feed'); registrarNotificacoes(); }
 }
 
 let cadastroTemp = {};
@@ -686,7 +706,7 @@ async function fazerLogin(){
   const { data: perfil } = await sb.from('usuarios').select('id,raio').eq('id', data.user.id).single();
   btn.disabled=false; btn.textContent='Entrar →';
   if(!perfil || !perfil.id){ irTela('t-raio'); }
-  else { await carregarPosts(); irTela('t-feed'); }
+  else { await carregarPosts(); irTela('t-feed'); registrarNotificacoes(); }
 }
 
 async function carregarPerfil(uid){
@@ -706,7 +726,6 @@ async function carregarPerfil(uid){
     E.fotoUrl = data.foto_url || null;
   }
   document.getElementById('fsub').textContent = `${E.cidade||E.bairro||'Minha cidade'} · ${E.raio}m`;
-  // Atualiza avatar no header com foto se tiver
   const favEl = document.getElementById('fav');
   if(E.fotoUrl){
     favEl.innerHTML = `<img src="${E.fotoUrl}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">`;
@@ -732,7 +751,6 @@ async function uploadFotoPerfil(input){
     await sb.from('usuarios').update({ foto_url: url }).eq('id', E.userId);
     E.fotoUrl = url;
     toast('Foto atualizada! 📸');
-    // Recarrega a aba perfil
     navTab('perfil', document.querySelector('.nitem:last-child'));
   } catch(e){
     toast('Erro ao enviar foto: ' + e.message);
@@ -808,47 +826,28 @@ async function salvarEndereco(){
 
 async function carregarPosts(){
   document.getElementById('feed').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando feed...</div>';
-
   let query = sb.from('posts').select('*, comentarios(*)').order('criado_em', { ascending: false }).limit(50);
-
-  // Filtra por distância se tiver coordenadas do usuário
   if(E.lat && E.lon && E.raio){
-    const { data, error } = await sb.rpc('posts_no_raio', {
-      user_lat: E.lat,
-      user_lon: E.lon,
-      raio_metros: E.raio
-    });
+    const { data, error } = await sb.rpc('posts_no_raio', { user_lat: E.lat, user_lon: E.lon, raio_metros: E.raio });
     if(!error && data){
-      // Busca comentários dos posts filtrados
       const ids = data.map(p => p.id);
       if(ids.length > 0){
         const { data: comData } = await sb.from('comentarios').select('*').in('post_id', ids);
         const comMap = {};
         (comData||[]).forEach(c => { if(!comMap[c.post_id]) comMap[c.post_id]=[]; comMap[c.post_id].push(c); });
         E.posts = data.map(p => ({
-          id: p.id,
-          nome: p.apelido_autor || 'Vizinho',
-          dist: formatarDistancia(p.distancia_metros),
-          tipo: p.tipo,
-          txt:  p.texto,
-          ap:   p.apoios || 0,
-          apd:  false,
-          av:   (p.apelido_autor||'V').charAt(0).toUpperCase(),
-          cor:  COR[Math.abs(hashStr(p.id+'')) % COR.length],
-          foto_url: p.foto_url || null,
-          usuario_id: p.usuario_id,
+          id: p.id, nome: p.apelido_autor || 'Vizinho', dist: formatarDistancia(p.distancia_metros),
+          tipo: p.tipo, txt: p.texto, ap: p.apoios || 0, apd: false,
+          av: (p.apelido_autor||'V').charAt(0).toUpperCase(),
+          cor: COR[Math.abs(hashStr(p.id+'')) % COR.length],
+          foto_url: p.foto_url || null, usuario_id: p.usuario_id,
           coms: (comMap[p.id]||[]).map(c=>({
-            nome: c.apelido_autor||'Vizinho',
-            dist: '0m',
-            txt:  c.texto,
-            usuario_id: c.usuario_id,
-            av:   (c.apelido_autor||'V').charAt(0).toUpperCase(),
-            cor:  COR[Math.abs(hashStr(c.id+'')) % COR.length]
+            nome: c.apelido_autor||'Vizinho', dist: '0m', txt: c.texto, usuario_id: c.usuario_id,
+            av: (c.apelido_autor||'V').charAt(0).toUpperCase(),
+            cor: COR[Math.abs(hashStr(c.id+'')) % COR.length]
           }))
         }));
-        // Carrega fotos de perfil dos autores
         await carregarFotosPerfil(data.map(p=>p.usuario_id));
-        // Restaura apoios do localStorage (só marca como apoiado, não soma de novo)
         const apoiosLocais = getApoiosLocais();
         E.posts.forEach(p => { if(apoiosLocais.includes(p.id)) p.apd = true; });
         if(E.posts.length === 0) E.posts = postsBoasVindas();
@@ -856,29 +855,17 @@ async function carregarPosts(){
       }
     }
   }
-
-  // Fallback: sem coordenadas, mostra todos
   const { data, error } = await query;
   if(error){ console.error(error); E.posts=[]; render(); return; }
   E.posts = (data||[]).map(p => ({
-    id: p.id,
-    nome: p.apelido_autor || 'Vizinho',
-    dist: '0m',
-    tipo: p.tipo,
-    txt:  p.texto,
-    ap:   p.apoios || 0,
-    apd:  false,
-    av:   (p.apelido_autor||'V').charAt(0).toUpperCase(),
-    cor:  COR[Math.abs(hashStr(p.id+'')) % COR.length],
-    foto_url: p.foto_url || null,
+    id: p.id, nome: p.apelido_autor || 'Vizinho', dist: '0m', tipo: p.tipo, txt: p.texto,
+    ap: p.apoios || 0, apd: false, av: (p.apelido_autor||'V').charAt(0).toUpperCase(),
+    cor: COR[Math.abs(hashStr(p.id+'')) % COR.length], foto_url: p.foto_url || null,
     usuario_id: p.usuario_id,
     coms: (p.comentarios||[]).map(c=>({
-      nome: c.apelido_autor||'Vizinho',
-      dist: '0m',
-      txt:  c.texto,
-      usuario_id: c.usuario_id,
-      av:   (c.apelido_autor||'V').charAt(0).toUpperCase(),
-      cor:  COR[Math.abs(hashStr(c.id+'')) % COR.length]
+      nome: c.apelido_autor||'Vizinho', dist: '0m', txt: c.texto, usuario_id: c.usuario_id,
+      av: (c.apelido_autor||'V').charAt(0).toUpperCase(),
+      cor: COR[Math.abs(hashStr(c.id+'')) % COR.length]
     }))
   }));
   if(E.posts.length === 0) E.posts = postsBoasVindas();
@@ -904,13 +891,11 @@ async function carregarFotosPerfil(userIds){
   if(!ids.length) return;
   const { data } = await sb.from('usuarios').select('id, foto_url').in('id', ids);
   (data||[]).forEach(u => { if(u.foto_url) fotoPerfilCache[u.id] = u.foto_url; });
-  // Inclui a foto do próprio usuário
   if(E.userId && E.fotoUrl) fotoPerfilCache[E.userId] = E.fotoUrl;
 }
 
 function hashStr(s){ let h=0; for(let i=0;i<s.length;i++) h=Math.imul(31,h)+s.charCodeAt(i)|0; return h; }
 
-// Apoios persistidos no localStorage
 function getApoiosLocais(){ try{ return JSON.parse(localStorage.getItem('vc_apoios')||'[]'); } catch(e){ return []; } }
 function salvarApoioLocal(id){ const a=getApoiosLocais(); if(!a.includes(id)){ a.push(id); localStorage.setItem('vc_apoios', JSON.stringify(a)); } }
 function removerApoioLocal(id){ const a=getApoiosLocais().filter(x=>x!==id); localStorage.setItem('vc_apoios', JSON.stringify(a)); }
@@ -926,18 +911,12 @@ async function postar(){
   if(fotoFile){
     document.getElementById('foto-loading').style.display='flex';
     try{ uploadedUrl = await uploadFoto(fotoFile); }
-    catch(e){
-      toast('Erro ao enviar foto: ' + e.message);
-      document.getElementById('foto-loading').style.display='none';
-      btn.disabled=false; btn.textContent='Publicar →'; return;
-    }
+    catch(e){ toast('Erro ao enviar foto: ' + e.message); document.getElementById('foto-loading').style.display='none'; btn.disabled=false; btn.textContent='Publicar →'; return; }
     document.getElementById('foto-loading').style.display='none';
   }
   const { data, error } = await sb.from('posts').insert({
-    usuario_id: E.userId, apelido_autor: E.apelido,
-    tipo: tipoAt, texto: txt || '',
-    bairro: E.bairro, cidade: E.cidade, cep: E.cep,
-    lat: E.lat, lon: E.lon, apoios: 0, foto_url: uploadedUrl
+    usuario_id: E.userId, apelido_autor: E.apelido, tipo: tipoAt, texto: txt || '',
+    bairro: E.bairro, cidade: E.cidade, cep: E.cep, lat: E.lat, lon: E.lon, apoios: 0, foto_url: uploadedUrl
   }).select().single();
   btn.disabled=false; btn.textContent='Publicar →';
   if(error){ toast('Erro ao publicar: ' + error.message); return; }
@@ -946,8 +925,7 @@ async function postar(){
   document.querySelectorAll('.ftab').forEach((t,i)=>t.classList.toggle('ativo',i===0));
   E.posts.unshift({
     id: data.id, nome: E.apelido, dist:'0m', tipo:tipoAt,
-    txt: txt||'', ap:0, apd:false,
-    av: E.apelido.charAt(0).toUpperCase(),
+    txt: txt||'', ap:0, apd:false, av: E.apelido.charAt(0).toUpperCase(),
     cor: COR[Math.abs(hashStr(data.id+'')) % COR.length],
     foto_url: uploadedUrl, usuario_id: E.userId, coms:[]
   });
@@ -977,18 +955,13 @@ async function envCom(id){
     p.coms.push({nome:E.apelido,dist:'0m',txt,av:E.apelido.charAt(0).toUpperCase(),cor:COR[Math.floor(Math.random()*COR.length)]});
     render(); toast('Comentário publicado! 💬'); return;
   }
-  const { error } = await sb.from('comentarios').insert({
-    post_id: id, usuario_id: E.userId, apelido_autor: E.apelido, texto: txt
-  });
+  const { error } = await sb.from('comentarios').insert({ post_id: id, usuario_id: E.userId, apelido_autor: E.apelido, texto: txt });
   if(error){ toast('Erro ao comentar: ' + error.message); return; }
   p.coms.push({nome:E.apelido,dist:'0m',txt,av:E.apelido.charAt(0).toUpperCase(),cor:COR[Math.floor(Math.random()*COR.length)]});
   render();
   toast('Comentário publicado! 💬');
 }
 
-// ============================================================
-// RENDER — meu calculado dinamicamente com E.userId
-// ============================================================
 const TL={problema:'🚧 Problema',aviso:'⚠️ Aviso',ajuda:'🤝 Ajuda',info:'💬 Info'};
 const TC={problema:'t-pr',aviso:'t-av',ajuda:'t-aj',info:'t-in'};
 const fotoPerfilCache = {};
@@ -1048,11 +1021,7 @@ function detectOq(txt){
   return 'default';
 }
 function temPalavrão(t){return PALAVROES.some(p=>t.toLowerCase().includes(p));}
-
-function buscarNoGoogle(termo){
-  const cidade = encodeURIComponent((E.cidade||'') + ' ' + termo);
-  window.open('https://www.google.com/search?q='+cidade, '_blank');
-}
+function buscarNoGoogle(termo){ const cidade = encodeURIComponent((E.cidade||'') + ' ' + termo); window.open('https://www.google.com/search?q='+cidade, '_blank'); }
 
 function render(){
   const lista = document.getElementById('feed');
@@ -1063,16 +1032,12 @@ function render(){
     const db = p.tipo==='problema' ? OQ[detectOq(p.txt)] : null;
     const coms = p.coms.map(c=>{
       const fotoC = fotoPerfilCache[c.usuario_id];
-      const cavHtml = fotoC
-        ? `<img src="${fotoC}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
-        : `<div class="cav" style="background:${c.cor}20;color:${c.cor}">${c.av}</div>`;
+      const cavHtml = fotoC ? `<img src="${fotoC}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : `<div class="cav" style="background:${c.cor}20;color:${c.cor}">${c.av}</div>`;
       return `<div class="com">${cavHtml}<div><span class="cnome">${c.nome}</span> <span class="cdist">· ${c.dist}</span><div class="ctxt">${c.txt}</div></div></div>`;
     }).join('');
     const eMeu = p.usuario_id === E.userId;
     const fotoAutor = fotoPerfilCache[p.usuario_id];
-    const avatarHtml = fotoAutor
-      ? `<img src="${fotoAutor}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
-      : `<div class="pav" style="background:${p.cor}20;color:${p.cor}">${p.av}</div>`;
+    const avatarHtml = fotoAutor ? `<img src="${fotoAutor}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : `<div class="pav" style="background:${p.cor}20;color:${p.cor}">${p.av}</div>`;
     return `<div class="pc" id="pc${p.id}">
       <div class="pm">
         <div class="ph">${avatarHtml}<div><div class="pnome">${p.nome}</div><div class="pdist">${p.dist ? 'a '+p.dist+' de você' : ''}</div></div><span class="ptag ${TC[p.tipo]}">${TL[p.tipo]}</span></div>
@@ -1103,7 +1068,6 @@ function togOq(id){E.abOq.has(id)?E.abOq.delete(id):E.abOq.add(id);render();}
 function togCom(id){E.abCom.has(id)?E.abCom.delete(id):E.abCom.add(id);render();setTimeout(()=>{const el=document.getElementById('ci'+id);if(el)el.focus();},100);}
 function filtrar(f,el){E.filtro=f;document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('ativo'));el.classList.add('ativo');render();}
 
-// ← CORREÇÃO: apaga comentários antes do post (foreign key)
 async function excluirPost(id){
   if(!confirm('Excluir este post?')) return;
   await sb.from('comentarios').delete().eq('post_id', id);
@@ -1136,7 +1100,7 @@ async function buscaCEP(cep){
     if(numWrap) numWrap.style.display='';
     E.rua=logr; E.bairro=bairro||d.localidade; E.cidade=d.localidade; E.uf=d.uf; E.cep=cep;
     geocodificar(logr,'',d.localidade,d.uf).then(c=>{if(c){E.lat=c.lat;E.lon=c.lon;}});
-  }catch(e){
+  } catch(e){
     addrEl.value='CEP '+cep.slice(0,5)+'-'+cep.slice(5)+' encontrado';
     if(numWrap) numWrap.style.display='';
     E.bairro='Meu bairro'; E.cidade='Minha cidade'; E.uf='BR'; E.cep=cep;
@@ -1153,7 +1117,7 @@ async function geocodificar(rua,numero,cidade,uf){
     const r=await fetch('https://nominatim.openstreetmap.org/search?q='+q+'&format=json&limit=1',{headers:{'Accept-Language':'pt-BR','User-Agent':'VizinhoCerto/1.0'}});
     const d=await r.json();
     if(d&&d[0]) return {lat:parseFloat(d[0].lat),lon:parseFloat(d[0].lon)};
-  }catch(e){}
+  } catch(e){}
   return null;
 }
 
@@ -1191,6 +1155,7 @@ async function irFeed(){
   await carregarPerfil(uid);
   await carregarPosts();
   irTela('t-feed');
+  registrarNotificacoes();
 }
 
 function irTela(id){
@@ -1246,7 +1211,7 @@ async function abrirIA(id){
     const data=await resp.json();
     if(data.texto){ document.getElementById('iatit').textContent='Pedido pronto para enviar!'; document.getElementById('iatx').textContent=data.texto; }
     else { document.getElementById('iatit').textContent='Erro'; document.getElementById('iatx').textContent=JSON.stringify(data); }
-  }catch(e){document.getElementById('iatx').textContent='Erro: '+e.message;}
+  } catch(e){ document.getElementById('iatx').textContent='Erro: '+e.message; }
 }
 function fecharIA(){document.getElementById('mia').classList.remove('ab');}
 function copiarIA(){navigator.clipboard.writeText(document.getElementById('iatx').textContent).then(()=>toast('Copiado! 📋'));}
@@ -1273,7 +1238,7 @@ function navTab(tab,el){
     carregarVizinhos();
   } else if(tab==='perfil'){
     srvEl.style.display='';
-    const fotoHtml = E.fotoUrl 
+    const fotoHtml = E.fotoUrl
       ? `<img src="${E.fotoUrl}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--verde-claro);cursor:pointer;" onclick="document.getElementById('perfil-foto-input').click()" title="Trocar foto">`
       : `<div onclick="document.getElementById('perfil-foto-input').click()" style="width:72px;height:72px;border-radius:50%;background:#D8F3DC;display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:32px;color:#2D6A4F;cursor:pointer;border:2px dashed var(--verde-claro);position:relative;" title="Adicionar foto">
           ${E.nome.charAt(0).toUpperCase()||'?'}
@@ -1307,97 +1272,39 @@ function compartilharApp(){
 
 async function carregarVizinhos(){
   const srvEl = document.getElementById('servicos-tab');
-
   if(!E.lat || !E.lon){
-    srvEl.innerHTML=`<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;">
-      <div style="font-size:48px;margin-bottom:1rem;">📍</div>
-      <div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Endereço não encontrado</div>
-      <p style="font-size:13px;line-height:1.6;">Atualize seu endereço no perfil para ver seus vizinhos.</p>
-    </div>`;
+    srvEl.innerHTML=`<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;"><div style="font-size:48px;margin-bottom:1rem;">📍</div><div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Endereço não encontrado</div><p style="font-size:13px;line-height:1.6;">Atualize seu endereço no perfil para ver seus vizinhos.</p></div>`;
     return;
   }
-
-  const { data, error } = await sb.rpc('vizinhos_no_raio', {
-    user_lat: E.lat, user_lon: E.lon,
-    raio_metros: E.raio, user_id: E.userId
-  });
-
+  const { data, error } = await sb.rpc('vizinhos_no_raio', { user_lat: E.lat, user_lon: E.lon, raio_metros: E.raio, user_id: E.userId });
   if(error || !data || data.length === 0){
-    srvEl.innerHTML=`<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;">
-      <div style="font-size:48px;margin-bottom:1rem;">🏘️</div>
-      <div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Nenhum vizinho ainda</div>
-      <p style="font-size:13px;line-height:1.6;">Você é um dos primeiros na sua rua! Compartilhe o app com seus vizinhos.</p>
-      <div style="margin-top:1.5rem;background:var(--verde-bg);border-radius:12px;padding:1rem;font-size:13px;color:#1B4D37;margin-bottom:1rem;">📲 <strong>vizinhocerto.com.br</strong></div>
-      <button onclick="compartilharApp()" style="width:100%;padding:14px;background:#2D6A4F;color:white;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><span>📤</span> Compartilhar com vizinhos</button>
-    </div>`;
+    srvEl.innerHTML=`<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;"><div style="font-size:48px;margin-bottom:1rem;">🏘️</div><div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Nenhum vizinho ainda</div><p style="font-size:13px;line-height:1.6;">Você é um dos primeiros na sua rua! Compartilhe o app com seus vizinhos.</p><div style="margin-top:1.5rem;background:var(--verde-bg);border-radius:12px;padding:1rem;font-size:13px;color:#1B4D37;margin-bottom:1rem;">📲 <strong>vizinhocerto.com.br</strong></div><button onclick="compartilharApp()" style="width:100%;padding:14px;background:#2D6A4F;color:white;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><span>📤</span> Compartilhar com vizinhos</button></div>`;
     return;
   }
-
   const cards = data.map(v => {
     const inicial = (v.apelido||'V').charAt(0).toUpperCase();
     const cor = COR[Math.abs(hashStr(v.id+'')) % COR.length];
     const dist = formatarDistancia(v.distancia_metros);
-    const avatarHtml = v.foto_url
-      ? `<img src="${v.foto_url}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
-      : `<div style="width:46px;height:46px;border-radius:50%;background:${cor}20;color:${cor};display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:20px;font-weight:600;flex-shrink:0;">${inicial}</div>`;
-    return `<div style="background:var(--branco);border-radius:var(--radius);border:1px solid var(--borda);padding:1rem 1.25rem;display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-      ${avatarHtml}
-      <div style="flex:1;">
-        <div style="font-size:15px;font-weight:500;color:var(--texto);">${v.apelido||'Vizinho'}</div>
-        <div style="font-size:12px;color:var(--texto-muted);margin-top:2px;">${v.bairro||v.cidade||''}</div>
-      </div>
-      <div style="font-size:12px;font-weight:500;color:var(--verde);background:var(--verde-bg);padding:4px 10px;border-radius:20px;">a ${dist}</div>
-    </div>`;
+    const avatarHtml = v.foto_url ? `<img src="${v.foto_url}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : `<div style="width:46px;height:46px;border-radius:50%;background:${cor}20;color:${cor};display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:20px;font-weight:600;flex-shrink:0;">${inicial}</div>`;
+    return `<div style="background:var(--branco);border-radius:var(--radius);border:1px solid var(--borda);padding:1rem 1.25rem;display:flex;align-items:center;gap:12px;margin-bottom:10px;">${avatarHtml}<div style="flex:1;"><div style="font-size:15px;font-weight:500;color:var(--texto);">${v.apelido||'Vizinho'}</div><div style="font-size:12px;color:var(--texto-muted);margin-top:2px;">${v.bairro||v.cidade||''}</div></div><div style="font-size:12px;font-weight:500;color:var(--verde);background:var(--verde-bg);padding:4px 10px;border-radius:20px;">a ${dist}</div></div>`;
   }).join('');
-
-  srvEl.innerHTML=`<div style="padding:1rem 1rem 5rem;">
-    <div style="background:linear-gradient(135deg,#2D6A4F,#52B788);padding:1.25rem;border-radius:var(--radius);margin-bottom:1rem;">
-      <div style="font-family:Fraunces,serif;font-size:20px;color:white;margin-bottom:4px;">Seus Vizinhos</div>
-      <div style="font-size:12px;color:rgba(255,255,255,.7);">${data.length} vizinho${data.length!==1?'s':''} no raio de ${E.raio}m</div>
-    </div>
-    ${cards}
-    <button onclick="compartilharApp()" style="width:100%;padding:12px;background:var(--branco);color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;margin-top:6px;">📤 Convidar mais vizinhos</button>
-  </div>`;
+  srvEl.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div style="background:linear-gradient(135deg,#2D6A4F,#52B788);padding:1.25rem;border-radius:var(--radius);margin-bottom:1rem;"><div style="font-family:Fraunces,serif;font-size:20px;color:white;margin-bottom:4px;">Seus Vizinhos</div><div style="font-size:12px;color:rgba(255,255,255,.7);">${data.length} vizinho${data.length!==1?'s':''} no raio de ${E.raio}m</div></div>${cards}<button onclick="compartilharApp()" style="width:100%;padding:12px;background:var(--branco);color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;margin-top:6px;">📤 Convidar mais vizinhos</button></div>`;
 }
 
 async function renderServicos(){
   const el=document.getElementById('servicos-tab');
   el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando serviços...</div>';
-
-  // Busca anúncios ativos do Supabase
-  let query = sb.from('anuncios').select('*').eq('ativo', true).gt('expira_em', new Date().toISOString()).order('destaque', {ascending:false}).order('criado_em', {ascending:false});
-
-  // Filtra por raio se tiver coordenadas
-  const { data: anunData } = await query;
+  const { data: anunData } = await sb.from('anuncios').select('*').eq('ativo', true).gt('expira_em', new Date().toISOString()).order('destaque', {ascending:false}).order('criado_em', {ascending:false});
   let anuncios = anunData || [];
-
-  // Filtra por categoria se necessário
   const fil = catAtiva==='todos' ? anuncios : anuncios.filter(s=>s.tipo===catAtiva);
-
   const cats=CATS.map(c=>`<div class="srv-cat ${c===catAtiva?'at':''}" onclick="setcat('${c}')">${c==='todos'?'Todos':c}</div>`).join('');
-
   const cards=fil.map(s=>`<div class="srv-card ${s.destaque?'destaque':''}">
     ${s.destaque?'<div class="srv-destaque-label">★ PARCEIRO DESTAQUE</div>':''}
-    <div class="srv-body"><div class="srv-top">
-    <div class="srv-logo" style="background:#E8F5E9">${s.icon||'🏪'}</div>
-    <div class="srv-info">
-      <div class="srv-nome">${s.nome}</div>
-      <div class="srv-tipo">${s.tipo}</div>
-    </div></div>
+    <div class="srv-body"><div class="srv-top"><div class="srv-logo" style="background:#E8F5E9">${s.icon||'🏪'}</div><div class="srv-info"><div class="srv-nome">${s.nome}</div><div class="srv-tipo">${s.tipo}</div></div></div>
     <div class="srv-desc">${s.descricao||''}</div>
     <div class="srv-tags"><span class="srv-tag">${s.tipo}</span>${s.destaque?'<span class="srv-tag">✓ Verificado</span>':''}</div>
-    <div class="srv-acoes">
-      <button class="srv-btn-wa" onclick="window.open('https://wa.me/55${(s.telefone||'').replace(/[^0-9]/g,'')}','_blank')">💬 WhatsApp</button>
-      <button class="srv-btn-tel" onclick="ligar('${(s.telefone||'').replace(/[^0-9]/g,'')}')">📞 Ligar</button>
-    </div></div></div>`).join('');
-
-  el.innerHTML=`<div style="padding:1rem 1rem 5rem;">
-    <div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div>
-    <div class="srv-cats">${cats}</div>
-    <div class="srv-grid">${fil.length===0?'<div style="text-align:center;padding:2rem;color:var(--texto-muted);font-size:14px;">Nenhum serviço cadastrado ainda.<br>Seja o primeiro!</div>':cards}
-    <div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p>
-    <button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div>
-    </div></div>`;
+    <div class="srv-acoes"><button class="srv-btn-wa" onclick="window.open('https://wa.me/55${(s.telefone||'').replace(/[^0-9]/g,'')}','_blank')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligar('${(s.telefone||'').replace(/[^0-9]/g,'')}')">📞 Ligar</button></div></div></div>`).join('');
+  el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div><div class="srv-cats">${cats}</div><div class="srv-grid">${fil.length===0?'<div style="text-align:center;padding:2rem;color:var(--texto-muted);font-size:14px;">Nenhum serviço cadastrado ainda.<br>Seja o primeiro!</div>':cards}<div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div></div></div>`;
 }
 function setcat(cat){ catAtiva=cat; renderServicos(); }
 
@@ -1441,11 +1348,6 @@ function renderResumo(){
     <div class="resumo-row"><span>Inclui</span><span style="font-size:11px;text-align:right;max-width:160px;">${beneficios[anunState.dias]}</span></div>
     <div class="resumo-row"><span>Total</span><span>R$ ${preco}</span></div>`;
 }
-function selPgto(met,el){
-  anunState.pgto=met;
-  document.querySelectorAll('.pgto-btn').forEach(b=>b.classList.remove('sel'));
-  el.classList.add('sel');renderPgto();
-}
 function renderPgto(){
   const preco=(anunState.preco/100).toFixed(2).replace('.',',');
   const area=document.getElementById('pgto-area');
@@ -1464,7 +1366,7 @@ async function anunFinalizar(){
     const data=await resp.json();
     if(data.url){ window.location.href=data.url; }
     else{ throw new Error(data.error||'sem link de pagamento'); }
-  }catch(e){
+  } catch(e){
     btn.disabled=false; btn.textContent='Pagar e publicar →';
     toast('Erro ao conectar com pagamento. Tente novamente.');
   }
@@ -1505,7 +1407,6 @@ function verificarRetornoPagamento(){
   if(params.get('pagamento')==='sucesso'){
     window.history.replaceState({},'',window.location.pathname);
     setTimeout(()=>{
-      // Mostra comprovante
       const comp = document.createElement('div');
       comp.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
       comp.innerHTML=`<div style="background:var(--creme);border-radius:20px;padding:2rem;max-width:380px;width:100%;text-align:center;">
