@@ -536,6 +536,68 @@ const E={
   raio:150, tipo:'problema', filtro:'tudo', abCom:new Set(), abOq:new Set(), posts:[], fotoUrl:null
 };
 
+// ── PULL TO REFRESH ──
+let ptrStart = 0, ptrAtivo = false, ptrEl = null;
+
+function initPullToRefresh() {
+  ptrEl = document.createElement('div');
+  ptrEl.id = 'ptr-indicator';
+  ptrEl.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999;display:flex;align-items:center;justify-content:center;height:0;overflow:hidden;background:var(--verde);transition:height .2s;';
+  ptrEl.innerHTML = '<div style="display:flex;align-items:center;gap:8px;color:var(--creme);font-size:13px;font-weight:500;"><svg id="ptr-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg><span id="ptr-txt">Solte para atualizar</span></div>';
+  document.body.appendChild(ptrEl);
+
+  document.addEventListener('touchstart', e => {
+    if(window.scrollY === 0) {
+      ptrStart = e.touches[0].clientY;
+      ptrAtivo = true;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchmove', e => {
+    if(!ptrAtivo) return;
+    const diff = e.touches[0].clientY - ptrStart;
+    if(diff > 0 && diff < 100) {
+      ptrEl.style.height = Math.min(diff * 0.6, 56) + 'px';
+      document.getElementById('ptr-spin').style.transform = `rotate(${diff * 3}deg)`;
+    }
+  }, { passive: true });
+
+  document.addEventListener('touchend', async e => {
+    if(!ptrAtivo) return;
+    ptrAtivo = false;
+    const diff = e.changedTouches[0].clientY - ptrStart;
+    if(diff > 60) {
+      ptrEl.style.height = '56px';
+      document.getElementById('ptr-txt').textContent = 'Atualizando...';
+      document.getElementById('ptr-spin').style.animation = 'ptr-rotate 0.8s linear infinite';
+      
+      // Detecta qual aba está ativa e atualiza a correta
+      const feedEl = document.getElementById('feed');
+      const srvEl = document.getElementById('servicos-tab');
+      const navAtivo = document.querySelector('.nitem.at');
+      const tabAtiva = navAtivo ? navAtivo.id : 'nav-feed';
+
+      if(tabAtiva === 'nav-feed' || feedEl.style.display !== 'none') {
+        await carregarPosts();
+      } else if(srvEl.style.display !== 'none') {
+        const txt = srvEl.innerHTML;
+        if(txt.includes('Serviços do Bairro')) await renderServicos();
+        else if(txt.includes('Seus Vizinhos') || txt.includes('Nenhum vizinho')) await carregarVizinhos();
+        else await renderServicos();
+      }
+
+      document.getElementById('ptr-txt').textContent = 'Atualizado! ✓';
+      setTimeout(() => { ptrEl.style.height = '0'; }, 800);
+    } else {
+      ptrEl.style.height = '0';
+    }
+  }, { passive: true });
+}
+
+const ptrStyle = document.createElement('style');
+ptrStyle.textContent = '@keyframes ptr-rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+document.head.appendChild(ptrStyle);
+
 // ── PUSH NOTIFICATIONS ──
 async function registrarNotificacoes() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
@@ -616,6 +678,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     await carregarPosts();
     irTela('t-feed');
     registrarNotificacoes();
+    initPullToRefresh();
   } catch(e) {
     console.error('Erro no init:', e);
     irTela('t-bv');
