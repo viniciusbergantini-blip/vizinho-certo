@@ -1318,7 +1318,9 @@ function navTab(tab,el){
   const feedEl = document.getElementById('feed');
   const feedVisivel = feedEl.style.display === '' || feedEl.style.display === 'block';
   if(tab === 'feed' && feedVisivel && window.scrollY > 0) {
-    window.scrollTo({top:0, behavior:'smooth'});
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+    window.scrollTo(0, 0);
     return;
   }
 
