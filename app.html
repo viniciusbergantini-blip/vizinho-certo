@@ -1117,6 +1117,7 @@ function buscarNoGoogle(termo){ const cidade = encodeURIComponent((E.cidade||'')
 
 function render(){
   const lista = document.getElementById('feed');
+  const scrollPos = lista.scrollTop || window.scrollY;
   const ps = E.filtro==='tudo' ? E.posts : E.posts.filter(p=>p.tipo===E.filtro);
   if(!ps.length){ lista.innerHTML='<div style="text-align:center;padding:3rem 1rem;color:var(--texto-muted);font-size:14px;">Nenhum post aqui ainda.<br>Seja o primeiro! 🏡</div>'; return; }
   const rows = ps.map(p=>{
@@ -1154,6 +1155,7 @@ function render(){
     </div>`;
   });
   lista.innerHTML = rows.join('');
+  window.scrollTo(0, scrollPos);
 }
 
 function togOq(id){E.abOq.has(id)?E.abOq.delete(id):E.abOq.add(id);render();}
