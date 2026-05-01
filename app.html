@@ -547,14 +547,13 @@ function initPullToRefresh() {
   document.body.appendChild(ptrEl);
 
   document.addEventListener('touchstart', e => {
-    if(window.scrollY === 0) {
-      ptrStart = e.touches[0].clientY;
-      ptrAtivo = true;
-    }
+    ptrStart = e.touches[0].clientY;
+    ptrAtivo = window.scrollY === 0;
   }, { passive: true });
 
   document.addEventListener('touchmove', e => {
     if(!ptrAtivo) return;
+    if(window.scrollY > 0) { ptrAtivo = false; ptrEl.style.height = '0'; return; }
     const diff = e.touches[0].clientY - ptrStart;
     if(diff > 0 && diff < 100) {
       ptrEl.style.height = Math.min(diff * 0.6, 56) + 'px';
@@ -1155,7 +1154,6 @@ function render(){
     </div>`;
   });
   lista.innerHTML = rows.join('');
-  window.scrollTo(0, scrollPos);
 }
 
 function togOq(id){E.abOq.has(id)?E.abOq.delete(id):E.abOq.add(id);render();}
