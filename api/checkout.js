@@ -4,14 +4,16 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-  const { nome, tipo, dias, preco, icon, desc, tel, retorno, usuario_id, lat, lon } = req.body || {};
+  const { nome, tipo, dias, preco, icon, desc, tel, retorno, usuario_id, lat, lon, email } = req.body || {};
 
   if (!nome || !tipo || !dias || !preco || !retorno) {
     return res.status(400).json({ error: 'Dados incompletos' });
   }
 
   try {
+    const customerEmail = typeof email === 'string' && email.includes('@') ? email.trim() : undefined;
     const session = await stripe.checkout.sessions.create({
+      ...(customerEmail ? { customer_email: customerEmail } : {}),
       payment_method_types: ['card'],
       line_items: [{
         price_data: {

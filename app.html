@@ -466,6 +466,7 @@
       <div class="anun-field"><label>Descrição curta</label><textarea id="edit-anun-desc"></textarea></div>
       <div class="anun-field"><label>Telefone / WhatsApp</label><input type="tel" id="edit-anun-tel"/></div>
       <div class="anun-nav"><button class="anun-back" onclick="fecharEditarAnuncio()">Cancelar</button><button class="anun-next" id="edit-anun-btn" onclick="salvarEditarAnuncio()">Salvar alterações</button></div>
+      <button id="delete-anun-btn" onclick="excluirEditarAnuncio()" style="width:100%;margin-top:10px;padding:12px;background:transparent;border:1.5px solid #E24B4A;border-radius:10px;color:#A32D2D;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">Excluir anúncio</button>
     </div>
   </div>
 </div>
@@ -1536,6 +1537,32 @@ async function salvarEditarAnuncio(){
   }
 }
 
+async function excluirEditarAnuncio(){
+  const id=document.getElementById('edit-anun-id').value;
+  if(!id){ toast('Anúncio não encontrado.'); return; }
+  if(!confirm('Tem certeza que deseja excluir este anúncio? Ele deixará de aparecer para os vizinhos.')) return;
+  const btn=document.getElementById('delete-anun-btn');
+  btn.disabled=true; btn.textContent='Excluindo...';
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    const resp=await fetch('/api/anuncio-delete',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+(session?.access_token||'')},
+      body:JSON.stringify({id})
+    });
+    const data=await resp.json();
+    if(!resp.ok) throw new Error(data.error||'Erro ao excluir');
+    fecharEditarAnuncio();
+    await renderServicos();
+    await carregarPosts();
+    toast('Anúncio excluído!');
+  }catch(e){
+    toast(e.message || 'Erro ao excluir anúncio.');
+  }finally{
+    btn.disabled=false; btn.textContent='Excluir anúncio';
+  }
+}
+
 const anunState={tipo:'',icon:'',nome:'',desc:'',tel:'',dias:0,preco:0,pgto:'pix'};
 function abrirAnun(){document.getElementById('manun').classList.add('ab');anunStep(1);}
 function fecharAnun(){document.getElementById('manun').classList.remove('ab');}
@@ -1586,10 +1613,12 @@ async function anunFinalizar(){
   btn.textContent='Abrindo pagamento...';btn.disabled=true;
   try{
     const retorno = window.location.origin + '/app';
+    const { data: { session } } = await sb.auth.getSession();
     const resp=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
       nome:anunState.nome, tipo:anunState.tipo, dias:anunState.dias, preco:anunState.preco,
       icon:anunState.icon, desc:anunState.desc, tel:anunState.tel,
-      usuario_id: E.userId, lat: E.lat, lon: E.lon, retorno
+      usuario_id: E.userId, lat: E.lat, lon: E.lon, retorno,
+      email: session?.user?.email || ''
     })});
     const data=await resp.json();
     if(data.url){
