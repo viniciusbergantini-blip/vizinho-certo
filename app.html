@@ -893,6 +893,7 @@ async function salvarEndereco(){
 
 async function carregarPosts(){
   document.getElementById('feed').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando feed...</div>';
+  const anunciosFeed = anunciosComoPosts(await carregarAnunciosVisiveis());
   let query = sb.from('posts').select('*, comentarios(*)').order('criado_em', { ascending: false }).limit(50);
   if(E.lat && E.lon && E.raio){
     const { data, error } = await sb.rpc('posts_no_raio', { user_lat: E.lat, user_lon: E.lon, raio_metros: E.raio });
@@ -918,6 +919,7 @@ async function carregarPosts(){
         await carregarFotosPerfil(data.map(p=>p.usuario_id));
         const apoiosLocais = getApoiosLocais();
         E.posts.forEach(p => { if(apoiosLocais.includes(p.id)) p.apd = true; });
+        E.posts = [...anunciosFeed, ...E.posts];
         if(E.posts.length === 0) E.posts = postsBoasVindas();
         render(); return;
       }
@@ -936,6 +938,7 @@ async function carregarPosts(){
       cor: COR[Math.abs(hashStr(c.id+'')) % COR.length]
     }))
   }));
+  E.posts = [...anunciosFeed, ...E.posts];
   if(E.posts.length === 0) E.posts = postsBoasVindas();
   render();
 }
@@ -958,6 +961,48 @@ function formatarDistancia(metros){
   if(!metros && metros !== 0) return '0m';
   if(metros < 1000) return Math.round(metros)+'m';
   return (metros/1000).toFixed(1)+'km';
+}
+
+function distanciaKm(lat1, lon1, lat2, lon2){
+  const aLat=parseFloat(lat1), aLon=parseFloat(lon1), bLat=parseFloat(lat2), bLon=parseFloat(lon2);
+  if([aLat,aLon,bLat,bLon].some(v=>Number.isNaN(v))) return null;
+  const R=6371;
+  const dLat=(bLat-aLat)*Math.PI/180;
+  const dLon=(bLon-aLon)*Math.PI/180;
+  const h=Math.sin(dLat/2)**2 + Math.cos(aLat*Math.PI/180)*Math.cos(bLat*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(h), Math.sqrt(1-h));
+}
+
+function enriquecerAnuncio(anuncio){
+  const distKm=distanciaKm(E.lat,E.lon,anuncio.lat,anuncio.lon);
+  return {...anuncio, distancia_km:distKm, distancia_fmt:distKm===null?'':formatarDistancia(distKm*1000)};
+}
+
+function anuncioNoRaio(anuncio){
+  const distKm=distanciaKm(E.lat,E.lon,anuncio.lat,anuncio.lon);
+  if(distKm === null) return false;
+  return distKm <= (parseFloat(anuncio.raio_km) || 0);
+}
+
+async function carregarAnunciosVisiveis(){
+  const { data, error } = await sb.from('anuncios')
+    .select('*')
+    .eq('ativo', true)
+    .gt('expira_em', new Date().toISOString())
+    .order('destaque', {ascending:false})
+    .order('criado_em', {ascending:false});
+  if(error){ console.error(error); return []; }
+  return (data||[]).filter(anuncioNoRaio).map(enriquecerAnuncio);
+}
+
+function anunciosComoPosts(anuncios){
+  return anuncios.map(a=>({
+    id:'anun-'+a.id, nome:a.nome, dist:a.distancia_fmt, tipo:'info',
+    txt:`${a.icon||'🏪'} ${a.descricao||'Anúncio disponível para vizinhos no raio.'}`,
+    ap:0, apd:false, av:(a.nome||'A').charAt(0).toUpperCase(), cor:'#2D6A4F',
+    foto_url:null, usuario_id:a.usuario_id, tempo:formatarTempo(a.criado_em), coms:[],
+    isAnuncio:true, telefone:a.telefone, categoria:a.tipo, destaque:a.destaque
+  }));
 }
 
 function postsBoasVindas(){
@@ -1132,6 +1177,19 @@ function render(){
     const eMeu = p.usuario_id === E.userId;
     const fotoAutor = fotoPerfilCache[p.usuario_id];
     const avatarHtml = fotoAutor ? `<img src="${fotoAutor}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : `<div class="pav" style="background:${p.cor}20;color:${p.cor}">${p.av}</div>`;
+    if(p.isAnuncio){
+      const tel=(p.telefone||'').replace(/[^0-9]/g,'');
+      return `<div class="pc" id="pc${p.id}">
+        <div class="pm" style="border:1.5px solid var(--verde-claro);background:#FBFFF8;">
+          <div class="ph">${avatarHtml}<div><div class="pnome">${p.nome}</div><div class="pdist">${p.dist ? 'a '+p.dist+' de você' : ''}${p.tempo ? ' · '+p.tempo : ''}</div></div><span class="ptag t-in">Patrocinado</span></div>
+          <div class="ptxt">${p.txt}</div>
+          <div class="srv-tags" style="margin-top:10px;"><span class="srv-tag">${p.categoria||'Serviço'}</span>${p.destaque?'<span class="srv-tag">✓ Destaque</span>':''}</div>
+          <div class="srv-acoes" style="margin-top:12px;">
+            ${tel?`<button class="srv-btn-wa" onclick="window.open('https://wa.me/55${tel}','_blank')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligar('${tel}')">📞 Ligar</button>`:''}
+          </div>
+        </div>
+      </div>`;
+    }
     return `<div class="pc" id="pc${p.id}">
       <div class="pm">
         <div class="ph">${avatarHtml}<div><div class="pnome">${p.nome}</div><div class="pdist">${p.dist ? 'a '+p.dist+' de você' : ''}${p.tempo ? ' · '+p.tempo : ''}</div></div><span class="ptag ${TC[p.tipo]}">${TL[p.tipo]}</span></div>
@@ -1396,15 +1454,14 @@ async function carregarVizinhos(){
 async function renderServicos(){
   const el=document.getElementById('servicos-tab');
   el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando serviços...</div>';
-  const { data: anunData } = await sb.from('anuncios').select('*').eq('ativo', true).gt('expira_em', new Date().toISOString()).order('destaque', {ascending:false}).order('criado_em', {ascending:false});
-  let anuncios = anunData || [];
+  let anuncios = await carregarAnunciosVisiveis();
   const fil = catAtiva==='todos' ? anuncios : anuncios.filter(s=>s.tipo===catAtiva);
   const cats=CATS.map(c=>`<div class="srv-cat ${c===catAtiva?'at':''}" onclick="setcat('${c}')">${c==='todos'?'Todos':c}</div>`).join('');
   const cards=fil.map(s=>`<div class="srv-card ${s.destaque?'destaque':''}">
     ${s.destaque?'<div class="srv-destaque-label">★ PARCEIRO DESTAQUE</div>':''}
     <div class="srv-body"><div class="srv-top"><div class="srv-logo" style="background:#E8F5E9">${s.icon||'🏪'}</div><div class="srv-info"><div class="srv-nome">${s.nome}</div><div class="srv-tipo">${s.tipo}</div></div></div>
     <div class="srv-desc">${s.descricao||''}</div>
-    <div class="srv-tags"><span class="srv-tag">${s.tipo}</span>${s.destaque?'<span class="srv-tag">✓ Verificado</span>':''}</div>
+    <div class="srv-tags"><span class="srv-tag">${s.tipo}</span>${s.distancia_fmt?`<span class="srv-tag">a ${s.distancia_fmt}</span>`:''}${s.destaque?'<span class="srv-tag">✓ Verificado</span>':''}</div>
     <div class="srv-acoes"><button class="srv-btn-wa" onclick="window.open('https://wa.me/55${(s.telefone||'').replace(/[^0-9]/g,'')}','_blank')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligar('${(s.telefone||'').replace(/[^0-9]/g,'')}')">📞 Ligar</button></div></div></div>`).join('');
   el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div><div class="srv-cats">${cats}</div><div class="srv-grid">${fil.length===0?'<div style="text-align:center;padding:2rem;color:var(--texto-muted);font-size:14px;">Nenhum serviço cadastrado ainda.<br>Seja o primeiro!</div>':cards}<div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div></div></div>`;
 }
