@@ -184,6 +184,7 @@
   .srv-acoes{display:flex;gap:8px;}
   .srv-btn-wa{flex:1;padding:9px;background:#25D366;color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;}
   .srv-btn-tel{flex:1;padding:9px;background:var(--verde);color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
+  .srv-btn-edit{width:100%;padding:9px;background:var(--branco);color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;margin-top:8px;}
   .srv-anunciar{background:var(--creme-escuro);border:2px dashed var(--borda);border-radius:var(--radius);padding:1.25rem;text-align:center;margin-top:10px;}
   .srv-anunciar p{font-size:13px;color:var(--texto-muted);margin-bottom:10px;line-height:1.5;}
   .srv-anunciar strong{color:var(--texto);font-weight:500;}
@@ -449,6 +450,22 @@
       <div class="resumo-box" id="anun-resumo"></div>
       <div id="pgto-area"></div>
       <div class="anun-nav"><button class="anun-back" onclick="anunStep(3)">← Voltar</button><button class="anun-next" onclick="anunFinalizar()">Pagar e publicar →</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="anun-overlay" id="medit-anun">
+  <div class="anun-sheet">
+    <div style="padding:1rem 1.5rem 0;"><div class="anun-handle"></div></div>
+    <div class="anun-step ab">
+      <div class="anun-titulo">Editar anúncio</div>
+      <div class="anun-sub">Atualize as informações que aparecem para os vizinhos. O plano e o raio contratado não mudam.</div>
+      <input type="hidden" id="edit-anun-id"/>
+      <div class="anun-field"><label>Categoria</label><select id="edit-anun-tipo"></select></div>
+      <div class="anun-field"><label>Nome do negócio ou seu nome</label><input type="text" id="edit-anun-nome"/></div>
+      <div class="anun-field"><label>Descrição curta</label><textarea id="edit-anun-desc"></textarea></div>
+      <div class="anun-field"><label>Telefone / WhatsApp</label><input type="tel" id="edit-anun-tel"/></div>
+      <div class="anun-nav"><button class="anun-back" onclick="fecharEditarAnuncio()">Cancelar</button><button class="anun-next" id="edit-anun-btn" onclick="salvarEditarAnuncio()">Salvar alterações</button></div>
     </div>
   </div>
 </div>
@@ -1371,6 +1388,8 @@ function copiarIA(){navigator.clipboard.writeText(document.getElementById('iatx'
 const SERVICOS=[];
 let catAtiva='todos';
 const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Costureira','Jardineiro','Pedreiro','Marido de Aluguel','Anúncio','Outros Serviços'];
+const CAT_ICONS={'Encanador':'🔧','Eletricista':'⚡','Diarista':'🧹','Comércio':'🍕','Costureira':'🧵','Jardineiro':'🌿','Pedreiro':'🏗️','Marido de Aluguel':'🔨','Anúncio':'🛒','Outros Serviços':'🛠️'};
+let anunciosVisiveisCache=[];
 
 function navTab(tab,el){
   const feedEl = document.getElementById('feed');
@@ -1455,6 +1474,7 @@ async function renderServicos(){
   const el=document.getElementById('servicos-tab');
   el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando serviços...</div>';
   let anuncios = await carregarAnunciosVisiveis();
+  anunciosVisiveisCache = anuncios;
   const fil = catAtiva==='todos' ? anuncios : anuncios.filter(s=>s.tipo===catAtiva);
   const cats=CATS.map(c=>`<div class="srv-cat ${c===catAtiva?'at':''}" onclick="setcat('${c}')">${c==='todos'?'Todos':c}</div>`).join('');
   const cards=fil.map(s=>`<div class="srv-card ${s.destaque?'destaque':''}">
@@ -1462,10 +1482,59 @@ async function renderServicos(){
     <div class="srv-body"><div class="srv-top"><div class="srv-logo" style="background:#E8F5E9">${s.icon||'🏪'}</div><div class="srv-info"><div class="srv-nome">${s.nome}</div><div class="srv-tipo">${s.tipo}</div></div></div>
     <div class="srv-desc">${s.descricao||''}</div>
     <div class="srv-tags"><span class="srv-tag">${s.tipo}</span>${s.distancia_fmt?`<span class="srv-tag">a ${s.distancia_fmt}</span>`:''}${s.destaque?'<span class="srv-tag">✓ Verificado</span>':''}</div>
-    <div class="srv-acoes"><button class="srv-btn-wa" onclick="window.open('https://wa.me/55${(s.telefone||'').replace(/[^0-9]/g,'')}','_blank')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligar('${(s.telefone||'').replace(/[^0-9]/g,'')}')">📞 Ligar</button></div></div></div>`).join('');
+    <div class="srv-acoes"><button class="srv-btn-wa" onclick="window.open('https://wa.me/55${(s.telefone||'').replace(/[^0-9]/g,'')}','_blank')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligar('${(s.telefone||'').replace(/[^0-9]/g,'')}')">📞 Ligar</button></div>
+    ${s.usuario_id===E.userId?`<button class="srv-btn-edit" onclick="abrirEditarAnuncio('${s.id}')">Editar anúncio</button>`:''}</div></div>`).join('');
   el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div><div class="srv-cats">${cats}</div><div class="srv-grid">${fil.length===0?'<div style="text-align:center;padding:2rem;color:var(--texto-muted);font-size:14px;">Nenhum serviço cadastrado ainda.<br>Seja o primeiro!</div>':cards}<div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div></div></div>`;
 }
 function setcat(cat){ catAtiva=cat; renderServicos(); }
+
+function abrirEditarAnuncio(id){
+  const anuncio=anunciosVisiveisCache.find(a=>String(a.id)===String(id));
+  if(!anuncio){ toast('Anúncio não encontrado.'); return; }
+  const sel=document.getElementById('edit-anun-tipo');
+  sel.innerHTML=CATS.filter(c=>c!=='todos').map(c=>`<option value="${c}">${c}</option>`).join('');
+  document.getElementById('edit-anun-id').value=anuncio.id;
+  sel.value=anuncio.tipo;
+  document.getElementById('edit-anun-nome').value=anuncio.nome||'';
+  document.getElementById('edit-anun-desc').value=anuncio.descricao||'';
+  document.getElementById('edit-anun-tel').value=anuncio.telefone||'';
+  document.getElementById('medit-anun').classList.add('ab');
+}
+
+function fecharEditarAnuncio(){
+  document.getElementById('medit-anun').classList.remove('ab');
+}
+
+async function salvarEditarAnuncio(){
+  const id=document.getElementById('edit-anun-id').value;
+  const tipo=document.getElementById('edit-anun-tipo').value;
+  const nome=document.getElementById('edit-anun-nome').value.trim();
+  const descricao=document.getElementById('edit-anun-desc').value.trim();
+  const telefone=document.getElementById('edit-anun-tel').value.trim();
+  if(!nome){ toast('Digite o nome do negócio!'); return; }
+  if(!descricao){ toast('Escreva uma descrição!'); return; }
+  if(!telefone){ toast('Digite seu telefone!'); return; }
+  const btn=document.getElementById('edit-anun-btn');
+  btn.disabled=true; btn.textContent='Salvando...';
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    const resp=await fetch('/api/anuncio-update',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+(session?.access_token||'')},
+      body:JSON.stringify({id,tipo,nome,descricao,telefone,icon:CAT_ICONS[tipo]||'🏪'})
+    });
+    const data=await resp.json();
+    if(!resp.ok) throw new Error(data.error||'Erro ao salvar');
+    fecharEditarAnuncio();
+    await renderServicos();
+    await carregarPosts();
+    toast('Anúncio atualizado!');
+  }catch(e){
+    toast(e.message || 'Erro ao salvar anúncio.');
+  }finally{
+    btn.disabled=false; btn.textContent='Salvar alterações';
+  }
+}
 
 const anunState={tipo:'',icon:'',nome:'',desc:'',tel:'',dias:0,preco:0,pgto:'pix'};
 function abrirAnun(){document.getElementById('manun').classList.add('ab');anunStep(1);}
