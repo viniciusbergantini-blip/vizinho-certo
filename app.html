@@ -1508,26 +1508,55 @@ async function enviarAlerta(){
 
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('vis');setTimeout(()=>t.classList.remove('vis'),2500);}
 
-function verificarRetornoPagamento(){
+async function confirmarPublicacaoAnuncio(sessionId){
+  if(!sessionId) return { published:false, error:'Sessao de pagamento nao encontrada.' };
+  for(let tentativa=0; tentativa<4; tentativa++){
+    try{
+      const resp=await fetch('/api/checkout-status',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({session_id:sessionId})
+      });
+      const data=await resp.json();
+      if(resp.ok && data.published) return data;
+      if(resp.ok && data.paid && !data.published) return data;
+    }catch(e){
+      if(tentativa===3) return { published:false, error:e.message };
+    }
+    await new Promise(resolve=>setTimeout(resolve, 1500));
+  }
+  return { published:false, error:'Pagamento confirmado, mas o anuncio ainda esta processando.' };
+}
+
+function abrirComprovanteAnuncio(resultado){
+  const publicado=!!resultado.published;
+  const pago=!!resultado.paid || publicado;
+  const comp = document.createElement('div');
+  comp.id = 'comprovante-anuncio';
+  comp.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
+  comp.innerHTML=`<div style="background:var(--creme);border-radius:20px;padding:2rem;max-width:380px;width:100%;text-align:center;">
+    <div style="font-size:56px;margin-bottom:1rem;">${publicado?'🎉':'⏳'}</div>
+    <div style="font-family:Fraunces,serif;font-size:22px;color:var(--verde);margin-bottom:8px;">${publicado?'Anúncio publicado!':'Publicação em processamento'}</div>
+    <div style="font-size:14px;color:var(--texto-muted);line-height:1.6;margin-bottom:1.5rem;">${publicado?'Seu anúncio já está no ar na aba Serviços para os vizinhos no seu raio.':(pago?'Recebemos a confirmação do pagamento. A publicação ainda está processando; atualize a aba Serviços em instantes.':'A Stripe ainda está confirmando o pagamento. Assim que confirmar, seu anúncio será publicado automaticamente.')}</div>
+    <div style="background:var(--verde-bg);border-radius:12px;padding:1rem;margin-bottom:1.5rem;font-size:13px;color:#1B4D37;line-height:1.8;">
+      <div>${pago?'✅':'⏳'} Pagamento confirmado</div>
+      <div>${publicado?'✅':'⏳'} Anúncio na aba Serviços</div>
+      <div>✅ Comprovante enviado por email</div>
+    </div>
+    <button onclick="document.getElementById('comprovante-anuncio')?.remove();fecharAnun();navTab('servicos',document.getElementById('nav-servicos'));" style="width:100%;padding:12px;background:var(--verde);color:white;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">Ver Serviços →</button>
+  </div>`;
+  document.body.appendChild(comp);
+}
+
+async function verificarRetornoPagamento(){
   const params=new URLSearchParams(window.location.search);
   if(params.get('pagamento')==='sucesso'){
+    const sessionId=params.get('session_id');
     window.history.replaceState({},'',window.location.pathname);
-    setTimeout(()=>{
-      const comp = document.createElement('div');
-      comp.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1.5rem;';
-      comp.innerHTML=`<div style="background:var(--creme);border-radius:20px;padding:2rem;max-width:380px;width:100%;text-align:center;">
-        <div style="font-size:56px;margin-bottom:1rem;">🎉</div>
-        <div style="font-family:Fraunces,serif;font-size:22px;color:var(--verde);margin-bottom:8px;">Anúncio publicado!</div>
-        <div style="font-size:14px;color:var(--texto-muted);line-height:1.6;margin-bottom:1.5rem;">Seu anúncio já está no ar na aba Serviços para os vizinhos no seu raio. Você receberá um email de confirmação da Stripe.</div>
-        <div style="background:var(--verde-bg);border-radius:12px;padding:1rem;margin-bottom:1.5rem;font-size:13px;color:#1B4D37;line-height:1.8;">
-          <div>✅ Pagamento confirmado</div>
-          <div>✅ Anúncio ativo na aba Serviços</div>
-          <div>✅ Comprovante enviado por email</div>
-        </div>
-        <button onclick="this.closest('div[style]').remove();fecharAnun();navTab('servicos',document.getElementById('nav-servicos'));" style="width:100%;padding:12px;background:var(--verde);color:white;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">Ver meu anúncio →</button>
-      </div>`;
-      document.body.appendChild(comp);
-    },500);
+    setTimeout(()=>toast('Confirmando pagamento...'),300);
+    const resultado=await confirmarPublicacaoAnuncio(sessionId);
+    abrirComprovanteAnuncio(resultado);
+    if(resultado.published) renderServicos();
   } else if(params.get('pagamento')==='cancelado'){
     window.history.replaceState({},'',window.location.pathname);
     setTimeout(()=>toast('Pagamento cancelado. Tente novamente quando quiser.'),500);

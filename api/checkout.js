@@ -4,27 +4,28 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
+  const { nome, tipo, dias, preco, icon, desc, tel, retorno, usuario_id, lat, lon } = req.body || {};
 
-  const { nome, tipo, dias, preco, icon, desc, tel, retorno, usuario_id, lat, lon } = req.body;
-
-  if (!nome || !preco) return res.status(400).json({ error: 'Dados incompletos' });
+  if (!nome || !tipo || !dias || !preco || !retorno) {
+    return res.status(400).json({ error: 'Dados incompletos' });
+  }
 
   try {
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: ['card', 'pix'],
       line_items: [{
         price_data: {
           currency: 'brl',
           product_data: {
-            name: `Vizinho Certo — ${nome}`,
-            description: `Plano ${dias} dias · ${tipo}`,
+            name: `Vizinho Certo - ${nome}`,
+            description: `Plano ${dias} dias - ${tipo}`,
           },
-          unit_amount: preco, // em centavos
+          unit_amount: preco,
         },
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: `${retorno}?pagamento=sucesso`,
+      success_url: `${retorno}?pagamento=sucesso&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${retorno}?pagamento=cancelado`,
       metadata: {
         nome,

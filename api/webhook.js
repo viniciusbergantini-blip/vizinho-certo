@@ -1,5 +1,5 @@
 const Stripe = require('stripe');
-const { createClient } = require('@supabase/supabase-js');
+const { publicarAnuncioPago } = require('../lib/anuncios');
 
 module.exports.config = {
   api: {
@@ -33,81 +33,14 @@ module.exports = async (req, res) => {
     return res.status(400).json({ error: `Webhook error: ${e.message}` });
   }
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const meta = session.metadata;
-
-    const sb = createClient(
-      process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co',
-      process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
-    );
-
-    const dias = parseInt(meta.dias) || 10;
-    const expiraEm = new Date();
-    expiraEm.setDate(expiraEm.getDate() + dias);
-    const raioKm = dias === 10 ? 1.5 : dias === 20 ? 3 : 5;
-
-    const { error } = await sb.from('anuncios').insert({
-      usuario_id: meta.usuario_id || null,
-      nome: meta.nome,
-      tipo: meta.tipo,
-      descricao: meta.desc,
-      telefone: meta.tel,
-      icon: meta.icon || '🏪',
-      lat: meta.lat ? parseFloat(meta.lat) : null,
-      lon: meta.lon ? parseFloat(meta.lon) : null,
-      raio_km: raioKm,
-      dias,
-      destaque: dias >= 20,
-      stripe_session_id: session.id,
-      ativo: true,
-      expira_em: expiraEm.toISOString(),
-    });
-
-    if (error) {
-      console.error('Supabase insert error:', error);
-      return res.status(500).json({ error: 'Erro ao salvar anúncio' });
+  if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
+    try {
+      const result = await publicarAnuncioPago(event.data.object);
+      console.log('Anuncio processado:', event.data.object.id, result);
+    } catch (e) {
+      console.error('Supabase insert error:', e);
+      return res.status(500).json({ error: 'Erro ao salvar anuncio' });
     }
-
-    console.log('Anúncio salvo:', meta.nome);
-  }
-
-  res.json({ received: true });
-};
-
-    const sb = createClient(
-      process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co',
-      process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY
-    );
-
-    const dias = parseInt(meta.dias) || 10;
-    const expiraEm = new Date();
-    expiraEm.setDate(expiraEm.getDate() + dias);
-    const raioKm = dias === 10 ? 1.5 : dias === 20 ? 3 : 5;
-
-    const { error } = await sb.from('anuncios').insert({
-      usuario_id: meta.usuario_id || null,
-      nome: meta.nome,
-      tipo: meta.tipo,
-      descricao: meta.desc,
-      telefone: meta.tel,
-      icon: meta.icon || '🏪',
-      lat: meta.lat ? parseFloat(meta.lat) : null,
-      lon: meta.lon ? parseFloat(meta.lon) : null,
-      raio_km: raioKm,
-      dias,
-      destaque: dias >= 20,
-      stripe_session_id: session.id,
-      ativo: true,
-      expira_em: expiraEm.toISOString(),
-    });
-
-    if (error) {
-      console.error('Supabase insert error:', error);
-      return res.status(500).json({ error: 'Erro ao salvar anúncio' });
-    }
-
-    console.log('Anúncio salvo:', meta.nome);
   }
 
   res.json({ received: true });
