@@ -1315,9 +1315,9 @@ let catAtiva='todos';
 const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Costureira','Jardineiro','Pedreiro','Marido de Aluguel','Anúncio','Outros Serviços'];
 
 function navTab(tab,el){
-  // Se já está no feed e clica no feed, vai ao topo
-  const jaNoFeed = document.getElementById('nav-feed').classList.contains('at');
-  if(tab === 'feed' && jaNoFeed) {
+  // Se já está no feed e clica no feed, vai ao topo suavemente
+  const feedVisivel = document.getElementById('feed').style.display !== 'none';
+  if(tab === 'feed' && feedVisivel) {
     window.scrollTo({top:0, behavior:'smooth'});
     return;
   }
