@@ -1324,6 +1324,8 @@ function navTab(tab,el){
   feedEl.style.display='none'; tabsEl.style.display='none'; srvEl.style.display='none'; fabEl.style.display='none';
   if(tab==='feed'){
     feedEl.style.display=''; tabsEl.style.display=''; fabEl.style.display='flex';
+    // Se já estava no feed, volta ao topo
+    if(document.getElementById('nav-feed').classList.contains('at')) window.scrollTo({top:0, behavior:'smooth'});
   } else if(tab==='servicos'){
     srvEl.style.display=''; renderServicos();
   } else if(tab==='vizinhos'){
