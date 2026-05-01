@@ -1466,7 +1466,10 @@ async function anunFinalizar(){
       usuario_id: E.userId, lat: E.lat, lon: E.lon, retorno
     })});
     const data=await resp.json();
-    if(data.url){ window.location.href=data.url; }
+    if(data.url){
+      fecharAnun(); // fecha o modal antes de redirecionar
+      window.location.href=data.url;
+    }
     else{ throw new Error(data.error||'sem link de pagamento'); }
   } catch(e){
     btn.disabled=false; btn.textContent='Pagar e publicar →';
