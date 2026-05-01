@@ -547,13 +547,15 @@ function initPullToRefresh() {
   document.body.appendChild(ptrEl);
 
   document.addEventListener('touchstart', e => {
+    const scrolled = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
     ptrStart = e.touches[0].clientY;
-    ptrAtivo = window.scrollY === 0;
+    ptrAtivo = scrolled <= 0;
   }, { passive: true });
 
   document.addEventListener('touchmove', e => {
     if(!ptrAtivo) return;
-    if(window.scrollY > 0) { ptrAtivo = false; ptrEl.style.height = '0'; return; }
+    const scrolled = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+    if(scrolled > 0) { ptrAtivo = false; ptrEl.style.height = '0'; return; }
     const diff = e.touches[0].clientY - ptrStart;
     if(diff > 0 && diff < 100) {
       ptrEl.style.height = Math.min(diff * 0.6, 56) + 'px';
