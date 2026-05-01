@@ -1317,7 +1317,7 @@ const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Costureira
 function navTab(tab,el){
   const feedEl = document.getElementById('feed');
   const feedVisivel = feedEl.style.display === '' || feedEl.style.display === 'block';
-  if(tab === 'feed' && feedVisivel && window.scrollY > 0) {
+  if(tab === 'feed' && feedVisivel) {
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
     window.scrollTo(0, 0);
