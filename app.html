@@ -1453,7 +1453,7 @@ function renderResumo(){
 function renderPgto(){
   const preco=(anunState.preco/100).toFixed(2).replace('.',',');
   const area=document.getElementById('pgto-area');
-  area.innerHTML=`<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">💳</div><div style="font-weight:500;color:var(--texto);font-size:14px;">Valor: R$ ${preco}</div><div style="font-size:12px;color:var(--texto-muted);margin-top:8px;">Ao clicar em Pagar, você será redirecionado para o checkout seguro da Stripe. Aceitamos Pix, cartão de crédito e débito.</div></div>`;
+  area.innerHTML=`<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">💳</div><div style="font-weight:500;color:var(--texto);font-size:14px;">Valor: R$ ${preco}</div><div style="font-size:12px;color:var(--texto-muted);margin-top:8px;">Ao clicar em Pagar, você será redirecionado para o checkout seguro da Stripe. Aceitamos cartão de crédito e débito.</div></div>`;
 }
 async function anunFinalizar(){
   const btn=document.querySelector('#as4 .anun-next');
