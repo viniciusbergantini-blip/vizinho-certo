@@ -1524,7 +1524,7 @@ function verificarRetornoPagamento(){
           <div>✅ Anúncio ativo na aba Serviços</div>
           <div>✅ Comprovante enviado por email</div>
         </div>
-        <button onclick="this.closest('div[style]').remove();navTab('servicos',document.getElementById('nav-servicos'));" style="width:100%;padding:12px;background:var(--verde);color:white;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">Ver meu anúncio →</button>
+        <button onclick="this.closest('div[style]').remove();fecharAnun();navTab('servicos',document.getElementById('nav-servicos'));" style="width:100%;padding:12px;background:var(--verde);color:white;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">Ver meu anúncio →</button>
       </div>`;
       document.body.appendChild(comp);
     },500);
