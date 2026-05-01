@@ -1,8 +1,7 @@
 const Stripe = require('stripe');
 const { createClient } = require('@supabase/supabase-js');
 
-// Necessário para verificação de assinatura da Stripe
-export const config = {
+module.exports.config = {
   api: {
     bodyParser: false,
   },
