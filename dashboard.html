@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1B4D37">
+<title>Dashboard | Vizinho Certo</title>
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{--verde:#2D6A4F;--verde-escuro:#1B4D37;--verde-bg:#D8F3DC;--laranja:#E76F51;--creme:#FEFAE0;--creme-escuro:#F0E9D2;--texto:#1B1B1B;--muted:#6B6B6B;--branco:#fff;--borda:rgba(27,27,27,.12);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"DM Sans",sans-serif;background:var(--creme);color:var(--texto);min-height:100vh;}
+  button,input{font:inherit;}
+  .shell{max-width:1180px;margin:0 auto;padding:28px 18px 48px;}
+  .top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:26px;}
+  .brand{font-family:Fraunces,serif;color:var(--verde-escuro);font-size:28px;line-height:1;}
+  .sub{color:var(--muted);font-size:14px;margin-top:8px;}
+  .status{font-size:12px;color:var(--muted);text-align:right;line-height:1.5;margin-bottom:8px;}
+  .actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
+  .btn{border:0;background:var(--verde);color:white;border-radius:8px;padding:10px 14px;cursor:pointer;font-weight:700;}
+  .btn.secondary{background:var(--branco);color:var(--verde);border:1px solid var(--borda);}
+  .login{max-width:420px;margin:12vh auto 0;background:var(--branco);border:1px solid var(--borda);border-radius:8px;padding:24px;}
+  .login h1{font-family:Fraunces,serif;color:var(--verde-escuro);font-size:28px;margin-bottom:8px;}
+  .login p{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:18px;}
+  .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+  .field label{font-size:12px;color:var(--muted);font-weight:700;}
+  .field input{border:1px solid var(--borda);border-radius:8px;padding:11px 12px;background:white;}
+  .error{display:none;margin-top:12px;color:#9F1239;background:#FFE4E6;border:1px solid #FDA4AF;border-radius:8px;padding:10px;font-size:13px;line-height:1.45;}
+  .error.show{display:block;}
+  .hidden{display:none!important;}
+  .summary{display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:10px;margin-bottom:18px;}
+  .metric{background:var(--branco);border:1px solid var(--borda);border-radius:8px;padding:14px;}
+  .metric .label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
+  .metric .value{font-size:26px;font-weight:700;color:var(--verde-escuro);margin-top:8px;}
+  .metric .hint{font-size:12px;color:var(--muted);margin-top:4px;}
+  .tabs{display:flex;gap:8px;margin-bottom:16px;}
+  .tab{border:1px solid var(--borda);background:var(--branco);color:var(--texto);border-radius:8px;padding:9px 12px;cursor:pointer;font-weight:700;}
+  .tab.active{background:var(--verde);color:white;border-color:var(--verde);}
+  .panel{background:var(--branco);border:1px solid var(--borda);border-radius:8px;overflow:hidden;}
+  table{width:100%;border-collapse:collapse;}
+  th,td{padding:13px 14px;text-align:left;border-bottom:1px solid var(--borda);font-size:14px;}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:#FBF7E7;}
+  tr:last-child td{border-bottom:0;}
+  .city{font-weight:700;color:var(--verde-escuro);text-transform:capitalize;}
+  .positive{color:var(--verde);font-weight:700;}
+  .negative{color:var(--laranja);font-weight:700;}
+  .empty{padding:40px;text-align:center;color:var(--muted);}
+  @media(max-width:900px){.summary{grid-template-columns:repeat(2,1fr);} .top{flex-direction:column;} .status{text-align:left;} .actions{justify-content:flex-start;} .panel{overflow-x:auto;} table{min-width:780px;}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <section id="login" class="login hidden">
+    <h1>Dashboard</h1>
+    <p>Entre com uma conta autorizada para ver as conversões das landings.</p>
+    <div class="field"><label for="email">Email</label><input id="email" type="email" autocomplete="email"></div>
+    <div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password"></div>
+    <button class="btn" onclick="login()">Entrar</button>
+    <div id="login-error" class="error"></div>
+  </section>
+
+  <section id="dashboard" class="hidden">
+    <div class="top">
+      <div>
+        <div class="brand">Vizinho Certo</div>
+        <div class="sub">Conversão das landings por cidade</div>
+      </div>
+      <div>
+        <div id="status" class="status">Carregando...</div>
+        <div class="actions">
+          <button class="btn secondary" onclick="refreshMetrics()">Atualizar</button>
+          <button class="btn secondary" onclick="logout()">Sair</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button id="tab-today" class="tab active" onclick="selectWindow('today')">Hoje</button>
+      <button id="tab-seven_days" class="tab" onclick="selectWindow('seven_days')">Últimos 7 dias</button>
+    </div>
+
+    <div id="summary" class="summary"></div>
+    <div id="table" class="panel"></div>
+    <div id="dashboard-error" class="error"></div>
+  </section>
+</main>
+
+<script>
+const SUPABASE_URL = 'https://xurtdibicsxmouvzfxvb.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1cnRkaWJpY3N4bW91dnpmeHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNjcsImV4cCI6MjA4OTg3MTM2N30.WQ36EsY2JHP5G4VvLAfRNv7j4RjArne1sjbRS_tfvUU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const CITY_LABELS = { indaiatuba:'Indaiatuba', maringa:'Maringá', londrina:'Londrina' };
+let metrics = null;
+let activeWindow = 'today';
+let currentSession = null;
+
+window.addEventListener('DOMContentLoaded', init);
+
+async function init(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session){ showLogin(); return; }
+  currentSession = session;
+  showDashboard();
+  await loadMetrics(session);
+}
+
+async function login(){
+  setError('login-error', '');
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){ setError('login-error', 'Não foi possível entrar. Verifique email, senha e permissão de admin.'); return; }
+  currentSession = data.session;
+  showDashboard();
+  await loadMetrics(data.session);
+}
+
+async function refreshMetrics(){
+  const { data: { session } } = await sb.auth.getSession();
+  currentSession = session || currentSession;
+  if(!currentSession){ showLogin(); return; }
+  await loadMetrics(currentSession);
+}
+
+async function logout(){
+  await sb.auth.signOut();
+  metrics = null;
+  currentSession = null;
+  showLogin();
+}
+
+async function loadMetrics(session){
+  setError('dashboard-error', '');
+  document.getElementById('status').textContent = 'Atualizando métricas...';
+  try{
+    const resp = await fetch('/api/dashboard-metrics', {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    });
+    const data = await resp.json();
+    if(!resp.ok) throw new Error(data.error || 'Erro ao carregar dashboard');
+    metrics = data;
+    render();
+  } catch(e){
+    setError('dashboard-error', e.message);
+    document.getElementById('status').textContent = 'Falha ao carregar';
+  }
+}
+
+function selectWindow(name){
+  activeWindow = name;
+  document.querySelectorAll('.tab').forEach(tab => tab.classList.toggle('active', tab.id === `tab-${name}`));
+  render();
+}
+
+function render(){
+  if(!metrics) return;
+  const data = metrics.windows[activeWindow];
+  const totals = data.totals;
+  document.getElementById('status').textContent = `Atualizado em ${formatDate(metrics.generated_at)}`;
+  document.getElementById('summary').innerHTML = [
+    metric('Visitantes', totals.visitors, 'sessões únicas'),
+    metric('Cliques CTA', totals.cta_clicks, 'links para cadastro'),
+    metric('Cadastros', totals.signups, 'com origem de landing'),
+    metric('Conversão', `${totals.conversion_rate}%`, 'visita → cadastro'),
+    metric('Não cadastrou', `${totals.abandonment_rate}%`, `${totals.not_registered} visitantes`),
+    metric('Orgânico/direto', totals.direct_signups, 'sem landing de origem')
+  ].join('');
+  renderTable(data.cities);
+}
+
+function renderTable(cities){
+  const rows = Object.entries(cities).map(([city, item]) => `
+    <tr>
+      <td class="city">${CITY_LABELS[city] || city}</td>
+      <td>${item.visitors}</td>
+      <td>${item.cta_clicks}</td>
+      <td>${item.signups}</td>
+      <td>${item.conversions}</td>
+      <td class="positive">${item.conversion_rate}%</td>
+      <td class="negative">${item.abandonment_rate}%</td>
+      <td>${item.not_registered}</td>
+    </tr>`).join('');
+  document.getElementById('table').innerHTML = `
+    <table>
+      <thead><tr><th>Cidade</th><th>Visitantes</th><th>Cliques</th><th>Cadastros</th><th>Conversões</th><th>Conv.</th><th>Abandono</th><th>Sem cadastro</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function metric(label, value, hint){
+  return `<div class="metric"><div class="label">${label}</div><div class="value">${value}</div><div class="hint">${hint}</div></div>`;
+}
+
+function showLogin(){
+  document.getElementById('login').classList.remove('hidden');
+  document.getElementById('dashboard').classList.add('hidden');
+}
+
+function showDashboard(){
+  document.getElementById('login').classList.add('hidden');
+  document.getElementById('dashboard').classList.remove('hidden');
+}
+
+function setError(id, message){
+  const el = document.getElementById(id);
+  el.textContent = message;
+  el.classList.toggle('show', Boolean(message));
+}
+
+function formatDate(value){
+  return new Date(value).toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
+}
+</script>
+</body>
+</html>

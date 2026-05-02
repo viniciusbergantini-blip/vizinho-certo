@@ -57,6 +57,10 @@ function serveStatic(requestPath, res) {
   let filePath = requestPath;
   if (filePath === '/') filePath = '/index.html';
   if (filePath === '/app' || filePath.startsWith('/app/')) filePath = '/app.html';
+  if (filePath === '/dashboard' || filePath.startsWith('/dashboard/')) filePath = '/dashboard.html';
+  if (filePath === '/indaiatuba') filePath = '/indaiatuba.html';
+  if (filePath === '/maringa') filePath = '/maringa.html';
+  if (filePath === '/londrina') filePath = '/londrina.html';
 
   const resolved = path.resolve(root, `.${decodeURIComponent(filePath)}`);
   if (!resolved.startsWith(root)) {

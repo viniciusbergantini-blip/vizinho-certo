@@ -547,6 +547,35 @@ const VAPID_PUBLIC_KEY = 'BOto1nQHk0YOlsxXe38vEb8OJRvpvX_H-14FSURRIltLVnzt40m7py
 
 let modoRecuperacaoSenha = false;
 
+function getAnalyticsSessionId(){
+  const key = 'vc_session_id';
+  let sessionId = localStorage.getItem(key);
+  if(!sessionId){
+    sessionId = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    localStorage.setItem(key, sessionId);
+  }
+  return sessionId;
+}
+
+function getLandingSourceCity(){
+  const city = localStorage.getItem('vc_landing_source_city');
+  return ['indaiatuba','maringa','londrina'].includes(city) ? city : null;
+}
+
+function trackCadastro(eventType, userId){
+  fetch('/api/track', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      event_type: eventType,
+      session_id: getAnalyticsSessionId(),
+      city: getLandingSourceCity(),
+      path: window.location.pathname,
+      user_id: userId || E.userId || null
+    })
+  }).catch(()=>{});
+}
+
 const PALAVROES=['idiota','burro','imbecil','merda','fdp','filho da','viado','vadia','puta','vagabundo','cretino','otário','lixo'];
 const PALAVRAS_ANUNCIO=['vendo ','à venda','a venda','compro e vendo','troco por','aceito pix','valor r$','r$ ','reais cada','parcelo em','frete grátis','frete incluso','entrego na sua casa','faço entrega','promoção imperdível','últimas unidades','estoque limitado','aproveite','compre agora','peça já','encomendas abertas'];
 const COR=['#5E60CE','#E76F51','#2D6A4F','#D4A017','#48CAE4'];
@@ -758,6 +787,7 @@ async function irRaio(){
   const btn = document.getElementById('btn-cadastrar');
   btn.disabled = true; btn.textContent = 'Criando conta...';
   try {
+    trackCadastro('signup_started');
     const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
     if(authErr){ toast('Erro: ' + authErr.message); btn.disabled=false; btn.textContent='Criar conta →'; return; }
     E.userId = authData.user.id;
@@ -1318,8 +1348,10 @@ async function irFeed(){
     cidade: d.cidade||E.cidade||'', uf: d.uf||E.uf||'', raio: E.raio,
     lat: d.lat||E.lat||null, lon: d.lon||E.lon||null
   }, { onConflict: 'id' });
+  trackCadastro('signup_completed', uid);
   cadastroTemp = {};
   sessionStorage.removeItem('vc_cadastro');
+  localStorage.removeItem('vc_landing_source_city');
   await carregarPerfil(uid);
   await carregarPosts();
   irTela('t-feed');
