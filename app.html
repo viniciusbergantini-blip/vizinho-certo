@@ -186,7 +186,7 @@
   .srv-btn-wa{flex:1;padding:9px;background:#25D366;color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;}
   .srv-btn-tel{flex:1;padding:9px;background:var(--verde);color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
   .srv-btn-edit{width:100%;padding:9px;background:var(--branco);color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;margin-top:8px;}
-  .srv-anunciar{background:var(--creme-escuro);border:2px dashed var(--borda);border-radius:var(--radius);padding:1.25rem;text-align:center;margin-top:10px;}
+  .srv-anunciar{position:sticky;top:0;z-index:10;background:var(--creme);border:2px dashed var(--borda);border-radius:var(--radius);padding:1.25rem;text-align:center;margin:10px 0;}
   .srv-anunciar p{font-size:13px;color:var(--texto-muted);margin-bottom:10px;line-height:1.5;}
   .srv-anunciar strong{color:var(--texto);font-weight:500;}
   .srv-btn-anunciar{padding:10px 20px;background:#2D6A4F;color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
@@ -913,50 +913,38 @@ async function salvarEndereco(){
 async function carregarPosts(){
   document.getElementById('feed').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando feed...</div>';
   const anunciosFeed = anunciosComoPosts(await carregarAnunciosVisiveis());
-  let query = sb.from('posts').select('*, comentarios(*)').order('criado_em', { ascending: false }).limit(50);
-  if(E.lat && E.lon && E.raio){
-    const { data, error } = await sb.rpc('posts_no_raio', { user_lat: E.lat, user_lon: E.lon, raio_metros: E.raio });
-    if(!error && data){
-      const ids = data.map(p => p.id);
-      if(ids.length > 0){
-        const { data: comData } = await sb.from('comentarios').select('*').in('post_id', ids);
-        const comMap = {};
-        (comData||[]).forEach(c => { if(!comMap[c.post_id]) comMap[c.post_id]=[]; comMap[c.post_id].push(c); });
-        E.posts = data.map(p => ({
-          id: p.id, nome: p.apelido_autor || 'Vizinho', dist: formatarDistancia(p.distancia_metros),
-          tipo: p.tipo, txt: p.texto, ap: p.apoios || 0, apd: false,
-          av: (p.apelido_autor||'V').charAt(0).toUpperCase(),
-          cor: COR[Math.abs(hashStr(p.id+'')) % COR.length],
-          foto_url: p.foto_url || null, usuario_id: p.usuario_id,
-          tempo: formatarTempo(p.criado_em),
-          coms: (comMap[p.id]||[]).map(c=>({
-            nome: c.apelido_autor||'Vizinho', dist: '0m', txt: c.texto, usuario_id: c.usuario_id,
-            av: (c.apelido_autor||'V').charAt(0).toUpperCase(),
-            cor: COR[Math.abs(hashStr(c.id+'')) % COR.length]
-          }))
-        }));
-        await carregarFotosPerfil(data.map(p=>p.usuario_id));
-        const apoiosLocais = getApoiosLocais();
-        E.posts.forEach(p => { if(apoiosLocais.includes(p.id)) p.apd = true; });
-        E.posts = [...anunciosFeed, ...E.posts];
-        if(E.posts.length === 0) E.posts = postsBoasVindas();
-        render(); return;
-      }
-    }
+  if(!E.lat || !E.lon || !E.raio){
+    E.posts = anunciosFeed.length ? anunciosFeed : postsBoasVindas();
+    render();
+    return;
   }
-  const { data, error } = await query;
-  if(error){ console.error(error); E.posts=[]; render(); return; }
-  E.posts = (data||[]).map(p => ({
-    id: p.id, nome: p.apelido_autor || 'Vizinho', dist: '0m', tipo: p.tipo, txt: p.texto,
-    ap: p.apoios || 0, apd: false, av: (p.apelido_autor||'V').charAt(0).toUpperCase(),
-    cor: COR[Math.abs(hashStr(p.id+'')) % COR.length], foto_url: p.foto_url || null,
-    usuario_id: p.usuario_id, tempo: formatarTempo(p.criado_em),
-    coms: (p.comentarios||[]).map(c=>({
+
+  const { data, error } = await sb.rpc('posts_no_raio', { user_lat: E.lat, user_lon: E.lon, raio_metros: E.raio });
+  if(error){ console.error(error); E.posts = anunciosFeed.length ? anunciosFeed : postsBoasVindas(); render(); return; }
+
+  const postsNoRaio = (data||[]).filter(postDentroDoRaio);
+  const ids = postsNoRaio.map(p => p.id);
+  const comMap = {};
+  if(ids.length > 0){
+    const { data: comData } = await sb.from('comentarios').select('*').in('post_id', ids);
+    (comData||[]).forEach(c => { if(!comMap[c.post_id]) comMap[c.post_id]=[]; comMap[c.post_id].push(c); });
+  }
+  E.posts = postsNoRaio.map(p => ({
+    id: p.id, nome: p.apelido_autor || 'Vizinho', dist: formatarDistancia(p.distancia_metros),
+    tipo: p.tipo, txt: p.texto, ap: p.apoios || 0, apd: false,
+    av: (p.apelido_autor||'V').charAt(0).toUpperCase(),
+    cor: COR[Math.abs(hashStr(p.id+'')) % COR.length],
+    foto_url: p.foto_url || null, usuario_id: p.usuario_id,
+    tempo: formatarTempo(p.criado_em),
+    coms: (comMap[p.id]||[]).map(c=>({
       nome: c.apelido_autor||'Vizinho', dist: '0m', txt: c.texto, usuario_id: c.usuario_id,
       av: (c.apelido_autor||'V').charAt(0).toUpperCase(),
       cor: COR[Math.abs(hashStr(c.id+'')) % COR.length]
     }))
   }));
+  await carregarFotosPerfil(postsNoRaio.map(p=>p.usuario_id));
+  const apoiosLocais = getApoiosLocais();
+  E.posts.forEach(p => { if(apoiosLocais.includes(p.id)) p.apd = true; });
   E.posts = [...anunciosFeed, ...E.posts];
   if(E.posts.length === 0) E.posts = postsBoasVindas();
   render();
@@ -980,6 +968,15 @@ function formatarDistancia(metros){
   if(!metros && metros !== 0) return '0m';
   if(metros < 1000) return Math.round(metros)+'m';
   return (metros/1000).toFixed(1)+'km';
+}
+
+function postDentroDoRaio(post){
+  const raioMetros = parseFloat(E.raio);
+  if(!Number.isFinite(raioMetros)) return false;
+  const distanciaRpc = parseFloat(post.distancia_metros);
+  if(Number.isFinite(distanciaRpc)) return distanciaRpc <= raioMetros;
+  const distKm = distanciaKm(E.lat, E.lon, post.lat, post.lon);
+  return distKm !== null && distKm * 1000 <= raioMetros;
 }
 
 function distanciaKm(lat1, lon1, lat2, lon2){
@@ -1082,7 +1079,7 @@ async function postar(){
   });
   render();
   toast('Publicado! 🎉');
-  fetch('/api/notify', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'📢 Nova publicação na sua rua!', corpo: (txt||'').slice(0,80), url:'/app'})}).catch(()=>{});
+  fetch('/api/notify', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'📢 Nova publicação na sua rua!', corpo: (txt||'').slice(0,80), url:'/app', lat:E.lat, lon:E.lon, raio:E.raio})}).catch(()=>{});
 }
 
 async function apoiar(id){
@@ -1486,7 +1483,7 @@ async function renderServicos(){
     <div class="srv-tags"><span class="srv-tag">${s.tipo}</span>${s.distancia_fmt?`<span class="srv-tag">a ${s.distancia_fmt}</span>`:''}${s.destaque?'<span class="srv-tag">✓ Verificado</span>':''}</div>
     <div class="srv-acoes"><button class="srv-btn-wa" onclick="window.open('https://wa.me/55${(s.telefone||'').replace(/[^0-9]/g,'')}','_blank')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligar('${(s.telefone||'').replace(/[^0-9]/g,'')}')">📞 Ligar</button></div>
     ${s.usuario_id===E.userId?`<button class="srv-btn-edit" onclick="abrirEditarAnuncio('${s.id}')">Editar anúncio</button>`:''}</div></div>`).join('');
-  el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div><div class="srv-cats">${cats}</div><div class="srv-grid">${fil.length===0?'<div style="text-align:center;padding:2rem;color:var(--texto-muted);font-size:14px;">Nenhum serviço cadastrado ainda.<br>Seja o primeiro!</div>':cards}<div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div></div></div>`;
+  el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div><div class="srv-cats">${cats}</div><div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div><div class="srv-grid">${fil.length===0?'<div style="text-align:center;padding:2rem;color:var(--texto-muted);font-size:14px;">Nenhum serviço cadastrado ainda.<br>Seja o primeiro!</div>':cards}</div></div>`;
 }
 function setcat(cat){ catAtiva=cat; renderServicos(); }
 
@@ -1651,7 +1648,7 @@ async function enviarAlerta(){
       tipo:'aviso', texto:txt,
       bairro:E.bairro, cidade:E.cidade, cep:E.cep, lat:E.lat, lon:E.lon, apoios:0
     });
-    fetch('/api/notify', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'🆘 ALERTA DE EMERGÊNCIA!', corpo: E.nome+' acionou o botão de pânico nas proximidades!', url:'/app'})}).catch(()=>{});
+    fetch('/api/notify', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'🆘 ALERTA DE EMERGÊNCIA!', corpo: E.nome+' acionou o botão de pânico nas proximidades!', url:'/app', lat:E.lat, lon:E.lon, raio:E.raio})}).catch(()=>{});
   }
   setTimeout(()=>{
     const vc=Math.floor(3+(E.raio/100));
