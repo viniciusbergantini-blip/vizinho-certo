@@ -92,7 +92,13 @@
 <script>
 const SUPABASE_URL = 'https://xurtdibicsxmouvzfxvb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1cnRkaWJpY3N4bW91dnpmeHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNjcsImV4cCI6MjA4OTg3MTM2N30.WQ36EsY2JHP5G4VvLAfRNv7j4RjArne1sjbRS_tfvUU';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+});
 const CITY_LABELS = { indaiatuba:'Indaiatuba', maringa:'Maringá', londrina:'Londrina' };
 const AUTO_REFRESH_MS = 60000;
 let metrics = null;
@@ -102,9 +108,20 @@ let autoRefreshTimer = null;
 let isLoadingMetrics = false;
 
 window.addEventListener('DOMContentLoaded', init);
+sb.auth.onAuthStateChange((event, session) => {
+  if(session) currentSession = session;
+  if(event === 'SIGNED_OUT' && document.getElementById('login')){
+    stopAutoRefresh();
+    currentSession = null;
+    showLogin();
+  }
+});
 document.addEventListener('visibilitychange', () => {
   if(document.hidden) stopAutoRefresh();
-  else if(currentSession && !document.getElementById('dashboard').classList.contains('hidden')) startAutoRefresh();
+  else if(currentSession && !document.getElementById('dashboard').classList.contains('hidden')){
+    startAutoRefresh();
+    refreshMetrics();
+  }
 });
 
 async function init(){
@@ -113,7 +130,7 @@ async function init(){
   currentSession = session;
   showDashboard();
   startAutoRefresh();
-  await loadMetrics(session);
+  await loadMetrics();
 }
 
 async function login(){
@@ -125,15 +142,12 @@ async function login(){
   currentSession = data.session;
   showDashboard();
   startAutoRefresh();
-  await loadMetrics(data.session);
+  await loadMetrics();
 }
 
 async function refreshMetrics(){
   if(isLoadingMetrics) return;
-  const { data: { session } } = await sb.auth.getSession();
-  currentSession = session || currentSession;
-  if(!currentSession){ showLogin(); return; }
-  await loadMetrics(currentSession);
+  await loadMetrics();
 }
 
 async function logout(){
@@ -144,15 +158,47 @@ async function logout(){
   showLogin();
 }
 
-async function loadMetrics(session){
+async function getActiveSession(){
+  const { data: { session }, error } = await sb.auth.getSession();
+  if(error) throw error;
+  if(session){
+    currentSession = session;
+    return session;
+  }
+
+  if(currentSession && currentSession.refresh_token){
+    const refreshed = await sb.auth.refreshSession({ refresh_token: currentSession.refresh_token });
+    if(refreshed.error) throw refreshed.error;
+    currentSession = refreshed.data.session;
+    return currentSession;
+  }
+
+  return null;
+}
+
+async function loadMetrics(){
   if(isLoadingMetrics) return;
   isLoadingMetrics = true;
   setError('dashboard-error', '');
   document.getElementById('status').textContent = 'Atualizando métricas...';
   try{
-    const resp = await fetch('/api/dashboard-metrics', {
+    const session = await getActiveSession();
+    if(!session){ showLogin(); return; }
+
+    let resp = await fetch('/api/dashboard-metrics', {
       headers: { Authorization: `Bearer ${session.access_token}` }
     });
+
+    if(resp.status === 401 && currentSession && currentSession.refresh_token){
+      const refreshed = await sb.auth.refreshSession({ refresh_token: currentSession.refresh_token });
+      if(!refreshed.error && refreshed.data.session){
+        currentSession = refreshed.data.session;
+        resp = await fetch('/api/dashboard-metrics', {
+          headers: { Authorization: `Bearer ${currentSession.access_token}` }
+        });
+      }
+    }
+
     const data = await resp.json();
     if(!resp.ok) throw new Error(data.error || 'Erro ao carregar dashboard');
     metrics = data;
