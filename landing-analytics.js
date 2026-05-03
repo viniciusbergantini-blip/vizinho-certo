@@ -59,5 +59,16 @@
         });
       });
     });
+
+    document.querySelectorAll('form[action="/app"], form[action="/app.html"]').forEach(form => {
+      form.addEventListener('submit', () => {
+        localStorage.setItem('vc_landing_source_city', city);
+        const submitter = document.querySelector(`[form="${form.id}"][type="submit"]`);
+        track('cta_click', city, {
+          text: (submitter && submitter.textContent || 'submit').trim().slice(0, 120),
+          href: form.getAttribute('action')
+        });
+      });
+    });
   });
 })();

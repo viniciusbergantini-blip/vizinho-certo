@@ -562,6 +562,48 @@ function getLandingSourceCity(){
   return ['indaiatuba','maringa','londrina'].includes(city) ? city : null;
 }
 
+function getLandingSignupPrefill(){
+  const params = new URLSearchParams(window.location.search);
+  let stored = {};
+
+  try {
+    stored = JSON.parse(localStorage.getItem('vc_landing_signup_prefill') || '{}') || {};
+  } catch(e) {
+    stored = {};
+  }
+
+  const nome = (params.get('nome') || stored.nome || '').trim();
+  const email = (params.get('email') || stored.email || '').trim();
+  const cep = (params.get('cep') || stored.cep || '').replace(/[^0-9]/g, '').slice(0, 8);
+
+  if(!nome && !email && !cep) return null;
+  return { nome, email, cep };
+}
+
+function aplicarLandingSignupPrefill(){
+  const prefill = getLandingSignupPrefill();
+  if(!prefill) return;
+
+  mostrarCadastro();
+
+  const nomeEl = document.getElementById('inp-nome');
+  const apelidoEl = document.getElementById('inp-apelido');
+  const emailEl = document.getElementById('inp-email');
+  const cepEl = document.getElementById('inp-cep');
+
+  if(prefill.nome && nomeEl && !nomeEl.value) nomeEl.value = prefill.nome;
+  if(prefill.nome && apelidoEl && !apelidoEl.value) apelidoEl.value = prefill.nome.split(/\s+/)[0] || prefill.nome;
+  if(prefill.email && emailEl && !emailEl.value) emailEl.value = prefill.email;
+  if(prefill.cep && cepEl && !cepEl.value) {
+    cepEl.value = prefill.cep;
+    formataCEP(cepEl);
+  }
+
+  if(window.location.search) {
+    window.history.replaceState({}, document.title, window.location.pathname + window.location.hash);
+  }
+}
+
 function trackCadastro(eventType, userId){
   fetch('/api/track', {
     method:'POST',
@@ -686,6 +728,7 @@ function urlBase64ToUint8Array(base64String) {
 window.addEventListener('DOMContentLoaded', async () => {
   atuRaio(150);
   verificarRetornoPagamento();
+  aplicarLandingSignupPrefill();
 
   sb.auth.onAuthStateChange(async (event, session) => {
     if(event === 'SIGNED_OUT'){ modoRecuperacaoSenha=false; irTela('t-bv'); return; }
@@ -695,13 +738,14 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   try {
     const { data: { session } } = await sb.auth.getSession();
-    if(!session || !session.user){ irTela('t-bv'); return; }
+    if(!session || !session.user){ irTela('t-bv'); aplicarLandingSignupPrefill(); return; }
     if(modoRecuperacaoSenha){ irTela('t-nova-senha'); return; }
     E.userId = session.user.id;
     const { data: perfil } = await sb.from('usuarios').select('*').eq('id', session.user.id).single();
     if(!perfil || !perfil.apelido){
       irTela('t-bv'); mostrarCadastro();
       document.getElementById('inp-email').value = session.user.email;
+      aplicarLandingSignupPrefill();
       toast('Complete seu cadastro para continuar! 👋');
       return;
     }
@@ -1352,6 +1396,7 @@ async function irFeed(){
   cadastroTemp = {};
   sessionStorage.removeItem('vc_cadastro');
   localStorage.removeItem('vc_landing_source_city');
+  localStorage.removeItem('vc_landing_signup_prefill');
   await carregarPerfil(uid);
   await carregarPosts();
   irTela('t-feed');
