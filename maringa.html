@@ -205,6 +205,13 @@ a{color:inherit}
 .step b{font-family:"Fraunces",serif;color:var(--amarelo);font-size:34px}
 .step strong{display:block;margin:12px 0 6px;font-size:17px}
 .step span{display:block;color:rgba(254,250,224,.68);font-size:14px;line-height:1.55}
+.install-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:30px}
+.install-card{background:rgba(255,255,255,.08);border:1px solid rgba(254,250,224,.16);border-radius:8px;padding:22px}
+.install-card strong{display:block;font-size:17px;margin-bottom:12px;color:var(--creme)}
+.install-card span{display:block;color:rgba(254,250,224,.7);font-size:14px;line-height:1.8}
+.install-card b{color:#fff}
+.install-note{margin-top:18px;background:rgba(231,111,81,.14);border:1px solid rgba(231,111,81,.28);border-radius:8px;padding:16px 18px;color:rgba(254,250,224,.74);font-size:14px;line-height:1.6}
+.install-note strong{color:#fff}
 .faq{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:32px}
 .qa{background:#fff;border:1px solid var(--borda);border-radius:8px;padding:20px}
 .qa strong{display:block;color:var(--verde);font-size:16px;margin-bottom:7px}
@@ -231,7 +238,7 @@ footer strong span{color:var(--verde-claro)}
   .hero-grid{padding:34px 0 58px}
   .signup-card{max-width:520px}
   .benefits{grid-template-columns:repeat(2,1fr)}
-  .steps,.faq{grid-template-columns:1fr}
+  .steps,.install-grid,.faq{grid-template-columns:1fr}
 }
 @media(max-width:620px){
   .wrap{padding:0 18px}
@@ -270,6 +277,7 @@ footer strong span{color:var(--verde-claro)}
           <div class="cta-row">
             <a href="/app" class="btn-primary">Criar cadastro gratuito</a>
             <a href="#como-funciona" class="btn-secondary">Ver como funciona</a>
+            <a href="#instalar" class="btn-secondary">Como instalar</a>
           </div>
           <div class="microcopy">
             <span>Sem cartão de crédito</span>
@@ -392,6 +400,25 @@ footer strong span{color:var(--verde-claro)}
           <div class="qa"><strong>Serve para qualquer bairro de Maringá?</strong><span>Sim. O raio ajuda a aproximar pessoas da mesma região, rua ou quarteirão.</span></div>
           <div class="qa"><strong>Por que não usar só WhatsApp?</strong><span>Porque grupos são bons para conversa geral, mas ruins para organizar pedido, urgência, distância e histórico.</span></div>
         </div>
+      </div>
+    </section>
+
+    <section class="section dark r" id="instalar">
+      <div class="wrap">
+        <div class="eyebrow">Deixe no celular</div>
+        <h2 class="h2">Depois de criar sua conta, adicione o Vizinho Certo na tela inicial.</h2>
+        <p class="lead">Assim o app fica sempre à mão para acompanhar avisos da rua, responder vizinhos, consultar serviços do bairro e receber alertas importantes.</p>
+        <div class="install-grid">
+          <div class="install-card">
+            <strong>iPhone (Safari)</strong>
+            <span>1. Abra <b>vizinhocerto.com.br</b><br>2. Toque em <b>compartilhar</b><br>3. Escolha <b>Adicionar à Tela de Início</b><br>4. Confirme em <b>Adicionar</b></span>
+          </div>
+          <div class="install-card">
+            <strong>Android (Chrome)</strong>
+            <span>1. Abra <b>vizinhocerto.com.br</b><br>2. Toque nos <b>três pontinhos</b><br>3. Escolha <b>Adicionar à tela inicial</b><br>4. Confirme em <b>Adicionar</b></span>
+          </div>
+        </div>
+        <div class="install-note"><strong>Por que vale fazer isso?</strong> O Vizinho Certo funciona melhor como app no celular: acesso rápido, notificações e menos chance de perder algo importante da sua vizinhança.</div>
       </div>
     </section>
 
