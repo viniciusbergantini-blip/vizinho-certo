@@ -21,6 +21,7 @@
   .actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;}
   .btn{border:0;background:var(--verde);color:white;border-radius:8px;padding:10px 14px;cursor:pointer;font-weight:700;}
   .btn.secondary{background:var(--branco);color:var(--verde);border:1px solid var(--borda);}
+  .auto-status{font-size:12px;color:var(--muted);align-self:center;padding:0 4px;}
   .login{max-width:420px;margin:12vh auto 0;background:var(--branco);border:1px solid var(--borda);border-radius:8px;padding:24px;}
   .login h1{font-family:Fraunces,serif;color:var(--verde-escuro);font-size:28px;margin-bottom:8px;}
   .login p{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:18px;}
@@ -70,6 +71,7 @@
       <div>
         <div id="status" class="status">Carregando...</div>
         <div class="actions">
+          <span id="auto-status" class="auto-status">Auto: 60s</span>
           <button class="btn secondary" onclick="refreshMetrics()">Atualizar</button>
           <button class="btn secondary" onclick="logout()">Sair</button>
         </div>
@@ -92,17 +94,25 @@ const SUPABASE_URL = 'https://xurtdibicsxmouvzfxvb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1cnRkaWJpY3N4bW91dnpmeHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNjcsImV4cCI6MjA4OTg3MTM2N30.WQ36EsY2JHP5G4VvLAfRNv7j4RjArne1sjbRS_tfvUU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const CITY_LABELS = { indaiatuba:'Indaiatuba', maringa:'Maringá', londrina:'Londrina' };
+const AUTO_REFRESH_MS = 60000;
 let metrics = null;
 let activeWindow = 'today';
 let currentSession = null;
+let autoRefreshTimer = null;
+let isLoadingMetrics = false;
 
 window.addEventListener('DOMContentLoaded', init);
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden) stopAutoRefresh();
+  else if(currentSession && !document.getElementById('dashboard').classList.contains('hidden')) startAutoRefresh();
+});
 
 async function init(){
   const { data: { session } } = await sb.auth.getSession();
   if(!session){ showLogin(); return; }
   currentSession = session;
   showDashboard();
+  startAutoRefresh();
   await loadMetrics(session);
 }
 
@@ -114,10 +124,12 @@ async function login(){
   if(error){ setError('login-error', 'Não foi possível entrar. Verifique email, senha e permissão de admin.'); return; }
   currentSession = data.session;
   showDashboard();
+  startAutoRefresh();
   await loadMetrics(data.session);
 }
 
 async function refreshMetrics(){
+  if(isLoadingMetrics) return;
   const { data: { session } } = await sb.auth.getSession();
   currentSession = session || currentSession;
   if(!currentSession){ showLogin(); return; }
@@ -125,6 +137,7 @@ async function refreshMetrics(){
 }
 
 async function logout(){
+  stopAutoRefresh();
   await sb.auth.signOut();
   metrics = null;
   currentSession = null;
@@ -132,6 +145,8 @@ async function logout(){
 }
 
 async function loadMetrics(session){
+  if(isLoadingMetrics) return;
+  isLoadingMetrics = true;
   setError('dashboard-error', '');
   document.getElementById('status').textContent = 'Atualizando métricas...';
   try{
@@ -145,6 +160,24 @@ async function loadMetrics(session){
   } catch(e){
     setError('dashboard-error', e.message);
     document.getElementById('status').textContent = 'Falha ao carregar';
+  } finally {
+    isLoadingMetrics = false;
+  }
+}
+
+function startAutoRefresh(){
+  stopAutoRefresh();
+  document.getElementById('auto-status').textContent = `Auto: ${AUTO_REFRESH_MS / 1000}s`;
+  autoRefreshTimer = setInterval(() => {
+    if(document.hidden || !currentSession || isLoadingMetrics) return;
+    refreshMetrics();
+  }, AUTO_REFRESH_MS);
+}
+
+function stopAutoRefresh(){
+  if(autoRefreshTimer){
+    clearInterval(autoRefreshTimer);
+    autoRefreshTimer = null;
   }
 }
 
@@ -194,6 +227,7 @@ function metric(label, value, hint){
 }
 
 function showLogin(){
+  stopAutoRefresh();
   document.getElementById('login').classList.remove('hidden');
   document.getElementById('dashboard').classList.add('hidden');
 }
