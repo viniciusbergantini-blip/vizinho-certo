@@ -11,23 +11,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1B4D37">
-<meta name="description" content="Vizinho Certo — O fim do grupo de WhatsApp de vizinho. Conecte-se com quem mora perto de você de verdade.">
-<title>Vizinho Certo — Sua rua. Seus vizinhos.</title>
+<meta name="description" content="Vizinho Certo — Cadastre-se grátis para acompanhar sua rua, falar com vizinhos próximos e reportar problemas sem bagunça de grupo.">
+<title>Vizinho Certo | Sua rua. Seus vizinhos.</title>
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="manifest" href="/manifest.json">
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   (async () => {
-    const appUrl = window.location.protocol === 'file:' ? 'app.html' : '/app';
-    const isAppRoute = window.location.pathname.startsWith('/app') || window.location.pathname.endsWith('/app.html');
+    const appUrl = '/app';
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-
-    if(isAppRoute) return;
-
-    // Se for standalone redireciona IMEDIATAMENTE sem esperar Supabase
     if(isStandalone) { window.location.replace(appUrl); return; }
-
     try {
       const sb = supabase.createClient(
         'https://xurtdibicsxmouvzfxvb.supabase.co',
@@ -37,365 +31,462 @@
       if(session) window.location.replace(appUrl);
     } catch(e) {}
   })();
-
-  document.addEventListener('DOMContentLoaded', () => {
-    if(window.location.protocol !== 'file:'){
-      document.querySelectorAll('[data-app-link]').forEach(link => link.setAttribute('href', '/app'));
-    }
-  });
 </script>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script defer src="/landing-analytics.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --verde: #2D6A4F;
-    --verde-escuro: #1B4D37;
-    --verde-claro: #52B788;
-    --verde-bg: #D8F3DC;
-    --laranja: #E76F51;
-    --creme: #FEFAE0;
-    --creme-escuro: #F0E9D2;
-    --texto: #1B1B1B;
-    --texto-muted: #6B6B6B;
-    --branco: #FFFFFF;
-  }
-
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--creme);
-    color: var(--texto);
-    overflow-x: hidden;
-  }
-
-  /* ===== HERO ===== */
-  .hero {
-    min-height: 100vh;
-    background: var(--verde-escuro);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .hero::before {
-    content: '';
-    position: absolute;
-    width: 600px; height: 600px;
-    border-radius: 50%;
-    background: rgba(82,183,136,0.12);
-    top: -200px; right: -150px;
-    animation: float 8s ease-in-out infinite;
-  }
-  .hero::after {
-    content: '';
-    position: absolute;
-    width: 400px; height: 400px;
-    border-radius: 50%;
-    background: rgba(231,111,81,0.08);
-    bottom: -100px; left: -100px;
-    animation: float 10s ease-in-out infinite reverse;
-  }
-  @keyframes float {
-    0%,100% { transform: translateY(0) scale(1); }
-    50% { transform: translateY(-30px) scale(1.05); }
-  }
-
-  .nav {
-    position: relative; z-index: 10;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 1.5rem 2rem;
-  }
-  .nav-logo {
-    font-family: 'Fraunces', serif;
-    font-size: 22px; font-weight: 700;
-    color: var(--creme);
-    text-decoration: none;
-  }
-  .nav-logo span { color: var(--verde-claro); }
-  .nav-cta {
-    background: var(--laranja);
-    color: white;
-    padding: 10px 22px;
-    border-radius: 100px;
-    text-decoration: none;
-    font-size: 14px; font-weight: 500;
-    transition: transform .2s, box-shadow .2s;
-    box-shadow: 0 4px 16px rgba(231,111,81,.4);
-  }
-  .nav-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(231,111,81,.5); }
-
-  .hero-content {
-    flex: 1;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    text-align: center;
-    padding: 3rem 1.5rem 5rem;
-    position: relative; z-index: 1;
-  }
-
-  .hero-badge {
-    display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(82,183,136,0.15);
-    border: 1px solid rgba(82,183,136,0.3);
-    border-radius: 100px;
-    padding: 6px 16px;
-    font-size: 12px; font-weight: 500;
-    color: var(--verde-claro);
-    margin-bottom: 2rem;
-    letter-spacing: .5px;
-    animation: fadeUp .6s ease both;
-  }
-  .hero-badge::before { content: '●'; font-size: 8px; animation: pulse 2s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-  .hero-title {
-    font-family: 'Fraunces', serif;
-    font-size: clamp(42px, 8vw, 72px);
-    font-weight: 900;
-    color: var(--creme);
-    line-height: 1.05;
-    margin-bottom: 1.5rem;
-    animation: fadeUp .6s .1s ease both;
-    max-width: 700px;
-  }
-  .hero-title em { font-style: italic; color: var(--verde-claro); }
-  .hero-title .riscado { text-decoration: line-through; color: rgba(254,250,224,0.35); font-weight: 300; }
-
-  .hero-sub {
-    font-size: clamp(16px, 2.5vw, 20px);
-    color: rgba(254,250,224,0.65);
-    max-width: 480px;
-    line-height: 1.7;
-    margin-bottom: 2.5rem;
-    animation: fadeUp .6s .2s ease both;
-  }
-
-  .hero-actions {
-    display: flex; gap: 12px; flex-wrap: wrap;
-    justify-content: center;
-    animation: fadeUp .6s .3s ease both;
-  }
-  .btn-primary {
-    background: var(--laranja);
-    color: white;
-    padding: 16px 32px;
-    border-radius: 100px;
-    text-decoration: none;
-    font-size: 16px; font-weight: 500;
-    transition: all .2s;
-    box-shadow: 0 4px 20px rgba(231,111,81,.45);
-    display: flex; align-items: center; gap: 8px;
-  }
-  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(231,111,81,.6); }
-  .btn-secondary {
-    background: rgba(254,250,224,0.1);
-    color: var(--creme);
-    padding: 16px 28px;
-    border-radius: 100px;
-    text-decoration: none;
-    font-size: 15px;
-    border: 1px solid rgba(254,250,224,0.2);
-    transition: all .2s;
-  }
-  .btn-secondary:hover { background: rgba(254,250,224,0.15); }
-
-  @keyframes fadeUp {
-    from { opacity:0; transform: translateY(24px); }
-    to { opacity:1; transform: translateY(0); }
-  }
-
-  .hero-stats {
-    position: relative; z-index: 1;
-    display: flex; justify-content: center; gap: 3rem;
-    padding: 2rem;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    animation: fadeUp .6s .4s ease both;
-  }
-  .stat { text-align: center; }
-  .stat-num { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 700; color: var(--verde-claro); }
-  .stat-label { font-size: 12px; color: rgba(254,250,224,0.45); margin-top: 2px; }
-
-  /* ===== PROBLEMA ===== */
-  .problema { background: var(--creme-escuro); padding: 5rem 1.5rem; text-align: center; }
-  .problema-titulo { font-family: 'Fraunces', serif; font-size: clamp(28px, 5vw, 44px); font-weight: 700; color: var(--verde-escuro); max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.2; }
-  .problema-sub { font-size: 17px; color: var(--texto-muted); max-width: 480px; margin: 0 auto 3rem; line-height: 1.7; }
-  .chat-mockup { max-width: 360px; margin: 0 auto; background: #E8F0FB; border-radius: 20px; padding: 1.25rem; box-shadow: 0 8px 40px rgba(0,0,0,0.12); }
-  .chat-header { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid rgba(0,0,0,0.08); margin-bottom: 12px; }
-  .chat-avatar { width: 36px; height: 36px; border-radius: 50%; background: #25D366; display: flex; align-items: center; justify-content: center; font-size: 18px; }
-  .chat-name { font-size: 14px; font-weight: 500; color: #111; }
-  .chat-count { font-size: 11px; color: #888; }
-  .msg { margin-bottom: 8px; display: flex; flex-direction: column; }
-  .msg-bubble { display: inline-block; max-width: 85%; padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.5; position: relative; }
-  .msg-bubble.recv { background: white; color: #111; align-self: flex-start; border-bottom-left-radius: 4px; }
-  .msg-bubble.sent { background: #DCF8C6; color: #111; align-self: flex-end; border-bottom-right-radius: 4px; }
-  .msg-autor { font-size: 11px; color: #888; margin-bottom: 2px; }
-  .chat-caos { background: #FFF3CD; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #856404; text-align: center; margin-top: 8px; }
-
-  /* ===== SOLUÇÃO ===== */
-  .solucao { padding: 5rem 1.5rem; background: var(--creme); text-align: center; }
-  .tag-label { display: inline-block; background: var(--verde-bg); color: var(--verde); font-size: 12px; font-weight: 500; padding: 6px 16px; border-radius: 100px; margin-bottom: 1rem; letter-spacing: .5px; text-transform: uppercase; }
-  .section-title { font-family: 'Fraunces', serif; font-size: clamp(28px, 5vw, 44px); font-weight: 700; color: var(--verde-escuro); max-width: 580px; margin: 0 auto 1rem; line-height: 1.2; }
-  .section-sub { font-size: 17px; color: var(--texto-muted); max-width: 440px; margin: 0 auto 3rem; line-height: 1.7; }
-  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; max-width: 860px; margin: 0 auto; }
-  .feature-card { background: var(--branco); border-radius: 20px; padding: 1.75rem; text-align: left; border: 1px solid rgba(0,0,0,0.06); transition: transform .2s, box-shadow .2s; }
-  .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
-  .feature-icon { font-size: 32px; margin-bottom: 1rem; display: block; }
-  .feature-title { font-family: 'Fraunces', serif; font-size: 19px; font-weight: 700; color: var(--verde-escuro); margin-bottom: 8px; }
-  .feature-desc { font-size: 14px; color: var(--texto-muted); line-height: 1.65; }
-
-  /* ===== COMO INSTALAR ===== */
-  .instalar { background: var(--verde-escuro); padding: 5rem 1.5rem; text-align: center; }
-  .instalar .section-title { color: var(--creme); max-width: 500px; }
-  .instalar .section-sub { color: rgba(254,250,224,0.6); }
-  .instalar .tag-label { background: rgba(82,183,136,0.2); color: var(--verde-claro); }
-  .install-os { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-bottom: 2.5rem; }
-  .os-card { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 1.25rem 1.5rem; text-align: left; max-width: 280px; flex: 1; }
-  .os-title { font-size: 14px; font-weight: 500; color: var(--creme); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-  .os-steps { font-size: 12px; color: rgba(254,250,224,0.55); line-height: 2; }
-  .os-steps strong { color: rgba(254,250,224,0.85); }
-  .install-aviso { background: rgba(231,111,81,0.12); border: 1px solid rgba(231,111,81,0.25); border-radius: 12px; padding: 1rem 1.5rem; max-width: 500px; margin: 0 auto; font-size: 13px; color: rgba(254,250,224,0.7); line-height: 1.6; }
-  .install-aviso strong { color: var(--laranja); }
-
-  /* ===== COMO FUNCIONA ===== */
-  .como { padding: 5rem 1.5rem; background: var(--creme-escuro); text-align: center; }
-  .steps-list { display: flex; flex-direction: column; gap: 1rem; max-width: 500px; margin: 0 auto; text-align: left; }
-  .step-item { display: flex; gap: 16px; align-items: flex-start; background: var(--branco); border-radius: 16px; padding: 1.25rem; border: 1px solid rgba(0,0,0,0.05); }
-  .step-num { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; background: var(--verde-bg); color: var(--verde); font-weight: 700; font-size: 14px; display: flex; align-items: center; justify-content: center; }
-  .step-text { font-size: 14px; line-height: 1.6; color: var(--texto); }
-  .step-text strong { color: var(--verde-escuro); }
-
-  /* ===== CTA FINAL ===== */
-  .cta-final { background: var(--laranja); padding: 5rem 1.5rem; text-align: center; position: relative; overflow: hidden; }
-  .cta-final::before { content: ''; position: absolute; width: 500px; height: 500px; border-radius: 50%; background: rgba(255,255,255,0.08); top: -200px; right: -150px; }
-  .cta-final-title { font-family: 'Fraunces', serif; font-size: clamp(32px, 6vw, 52px); font-weight: 900; color: white; max-width: 560px; margin: 0 auto 1rem; line-height: 1.1; position: relative; z-index: 1; }
-  .cta-final-sub { font-size: 17px; color: rgba(255,255,255,0.75); margin-bottom: 2.5rem; position: relative; z-index: 1; }
-  .btn-white { display: inline-flex; align-items: center; gap: 10px; background: white; color: var(--laranja); padding: 18px 36px; border-radius: 100px; text-decoration: none; font-size: 17px; font-weight: 600; box-shadow: 0 8px 30px rgba(0,0,0,0.2); transition: all .2s; position: relative; z-index: 1; }
-  .btn-white:hover { transform: translateY(-3px); box-shadow: 0 14px 40px rgba(0,0,0,0.3); }
-
-  /* ===== FOOTER ===== */
-  footer { background: var(--verde-escuro); padding: 2rem 1.5rem; text-align: center; }
-  footer .logo-footer { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 700; color: var(--creme); margin-bottom: 8px; }
-  footer .logo-footer span { color: var(--verde-claro); }
-  footer p { font-size: 12px; color: rgba(254,250,224,0.35); }
-
-  .reveal { opacity: 0; transform: translateY(32px); transition: opacity .7s ease, transform .7s ease; }
-  .reveal.visible { opacity: 1; transform: translateY(0); }
-
-  @media (max-width: 600px) {
-    .hero-stats { gap: 1.5rem; }
-    .nav { padding: 1rem 1.25rem; }
-  }
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --verde:#1B4D37;
+  --verde-2:#2D6A4F;
+  --verde-claro:#52B788;
+  --laranja:#E76F51;
+  --creme:#FEFAE0;
+  --creme-2:#F0E9D2;
+  --azul:#28536B;
+  --amarelo:#E9C46A;
+  --texto:#1B1B1B;
+  --muted:#5C5C5C;
+  --branco:#FFFFFF;
+  --borda:rgba(27,77,55,.14);
+}
+html{scroll-behavior:smooth}
+body{font-family:"DM Sans",sans-serif;background:var(--creme);color:var(--texto);overflow-x:hidden}
+a{color:inherit}
+.page{min-height:100vh}
+.wrap{width:min(1120px,100%);margin:0 auto;padding:0 24px}
+.hero{
+  min-height:92svh;
+  background:
+    linear-gradient(180deg,rgba(27,77,55,.98),rgba(27,77,55,.94)),
+    repeating-linear-gradient(90deg,rgba(254,250,224,.05) 0 1px,transparent 1px 88px);
+  color:var(--creme);
+  position:relative;
+  overflow:hidden;
+}
+.hero::after{
+  content:"";
+  position:absolute;
+  left:0;right:0;bottom:0;height:120px;
+  background:linear-gradient(180deg,transparent,rgba(254,250,224,.08));
+  pointer-events:none;
+}
+.nav{
+  position:relative;z-index:5;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:20px;padding:22px 0;
+}
+.logo{font-family:"Fraunces",serif;font-size:20px;font-weight:900;text-decoration:none}
+.logo span{color:var(--verde-claro)}
+.nav-link{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:40px;padding:0 18px;border-radius:6px;
+  background:rgba(254,250,224,.1);border:1px solid rgba(254,250,224,.18);
+  color:var(--creme);text-decoration:none;font-size:14px;font-weight:700;
+}
+.hero-grid{
+  position:relative;z-index:2;
+  display:grid;grid-template-columns:minmax(0,1.05fr) minmax(340px,.82fr);
+  gap:48px;align-items:center;
+  padding:50px 0 82px;
+}
+.pill{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(82,183,136,.18);border:1px solid rgba(82,183,136,.32);
+  color:#BFF0D2;border-radius:999px;padding:7px 13px;
+  font-size:12px;font-weight:700;margin-bottom:18px;
+}
+.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--verde-claro)}
+.hero h1{
+  font-family:"Fraunces",serif;
+  font-size:clamp(42px,7vw,82px);
+  line-height:.98;font-weight:900;
+  max-width:760px;
+}
+.hero h1 em{font-style:italic;color:var(--verde-claro)}
+.hero-sub{
+  margin-top:20px;
+  max-width:610px;
+  color:rgba(254,250,224,.76);
+  font-size:clamp(17px,2vw,21px);
+  line-height:1.55;
+}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px;align-items:center}
+.btn-primary,.btn-secondary,.btn-light{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  min-height:52px;padding:0 24px;border-radius:7px;
+  text-decoration:none;font-weight:900;font-size:15px;
+}
+.btn-primary{background:var(--laranja);color:#fff;box-shadow:0 16px 32px rgba(231,111,81,.32)}
+.btn-secondary{border:1px solid rgba(254,250,224,.22);color:var(--creme);background:rgba(254,250,224,.08)}
+.btn-light{background:#fff;color:var(--laranja);box-shadow:0 12px 30px rgba(0,0,0,.14)}
+.microcopy{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:16px;color:rgba(254,250,224,.68);font-size:13px}
+.microcopy span{display:inline-flex;align-items:center;gap:7px}
+.microcopy span::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--amarelo)}
+.hero-proof{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  border-top:1px solid rgba(254,250,224,.13);
+  position:relative;z-index:2;
+}
+.proof-item{padding:18px 22px;border-right:1px solid rgba(254,250,224,.13)}
+.proof-item:last-child{border-right:0}
+.proof-k{font-family:"Fraunces",serif;color:var(--verde-claro);font-size:22px;font-weight:900}
+.proof-v{font-size:12px;color:rgba(254,250,224,.58);margin-top:3px;line-height:1.4}
+.signup-card{
+  background:var(--creme);
+  color:var(--texto);
+  border:1px solid rgba(254,250,224,.45);
+  border-radius:8px;
+  box-shadow:0 28px 70px rgba(0,0,0,.24);
+  overflow:hidden;
+}
+.signup-head{background:#fff;padding:22px;border-bottom:1px solid var(--borda)}
+.signup-head strong{font-family:"Fraunces",serif;color:var(--verde);font-size:24px;display:block;line-height:1.12}
+.signup-head p{color:var(--muted);font-size:14px;line-height:1.5;margin-top:8px}
+.signup-body{padding:20px 22px 22px}
+.checklist{display:grid;gap:12px;margin-bottom:18px}
+.check{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:flex-start}
+.check b{
+  display:flex;align-items:center;justify-content:center;
+  width:28px;height:28px;border-radius:50%;
+  background:#D8F3DC;color:var(--verde);font-size:15px;
+}
+.check strong{display:block;color:var(--verde);font-size:14px;margin-bottom:2px}
+.check span{display:block;color:var(--muted);font-size:13px;line-height:1.45}
+.form-preview{
+  background:#fff;border:1px solid var(--borda);border-radius:8px;padding:14px;margin:16px 0;
+}
+.field{
+  width:100%;height:42px;border:1px solid #D9D0BE;border-radius:7px;margin-top:8px;
+  background:#FAFAF7;display:flex;align-items:center;padding:0 12px;color:var(--texto);
+  font:500 13px "DM Sans",sans-serif;outline:none;transition:border-color .18s,box-shadow .18s,background .18s;
+}
+.field:first-child{margin-top:0}
+.field::placeholder{color:#847B6E;font-weight:400}
+.field:focus{border-color:var(--verde-claro);background:#fff;box-shadow:0 0 0 3px rgba(82,183,136,.16)}
+.field-error{display:none;color:#BF4A1C;font-size:12px;line-height:1.4;margin-top:9px}
+.field-error.show{display:block}
+.privacy{color:var(--muted);font-size:12px;line-height:1.45;margin-top:12px;text-align:center}
+.section{padding:72px 0}
+.section.alt{background:var(--creme-2)}
+.section.white{background:#fff}
+.section.dark{background:var(--verde);color:var(--creme)}
+.eyebrow{color:var(--laranja);font-size:12px;font-weight:900;text-transform:uppercase;margin-bottom:10px}
+.dark .eyebrow{color:var(--verde-claro)}
+.h2{font-family:"Fraunces",serif;font-size:clamp(30px,4vw,48px);line-height:1.06;color:var(--verde);font-weight:900}
+.dark .h2{color:var(--creme)}
+.lead{color:var(--muted);font-size:17px;line-height:1.65;max-width:660px;margin-top:14px}
+.dark .lead{color:rgba(254,250,224,.68)}
+.split{display:grid;grid-template-columns:.92fr 1.08fr;gap:46px;align-items:center}
+.pain-list{display:grid;gap:12px;margin-top:24px}
+.pain{background:#fff;border:1px solid var(--borda);border-radius:8px;padding:16px;display:grid;grid-template-columns:34px 1fr;gap:12px}
+.pain b{font-family:"Fraunces",serif;color:var(--laranja);font-size:22px}
+.pain strong{display:block;color:var(--verde);font-size:15px;margin-bottom:3px}
+.pain span{color:var(--muted);font-size:14px;line-height:1.5}
+.phone{width:min(370px,100%);margin:0 auto;background:#101A14;border:10px solid #101A14;border-radius:34px;box-shadow:0 30px 65px rgba(27,77,55,.2);overflow:hidden}
+.phone-screen{background:var(--creme);min-height:620px;border-radius:24px;overflow:hidden}
+.app-top{background:var(--verde);color:var(--creme);padding:18px}
+.app-top strong{font-family:"Fraunces",serif;font-size:22px;display:block}
+.app-top span{font-size:12px;color:rgba(254,250,224,.68)}
+.tabs{display:flex;gap:8px;overflow:hidden;background:#fff;border-bottom:1px solid #E4DDC8;padding:10px}
+.tab{white-space:nowrap;border-radius:999px;background:#F4F0E2;color:var(--muted);padding:7px 12px;font-size:11px;font-weight:700}
+.tab.active{background:#D8F3DC;color:var(--verde)}
+.post{margin:12px;background:#fff;border:1px solid #E4DDC8;border-radius:8px;overflow:hidden}
+.post-body{padding:14px}
+.post-row{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.avatar{width:36px;height:36px;border-radius:50%;background:var(--verde-claro);display:flex;align-items:center;justify-content:center;color:var(--verde);font-weight:900}
+.post-name{font-size:13px;font-weight:900;color:var(--texto)}
+.post-dist{font-size:11px;color:var(--muted)}
+.tag{display:inline-flex;background:#FFF1E9;color:#BF4A1C;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:900;margin-bottom:8px}
+.post p{font-size:13px;line-height:1.55;color:var(--texto)}
+.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.action{border:1px solid #BEE8CC;color:var(--verde);background:#F0FBF4;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:900}
+.benefits{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:32px}
+.benefit{background:var(--creme);border:1px solid var(--borda);border-radius:8px;padding:20px;min-height:174px}
+.benefit b{font-family:"Fraunces",serif;color:var(--azul);font-size:28px;display:block;margin-bottom:12px}
+.benefit strong{display:block;color:var(--verde);font-size:16px;margin-bottom:7px}
+.benefit span{color:var(--muted);font-size:14px;line-height:1.55}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px}
+.step{background:rgba(255,255,255,.08);border:1px solid rgba(254,250,224,.16);border-radius:8px;padding:22px}
+.step b{font-family:"Fraunces",serif;color:var(--amarelo);font-size:34px}
+.step strong{display:block;margin:12px 0 6px;font-size:17px}
+.step span{display:block;color:rgba(254,250,224,.68);font-size:14px;line-height:1.55}
+.install-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:30px}
+.install-card{background:rgba(255,255,255,.08);border:1px solid rgba(254,250,224,.16);border-radius:8px;padding:22px}
+.install-card strong{display:block;font-size:17px;margin-bottom:12px;color:var(--creme)}
+.install-card span{display:block;color:rgba(254,250,224,.7);font-size:14px;line-height:1.8}
+.install-card b{color:#fff}
+.install-note{margin-top:18px;background:rgba(231,111,81,.14);border:1px solid rgba(231,111,81,.28);border-radius:8px;padding:16px 18px;color:rgba(254,250,224,.74);font-size:14px;line-height:1.6}
+.install-note strong{color:#fff}
+.faq{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:32px}
+.qa{background:#fff;border:1px solid var(--borda);border-radius:8px;padding:20px}
+.qa strong{display:block;color:var(--verde);font-size:16px;margin-bottom:7px}
+.qa span{display:block;color:var(--muted);font-size:14px;line-height:1.6}
+.final{background:var(--laranja);color:#fff;text-align:center;padding:74px 0 86px}
+.final h2{font-family:"Fraunces",serif;font-size:clamp(32px,5vw,58px);line-height:1.04;max-width:760px;margin:0 auto}
+.final p{max-width:560px;margin:16px auto 28px;color:rgba(255,255,255,.76);font-size:17px;line-height:1.6}
+footer{background:#07140E;color:rgba(254,250,224,.36);text-align:center;padding:28px}
+footer strong{font-family:"Fraunces",serif;color:var(--creme)}
+footer strong span{color:var(--verde-claro)}
+.sticky-cta{position:fixed;z-index:30;left:12px;right:12px;bottom:12px;display:none;align-items:center;justify-content:center;min-height:52px;border-radius:8px;background:var(--laranja);color:#fff;text-decoration:none;font-weight:900;box-shadow:0 14px 34px rgba(0,0,0,.24)}
+.r{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+.r.v{opacity:1;transform:none}
+@media(max-width:900px){
+  .hero-grid,.split{grid-template-columns:1fr;gap:34px}
+  .hero{min-height:auto}
+  .hero-grid{padding:34px 0 58px}
+  .signup-card{max-width:520px}
+  .benefits{grid-template-columns:repeat(2,1fr)}
+  .steps,.install-grid,.faq{grid-template-columns:1fr}
+}
+@media(max-width:620px){
+  .wrap{padding:0 18px}
+  .nav{padding:16px 0}
+  .nav-link{display:none}
+  .hero-grid{padding-top:24px}
+  .hero h1{font-size:clamp(39px,13vw,58px)}
+  .hero-sub{font-size:16px}
+  .cta-row{display:grid}
+  .btn-primary,.btn-secondary,.btn-light{width:100%;padding:0 18px}
+  .hero-proof{grid-template-columns:1fr}
+  .proof-item{border-right:0;border-bottom:1px solid rgba(254,250,224,.13)}
+  .proof-item:last-child{border-bottom:0}
+  .section{padding:54px 0}
+  .benefits{grid-template-columns:1fr}
+  .phone-screen{min-height:560px}
+  .sticky-cta{display:flex}
+  body{padding-bottom:72px}
+}
 </style>
 </head>
 <body>
+<div class="page">
+  <header class="hero">
+    <div class="wrap">
+      <nav class="nav">
+        <a href="/" class="logo">Vizinho<span>Certo</span></a>
+        <a href="/app" class="nav-link">Entrar</a>
+      </nav>
 
-<section class="hero">
-  <nav class="nav">
-    <a href="/" class="nav-logo">Vizinho<span>Certo</span></a>
-    <a href="app.html" data-app-link class="nav-cta">Entrar no app →</a>
-  </nav>
+      <div class="hero-grid">
+        <div>
+          <div class="pill">Cadastro gratuito</div>
+          <h1>Sua rua, sem a bagunça do grupo de WhatsApp.</h1>
+          <p class="hero-sub">Crie sua conta grátis no Vizinho Certo para acompanhar vizinhos próximos, reportar problemas da rua e encontrar ajuda do bairro com mais foco e privacidade.</p>
+          <div class="cta-row">
+            <a href="/app" class="btn-primary">Criar cadastro gratuito</a>
+            <a href="#como-funciona" class="btn-secondary">Ver como funciona</a>
+            <a href="#instalar" class="btn-secondary">Como instalar</a>
+          </div>
+          <div class="microcopy">
+            <span>Sem cartão de crédito</span>
+            <span>Endereço exato privado</span>
+            <span>Feito para uso no celular</span>
+          </div>
+        </div>
 
-  <div class="hero-content">
-    <div class="hero-badge">🏘️ Vizinho Certo</div>
-    <div style="display:inline-block;background:var(--verde-claro);color:var(--verde-escuro);font-family:'Fraunces',serif;font-size:clamp(18px,4vw,26px);font-weight:900;padding:10px 28px;border-radius:100px;margin-bottom:1.5rem;letter-spacing:1px;animation:fadeUp .5s ease both;">GRATUITO</div>
-    <h1 class="hero-title">
-      Chega de grupo de<br>
-      WhatsApp de <span class="riscado">vizinho</span><br>
-      <em>Vizinho Certo</em>
-    </h1>
-    <p class="hero-sub">Conecte-se com quem mora na sua rua de verdade. Reporte problemas, peça ajuda e faça sua vizinhança mais segura e unida.</p>
-    <div class="hero-actions">
-      <a href="app.html" data-app-link class="btn-primary">🏘️ Criar conta grátis</a>
-      <a href="#instalar" class="btn-secondary">Como instalar</a>
+        <aside class="signup-card" aria-label="Resumo do cadastro gratuito">
+          <div class="signup-head">
+            <strong>Entre na sua vizinhança hoje</strong>
+            <p>O cadastro leva poucos passos e libera o feed da sua rua depois da configuração do raio.</p>
+          </div>
+          <div class="signup-body">
+            <div class="checklist">
+              <div class="check"><b>1</b><div><strong>Crie sua conta</strong><span>Nome, email, senha e CEP para localizar sua região.</span></div></div>
+              <div class="check"><b>2</b><div><strong>Escolha o raio</strong><span>Veja apenas o que acontece perto de você.</span></div></div>
+              <div class="check"><b>3</b><div><strong>Participe da rua</strong><span>Publique alertas, pedidos de ajuda e avisos do bairro.</span></div></div>
+            </div>
+            <form class="form-preview" id="landing-signup-form" action="/app" method="get">
+              <input class="field" id="landing-nome" name="nome" type="text" autocomplete="name" placeholder="Nome completo" required>
+              <input class="field" id="landing-email" name="email" type="email" autocomplete="email" placeholder="Email" required>
+              <input class="field" id="landing-cep" name="cep" type="tel" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="Seu CEP" required>
+              <div class="field-error" id="landing-form-error">Confira nome, email e CEP para continuar.</div>
+            </form>
+            <button type="submit" form="landing-signup-form" class="btn-primary" style="width:100%;border:0;cursor:pointer;font-family:'DM Sans',sans-serif">Começar grátis agora</button>
+            <p class="privacy">Seu endereço exato nunca aparece para outros usuários. Ele serve para calcular proximidade entre vizinhos.</p>
+          </div>
+        </aside>
+      </div>
     </div>
-  </div>
 
-  <div class="hero-stats">
-    <div class="stat"><div class="stat-num">Grátis</div><div class="stat-label">Para sempre</div></div>
-    <div class="stat"><div class="stat-num">Só vizinhos</div><div class="stat-label">Sem estranhos</div></div>
-    <div class="stat"><div class="stat-num">🔒</div><div class="stat-label">Endereço privado</div></div>
-  </div>
-</section>
-
-<section class="problema reveal">
-  <p class="problema-titulo">O grupo de WhatsApp virou uma bagunça, né?</p>
-  <p class="problema-sub">300 mensagens por dia, notificações infinitas, spam de bom dia e aquele vizinho que nunca para de reclamar.</p>
-  <div class="chat-mockup">
-    <div class="chat-header">
-      <div class="chat-avatar">💬</div>
-      <div><div class="chat-name">Moradores Rua das Flores</div><div class="chat-count">247 participantes</div></div>
+    <div class="hero-proof">
+      <div class="proof-item"><div class="proof-k">Grátis</div><div class="proof-v">Para entrar, testar e participar da plataforma.</div></div>
+      <div class="proof-item"><div class="proof-k">Local</div><div class="proof-v">Experiência pensada para moradores da sua rua.</div></div>
+      <div class="proof-item"><div class="proof-k">Privado</div><div class="proof-v">Mostramos distância aproximada, não seu número.</div></div>
     </div>
-    <div class="msg"><div class="msg-autor">Dona Maria</div><div class="msg-bubble recv">Bom diaaaaa!! ☀️🌸🌺</div></div>
-    <div class="msg"><div class="msg-autor">João da Esquina</div><div class="msg-bubble recv">Alguém viu meu gato? 🐱</div></div>
-    <div class="msg"><div class="msg-autor">Você</div><div class="msg-bubble sent">Tem um buraco enorme na calçada!</div></div>
-    <div class="msg"><div class="msg-autor">Anúncios</div><div class="msg-bubble recv">🚨 MEGA PROMOÇÃO HOJE!!!</div></div>
-    <div class="msg"><div class="msg-autor">Administrador</div><div class="msg-bubble recv">Por favor, respeitem as regras do grupo 🙏</div></div>
-    <div class="chat-caos">⚠️ Sua mensagem sobre a calçada se perdeu no meio de 47 mensagens</div>
-  </div>
-</section>
+  </header>
 
-<section class="solucao reveal">
-  <span class="tag-label">A solução</span>
-  <h2 class="section-title">Um app feito pra vizinhança de verdade</h2>
-  <p class="section-sub">Só quem mora perto de você aparece. Sem spam, sem bom dia, sem anúncio de venda de bolo.</p>
-  <div class="features-grid">
-    <div class="feature-card"><span class="feature-icon">📍</span><div class="feature-title">Só vizinhos reais</div><div class="feature-desc">Apenas quem mora no seu raio aparece no feed. Você define de 50m a 500m ao redor da sua casa.</div></div>
-    <div class="feature-card"><span class="feature-icon">🚧</span><div class="feature-title">Reporte problemas</div><div class="feature-desc">Buraco na rua, calçada quebrada, poste apagado. Com foto, apoio dos vizinhos e pedido formal gerado por IA.</div></div>
-    <div class="feature-card"><span class="feature-icon">🆘</span><div class="feature-title">Botão de emergência</div><div class="feature-desc">Alerta todos os vizinhos do seu raio imediatamente. Com acesso direto a Polícia, SAMU e Bombeiros.</div></div>
-    <div class="feature-card"><span class="feature-icon">🔧</span><div class="feature-title">Serviços do bairro</div><div class="feature-desc">Encontre encanador, eletricista, diarista e outros serviços próximos. Anuncie seu serviço também.</div></div>
-    <div class="feature-card"><span class="feature-icon">🤖</span><div class="feature-title">IA pra prefeitura</div><div class="feature-desc">Gerador de pedidos formais com IA. Crie ofícios prontos pra enviar pra prefeitura em segundos.</div></div>
-    <div class="feature-card"><span class="feature-icon">🔒</span><div class="feature-title">Endereço protegido</div><div class="feature-desc">Seu endereço exato nunca é mostrado a ninguém. Só calculamos a distância entre vizinhos.</div></div>
-  </div>
-</section>
+  <main>
+    <section class="section alt r">
+      <div class="wrap split">
+        <div>
+          <div class="eyebrow">Por que existe</div>
+          <h2 class="h2">O problema da rua se perde quando todo mundo fala ao mesmo tempo.</h2>
+          <p class="lead">Grupos grandes misturam corrente, venda, aviso urgente e conversa paralela. Quem quer resolver algo simples acaba sem contexto, sem prioridade e sem saber quem mora por perto.</p>
+          <div class="pain-list">
+            <div class="pain"><b>01</b><div><strong>Mensagem importante some rápido</strong><span>Um buraco, uma queda de energia ou um pedido de ajuda competem com dezenas de assuntos.</span></div></div>
+            <div class="pain"><b>02</b><div><strong>Você não sabe quem está perto</strong><span>O Vizinho Certo organiza a conversa por raio, para o problema chegar a quem realmente pode ver ou ajudar.</span></div></div>
+            <div class="pain"><b>03</b><div><strong>Privacidade vira preocupação</strong><span>A plataforma usa seu endereço para proximidade, mas não exibe sua casa para outros moradores.</span></div></div>
+          </div>
+        </div>
+        <div class="phone" aria-label="Prévia visual do feed do Vizinho Certo">
+          <div class="phone-screen">
+            <div class="app-top"><strong>Vizinho Certo</strong><span>Raio de 150m ao redor da sua rua</span></div>
+            <div class="tabs"><div class="tab active">Tudo</div><div class="tab">Problemas</div><div class="tab">Ajuda</div><div class="tab">Serviços</div></div>
+            <article class="post">
+              <div class="post-body">
+                <div class="post-row"><div class="avatar">A</div><div><div class="post-name">Ana, 120m</div><div class="post-dist">Minha vizinha</div></div></div>
+                <div class="tag">Problema da rua</div>
+                <p>Poste piscando na esquina da minha quadra. Alguém mais está sem luz?</p>
+                <div class="actions"><span class="action">Apoiar pedido</span><span class="action">Comentar</span></div>
+              </div>
+            </article>
+            <article class="post">
+              <div class="post-body">
+                <div class="post-row"><div class="avatar" style="background:#E9C46A;color:#6D4B00">R</div><div><div class="post-name">Rafael, 80m</div><div class="post-dist">Meu vizinho</div></div></div>
+                <div class="tag" style="background:#E8F3F8;color:#28536B">Ajuda</div>
+                <p>Alguém indica um chaveiro perto daqui que atenda agora?</p>
+                <div class="actions"><span class="action">Responder</span><span class="action">Indicar serviço</span></div>
+              </div>
+            </article>
+            <article class="post">
+              <div class="post-body">
+                <div class="post-row"><div class="avatar" style="background:#F0B6A6;color:#7D2E1D">M</div><div><div class="post-name">Márcia, 210m</div><div class="post-dist">Minha vizinha</div></div></div>
+                <div class="tag" style="background:#F0FBF4;color:#1B4D37">Aviso</div>
+                <p>Coleta passou mais cedo hoje. Deixem o lixo para amanhã.</p>
+                <div class="actions"><span class="action">Obrigado</span><span class="action">Compartilhar</span></div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
 
-<section class="instalar reveal" id="instalar">
-  <span class="tag-label">⚠️ Importante</span>
-  <h2 class="section-title">Adicione na tela inicial do seu celular</h2>
-  <p class="section-sub">Para funcionar como um app de verdade — com notificações e acesso rápido — precisa adicionar na tela inicial.</p>
-  <div class="install-os">
-    <div class="os-card">
-      <div class="os-title">🍎 iPhone (Safari)</div>
-      <div class="os-steps">1. Abra <strong>vizinhocerto.com.br</strong> no Safari<br>2. Toque no ícone de <strong>compartilhar</strong> ⬆<br>3. Role e toque em <strong>"Adicionar à Tela de Início"</strong><br>4. Confirme tocando em <strong>"Adicionar"</strong></div>
-    </div>
-    <div class="os-card">
-      <div class="os-title">🤖 Android (Chrome)</div>
-      <div class="os-steps">1. Abra <strong>vizinhocerto.com.br</strong> no Chrome<br>2. Toque no menu de <strong>3 pontinhos</strong> ⋮<br>3. Toque em <strong>"Adicionar à tela inicial"</strong><br>4. Confirme tocando em <strong>"Adicionar"</strong></div>
-    </div>
-  </div>
-  <div class="install-aviso"><strong>Por que isso é importante?</strong> Sem adicionar na tela inicial, o app abre como site normal e você perde notificações de emergência, avisos dos vizinhos e acesso rápido. Com o ícone na tela inicial, funciona como qualquer outro app. 📱</div>
-</section>
+    <section class="section white r">
+      <div class="wrap">
+        <div class="eyebrow">Dentro do Vizinho Certo</div>
+        <h2 class="h2">Veja o que acontece perto da sua rua, sem depender de grupo lotado.</h2>
+        <p class="lead">Depois do cadastro, você escolhe o raio da vizinhança e acompanha publicações organizadas por assunto: problemas, avisos, pedidos de ajuda e serviços do bairro.</p>
+        <div class="benefits">
+          <div class="benefit"><b>01</b><strong>Raio ajustável</strong><span>Escolha de 50m a 500m para acompanhar sua calçada, sua rua, o quarteirão ou o bairro.</span></div>
+          <div class="benefit"><b>02</b><strong>Problemas com apoio</strong><span>Publique buracos, postes, calçadas e outros problemas para vizinhos comentarem e apoiarem.</span></div>
+          <div class="benefit"><b>03</b><strong>Serviços do bairro</strong><span>Veja prestadores e comércios próximos com contato por WhatsApp ou telefone.</span></div>
+          <div class="benefit"><b>04</b><strong>Alerta de emergência</strong><span>Use o botão de emergência para avisar vizinhos do seu raio e acessar SAMU, polícia e bombeiros.</span></div>
+        </div>
+      </div>
+    </section>
 
-<section class="como reveal">
-  <span class="tag-label">Como funciona</span>
-  <h2 class="section-title">Simples assim</h2>
-  <p class="section-sub">Em menos de 2 minutos você já está conectado com sua vizinhança.</p>
-  <div class="steps-list">
-    <div class="step-item"><div class="step-num">1</div><div class="step-text"><strong>Crie sua conta gratuita</strong> com email e senha. Seu nome completo nunca é mostrado — só o apelido que você escolher.</div></div>
-    <div class="step-item"><div class="step-num">2</div><div class="step-text"><strong>Digite seu CEP e número da casa.</strong> Usamos isso só para calcular distâncias — seu endereço fica privado.</div></div>
-    <div class="step-item"><div class="step-num">3</div><div class="step-text"><strong>Defina seu raio de vizinhança</strong> — de 50m a 500m. Só quem mora dentro do raio aparece no seu feed.</div></div>
-    <div class="step-item"><div class="step-num">4</div><div class="step-text"><strong>Pronto!</strong> Poste, comente, apoie problemas e conecte-se com quem mora do seu lado.</div></div>
-  </div>
-</section>
+    <section class="section dark r" id="como-funciona">
+      <div class="wrap">
+        <div class="eyebrow">Como funciona</div>
+        <h2 class="h2">Em poucos passos, sua rua começa a aparecer no feed.</h2>
+        <p class="lead">O Vizinho Certo usa seu CEP e o raio escolhido para mostrar publicações, vizinhos e serviços realmente próximos de você.</p>
+        <div class="steps">
+          <div class="step"><b>1</b><strong>Crie sua conta grátis</strong><span>Informe nome, email, senha e CEP para entrar na vizinhança certa.</span></div>
+          <div class="step"><b>2</b><strong>Escolha a distância</strong><span>Defina se quer acompanhar 50m, 150m, 300m ou até 500m ao redor de você.</span></div>
+          <div class="step"><b>3</b><strong>Use as abas do app</strong><span>Navegue por feed, serviços, vizinhos e perfil para participar do bairro do seu jeito.</span></div>
+        </div>
+      </div>
+    </section>
 
-<section class="cta-final reveal">
-  <h2 class="cta-final-title">Sua rua merece mais do que um grupo de WhatsApp</h2>
-  <p class="cta-final-sub">Gratuito. Sem anúncios. Só vizinhos de verdade.</p>
-  <a href="app.html" data-app-link class="btn-white">🏘️ Entrar no Vizinho Certo</a>
-</section>
+    <section class="section alt r">
+      <div class="wrap">
+        <div class="eyebrow">Dúvidas antes de entrar</div>
+        <h2 class="h2">Sem truque: o convite é para cadastro gratuito.</h2>
+        <div class="faq">
+          <div class="qa"><strong>Preciso pagar para criar conta?</strong><span>Não. O cadastro inicial é gratuito e não pede cartão de crédito.</span></div>
+          <div class="qa"><strong>Meu endereço fica público?</strong><span>Não. O endereço é usado para calcular distância e organizar o feed por proximidade.</span></div>
+          <div class="qa"><strong>Serve para qualquer cidade?</strong><span>Sim. O raio ajuda a aproximar pessoas da mesma região, rua ou quarteirão em qualquer lugar.</span></div>
+          <div class="qa"><strong>Por que não usar só WhatsApp?</strong><span>Porque grupos são bons para conversa geral, mas ruins para organizar pedido, urgência, distância e histórico.</span></div>
+        </div>
+      </div>
+    </section>
 
-<footer>
-  <div class="logo-footer">Vizinho<span>Certo</span></div>
-  <p>vizinhocerto.com.br · Sua rua. Seus vizinhos. Do seu jeito.</p>
-</footer>
+    <section class="section dark r" id="instalar">
+      <div class="wrap">
+        <div class="eyebrow">Deixe no celular</div>
+        <h2 class="h2">Depois de criar sua conta, adicione o Vizinho Certo na tela inicial.</h2>
+        <p class="lead">Assim o app fica sempre à mão para acompanhar avisos da rua, responder vizinhos, consultar serviços do bairro e receber alertas importantes.</p>
+        <div class="install-grid">
+          <div class="install-card">
+            <strong>iPhone (Safari)</strong>
+            <span>1. Abra <b>vizinhocerto.com.br</b><br>2. Toque em <b>compartilhar</b><br>3. Escolha <b>Adicionar à Tela de Início</b><br>4. Confirme em <b>Adicionar</b></span>
+          </div>
+          <div class="install-card">
+            <strong>Android (Chrome)</strong>
+            <span>1. Abra <b>vizinhocerto.com.br</b><br>2. Toque nos <b>três pontinhos</b><br>3. Escolha <b>Adicionar à tela inicial</b><br>4. Confirme em <b>Adicionar</b></span>
+          </div>
+        </div>
+        <div class="install-note"><strong>Por que vale fazer isso?</strong> O Vizinho Certo funciona melhor como app no celular: acesso rápido, notificações e menos chance de perder algo importante da sua vizinhança.</div>
+      </div>
+    </section>
+
+    <section class="final r">
+      <div class="wrap">
+        <h2>Sua vizinhança pode ser mais útil no celular.</h2>
+        <p>Comece grátis, defina seu raio e veja o que está acontecendo perto da sua rua.</p>
+        <a href="/app" class="btn-light">Criar cadastro gratuito</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <strong>Vizinho<span>Certo</span></strong>
+    <p>vizinhocerto.com.br · Sua rua. Seus vizinhos. Do seu jeito.</p>
+  </footer>
+</div>
+
+<a href="/app" class="sticky-cta">Criar cadastro gratuito</a>
 
 <script>
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
-  }, { threshold: 0.1 });
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('v');
+  });
+}, { threshold: 0.12 });
+document.querySelectorAll('.r').forEach(el => obs.observe(el));
+
+const landingForm = document.getElementById('landing-signup-form');
+const landingCep = document.getElementById('landing-cep');
+const landingError = document.getElementById('landing-form-error');
+
+function onlyDigits(value) {
+  return (value || '').replace(/\D/g, '');
+}
+
+function formatCep(value) {
+  const digits = onlyDigits(value).slice(0, 8);
+  return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
+}
+
+if (landingCep) {
+  landingCep.addEventListener('input', () => {
+    landingCep.value = formatCep(landingCep.value);
+  });
+}
+
+if (landingForm) {
+  landingForm.addEventListener('submit', event => {
+    const nome = document.getElementById('landing-nome').value.trim();
+    const email = document.getElementById('landing-email').value.trim();
+    const cep = onlyDigits(landingCep.value);
+
+    if (!nome || !email.includes('@') || cep.length !== 8) {
+      event.preventDefault();
+      if (landingError) landingError.classList.add('show');
+      return;
+    }
+
+    localStorage.setItem('vc_landing_signup_prefill', JSON.stringify({
+      nome,
+      email,
+      cep,
+      city: 'geral'
+    }));
+
+    landingCep.value = formatCep(cep);
+  });
+}
 </script>
 </body>
 </html>
