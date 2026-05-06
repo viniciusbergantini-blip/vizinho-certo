@@ -11,23 +11,38 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#1B4D37">
-<meta name="description" content="Londrina no Vizinho Certo: cadastre-se grátis para acompanhar sua rua, falar com vizinhos próximos e reportar problemas sem bagunça de grupo.">
+<meta name="description" content="Vizinho Certo — Sua rua em Londrina, Sem grupo de WhatsApp. Cadastro gratuito.">
 <title>Vizinho Certo em Londrina | Cadastro gratuito</title>
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
+<link rel="manifest" href="/manifest.json">
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  (async () => {
+    const appUrl = '/app';
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if(isStandalone) { window.location.replace(appUrl); return; }
+    try {
+      const sb = supabase.createClient(
+        'https://xurtdibicsxmouvzfxvb.supabase.co',
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1cnRkaWJpY3N4bW91dnpmeHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNjcsImV4cCI6MjA4OTg3MTM2N30.WQ36EsY2JHP5G4VvLAfRNv7j4RjArne1sjbRS_tfvUU'
+      );
+      const { data: { session } } = await sb.auth.getSession();
+      if(session) window.location.replace(appUrl);
+    } catch(e) {}
+  })();
+</script>
 <script defer src="/landing-analytics.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;0,9..144,900;1,9..144,700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
   --verde:#1B4D37;
-  --verde-2:#2D6A4F;
   --verde-claro:#52B788;
+  --verde-bg:#D8F3DC;
   --laranja:#E76F51;
   --creme:#FEFAE0;
   --creme-2:#F0E9D2;
-  --azul:#28536B;
-  --amarelo:#E9C46A;
   --texto:#1B1B1B;
   --muted:#5C5C5C;
   --branco:#FFFFFF;
@@ -35,466 +50,304 @@
 }
 html{scroll-behavior:smooth}
 body{font-family:"DM Sans",sans-serif;background:var(--creme);color:var(--texto);overflow-x:hidden}
-a{color:inherit}
-.page{min-height:100vh}
-.wrap{width:min(1120px,100%);margin:0 auto;padding:0 24px}
-.hero{
-  min-height:92svh;
-  background:
-    linear-gradient(180deg,rgba(27,77,55,.98),rgba(27,77,55,.94)),
-    repeating-linear-gradient(90deg,rgba(254,250,224,.05) 0 1px,transparent 1px 88px);
-  color:var(--creme);
-  position:relative;
-  overflow:hidden;
-}
-.hero::after{
-  content:"";
-  position:absolute;
-  left:0;right:0;bottom:0;height:120px;
-  background:linear-gradient(180deg,transparent,rgba(254,250,224,.08));
-  pointer-events:none;
-}
-.nav{
-  position:relative;z-index:5;
-  display:flex;align-items:center;justify-content:space-between;
-  gap:20px;padding:22px 0;
-}
-.logo{font-family:"Fraunces",serif;font-size:20px;font-weight:900;text-decoration:none}
+a{color:inherit;text-decoration:none}
+
+.nav{background:var(--verde);padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:"Fraunces",serif;font-size:20px;font-weight:900;color:var(--creme)}
 .logo span{color:var(--verde-claro)}
-.nav-link{
-  display:inline-flex;align-items:center;justify-content:center;
-  min-height:40px;padding:0 18px;border-radius:6px;
-  background:rgba(254,250,224,.1);border:1px solid rgba(254,250,224,.18);
-  color:var(--creme);text-decoration:none;font-size:14px;font-weight:700;
-}
-.hero-grid{
-  position:relative;z-index:2;
-  display:grid;grid-template-columns:minmax(0,1.05fr) minmax(340px,.82fr);
-  gap:48px;align-items:center;
-  padding:50px 0 82px;
-}
-.pill{
-  display:inline-flex;align-items:center;gap:8px;
-  background:rgba(82,183,136,.18);border:1px solid rgba(82,183,136,.32);
-  color:#BFF0D2;border-radius:999px;padding:7px 13px;
-  font-size:12px;font-weight:700;margin-bottom:18px;
-}
-.pill::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--verde-claro)}
-.hero h1{
-  font-family:"Fraunces",serif;
-  font-size:clamp(42px,7vw,82px);
-  line-height:.98;font-weight:900;
-  max-width:760px;
-}
+.nav-entrar{font-size:13px;font-weight:700;color:rgba(254,250,224,.7)}
+
+.hero{background:var(--verde);padding:28px 20px 0}
+.hero-inner{width:min(520px,100%);margin:0 auto;padding-bottom:32px}
+.pill{display:inline-flex;align-items:center;gap:6px;background:rgba(82,183,136,.2);border:1px solid rgba(82,183,136,.3);border-radius:999px;padding:5px 12px;margin-bottom:16px}
+.pill-dot{width:6px;height:6px;border-radius:50%;background:var(--verde-claro);flex-shrink:0}
+.pill span{font-size:11px;font-weight:700;color:var(--verde-claro)}
+.hero h1{font-family:"Fraunces",serif;font-size:clamp(30px,8vw,44px);font-weight:900;color:var(--creme);line-height:1.08;margin-bottom:12px}
 .hero h1 em{font-style:italic;color:var(--verde-claro)}
-.hero-sub{
-  margin-top:20px;
-  max-width:610px;
-  color:rgba(254,250,224,.76);
-  font-size:clamp(17px,2vw,21px);
-  line-height:1.55;
-}
-.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px;align-items:center}
-.btn-primary,.btn-secondary,.btn-light{
-  display:inline-flex;align-items:center;justify-content:center;gap:10px;
-  min-height:52px;padding:0 24px;border-radius:7px;
-  text-decoration:none;font-weight:900;font-size:15px;
-}
-.btn-primary{background:var(--laranja);color:#fff;box-shadow:0 16px 32px rgba(231,111,81,.32)}
-.btn-secondary{border:1px solid rgba(254,250,224,.22);color:var(--creme);background:rgba(254,250,224,.08)}
-.btn-light{background:#fff;color:var(--laranja);box-shadow:0 12px 30px rgba(0,0,0,.14)}
-.microcopy{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:16px;color:rgba(254,250,224,.68);font-size:13px}
-.microcopy span{display:inline-flex;align-items:center;gap:7px}
-.microcopy span::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--amarelo)}
-.hero-proof{
-  display:grid;grid-template-columns:repeat(3,1fr);
-  border-top:1px solid rgba(254,250,224,.13);
-  position:relative;z-index:2;
-}
-.proof-item{padding:18px 22px;border-right:1px solid rgba(254,250,224,.13)}
-.proof-item:last-child{border-right:0}
-.proof-k{font-family:"Fraunces",serif;color:var(--verde-claro);font-size:22px;font-weight:900}
-.proof-v{font-size:12px;color:rgba(254,250,224,.58);margin-top:3px;line-height:1.4}
-.signup-card{
-  background:var(--creme);
-  color:var(--texto);
-  border:1px solid rgba(254,250,224,.45);
-  border-radius:8px;
-  box-shadow:0 28px 70px rgba(0,0,0,.24);
-  overflow:hidden;
-}
-.signup-head{background:#fff;padding:22px;border-bottom:1px solid var(--borda)}
-.signup-head strong{font-family:"Fraunces",serif;color:var(--verde);font-size:24px;display:block;line-height:1.12}
-.signup-head p{color:var(--muted);font-size:14px;line-height:1.5;margin-top:8px}
-.signup-body{padding:20px 22px 22px}
-.checklist{display:grid;gap:12px;margin-bottom:18px}
-.check{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:flex-start}
-.check b{
-  display:flex;align-items:center;justify-content:center;
-  width:28px;height:28px;border-radius:50%;
-  background:#D8F3DC;color:var(--verde);font-size:15px;
-}
-.check strong{display:block;color:var(--verde);font-size:14px;margin-bottom:2px}
-.check span{display:block;color:var(--muted);font-size:13px;line-height:1.45}
-.form-preview{
-  background:#fff;border:1px solid var(--borda);border-radius:8px;padding:14px;margin:16px 0;
-}
-.field{
-  width:100%;height:42px;border:1px solid #D9D0BE;border-radius:7px;margin-top:8px;
-  background:#FAFAF7;display:flex;align-items:center;padding:0 12px;color:var(--texto);
-  font:500 13px "DM Sans",sans-serif;outline:none;transition:border-color .18s,box-shadow .18s,background .18s;
-}
-.field:first-child{margin-top:0}
-.field::placeholder{color:#847B6E;font-weight:400}
-.field:focus{border-color:var(--verde-claro);background:#fff;box-shadow:0 0 0 3px rgba(82,183,136,.16)}
-.field-error{display:none;color:#BF4A1C;font-size:12px;line-height:1.4;margin-top:9px}
+.hero-sub{font-size:15px;color:rgba(254,250,224,.65);line-height:1.6;margin-bottom:24px;max-width:480px}
+
+.form-card{background:var(--branco);border-radius:14px;padding:20px}
+.form-card-title{font-family:"Fraunces",serif;font-size:18px;color:var(--verde);font-weight:900;margin-bottom:4px}
+.form-card-sub{font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.5}
+.field{width:100%;height:46px;border:1.5px solid #D9D0BE;border-radius:8px;margin-bottom:10px;padding:0 14px;font:500 14px "DM Sans",sans-serif;color:var(--texto);background:#FAFAF7;outline:none;transition:border-color .18s}
+.field:focus{border-color:var(--verde-claro);background:#fff}
+.field::placeholder{color:#9E9589;font-weight:400}
+.btn-submit{width:100%;height:50px;background:var(--laranja);color:#fff;border:none;border-radius:8px;font:700 15px "DM Sans",sans-serif;cursor:pointer;transition:background .2s;margin-top:2px}
+.btn-submit:hover{background:#d4623f}
+.form-note{font-size:11px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.5}
+.field-error{display:none;color:#BF4A1C;font-size:12px;margin-top:-6px;margin-bottom:8px}
 .field-error.show{display:block}
-.privacy{
-  color:var(--muted);font-size:12px;line-height:1.45;margin-top:12px;text-align:center;
-}
-.section{padding:72px 0}
-.section.alt{background:var(--creme-2)}
-.section.white{background:#fff}
-.section.dark{background:var(--verde);color:var(--creme)}
-.eyebrow{color:var(--laranja);font-size:12px;font-weight:900;text-transform:uppercase;margin-bottom:10px}
-.dark .eyebrow{color:var(--verde-claro)}
-.h2{
-  font-family:"Fraunces",serif;
-  font-size:clamp(30px,4vw,48px);
-  line-height:1.06;color:var(--verde);font-weight:900;
-}
-.dark .h2{color:var(--creme)}
-.lead{color:var(--muted);font-size:17px;line-height:1.65;max-width:660px;margin-top:14px}
-.dark .lead{color:rgba(254,250,224,.68)}
-.split{display:grid;grid-template-columns:.92fr 1.08fr;gap:46px;align-items:center}
-.pain-list{display:grid;gap:12px;margin-top:24px}
-.pain{
-  background:#fff;border:1px solid var(--borda);border-radius:8px;
-  padding:16px;display:grid;grid-template-columns:34px 1fr;gap:12px;
-}
-.pain b{font-family:"Fraunces",serif;color:var(--laranja);font-size:22px}
-.pain strong{display:block;color:var(--verde);font-size:15px;margin-bottom:3px}
-.pain span{color:var(--muted);font-size:14px;line-height:1.5}
-.phone{
-  width:min(370px,100%);
-  margin:0 auto;
-  background:#101A14;border:10px solid #101A14;border-radius:34px;
-  box-shadow:0 30px 65px rgba(27,77,55,.2);
-  overflow:hidden;
-}
-.phone-screen{background:var(--creme);min-height:620px;border-radius:24px;overflow:hidden}
-.app-top{background:var(--verde);color:var(--creme);padding:18px}
-.app-top strong{font-family:"Fraunces",serif;font-size:22px;display:block}
-.app-top span{font-size:12px;color:rgba(254,250,224,.68)}
-.tabs{display:flex;gap:8px;overflow:hidden;background:#fff;border-bottom:1px solid #E4DDC8;padding:10px}
-.tab{white-space:nowrap;border-radius:999px;background:#F4F0E2;color:var(--muted);padding:7px 12px;font-size:11px;font-weight:700}
-.tab.active{background:#D8F3DC;color:var(--verde)}
-.post{margin:12px;background:#fff;border:1px solid #E4DDC8;border-radius:8px;overflow:hidden}
-.post-body{padding:14px}
-.post-row{display:flex;gap:10px;align-items:center;margin-bottom:10px}
-.avatar{width:36px;height:36px;border-radius:50%;background:var(--verde-claro);display:flex;align-items:center;justify-content:center;color:var(--verde);font-weight:900}
-.post-name{font-size:13px;font-weight:900;color:var(--texto)}
-.post-dist{font-size:11px;color:var(--muted)}
-.tag{display:inline-flex;background:#FFF1E9;color:#BF4A1C;border-radius:999px;padding:4px 9px;font-size:11px;font-weight:900;margin-bottom:8px}
-.post p{font-size:13px;line-height:1.55;color:var(--texto)}
-.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
-.action{border:1px solid #BEE8CC;color:var(--verde);background:#F0FBF4;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:900}
-.benefits{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:32px}
-.benefit{
-  background:var(--creme);border:1px solid var(--borda);border-radius:8px;
-  padding:20px;min-height:174px;
-}
-.benefit b{font-family:"Fraunces",serif;color:var(--azul);font-size:28px;display:block;margin-bottom:12px}
-.benefit strong{display:block;color:var(--verde);font-size:16px;margin-bottom:7px}
-.benefit span{color:var(--muted);font-size:14px;line-height:1.55}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:30px}
-.step{background:rgba(255,255,255,.08);border:1px solid rgba(254,250,224,.16);border-radius:8px;padding:22px}
-.step b{font-family:"Fraunces",serif;color:var(--amarelo);font-size:34px}
-.step strong{display:block;margin:12px 0 6px;font-size:17px}
-.step span{display:block;color:rgba(254,250,224,.68);font-size:14px;line-height:1.55}
-.install-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:30px}
-.install-card{background:rgba(255,255,255,.08);border:1px solid rgba(254,250,224,.16);border-radius:8px;padding:22px}
-.install-card strong{display:block;font-size:17px;margin-bottom:12px;color:var(--creme)}
-.install-card span{display:block;color:rgba(254,250,224,.7);font-size:14px;line-height:1.8}
-.install-card b{color:#fff}
-.install-note{margin-top:18px;background:rgba(231,111,81,.14);border:1px solid rgba(231,111,81,.28);border-radius:8px;padding:16px 18px;color:rgba(254,250,224,.74);font-size:14px;line-height:1.6}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);background:rgba(0,0,0,.18);border-top:1px solid rgba(254,250,224,.1)}
+.stat{padding:14px 10px;text-align:center;border-right:1px solid rgba(254,250,224,.1)}
+.stat:last-child{border-right:0}
+.stat-num{font-family:"Fraunces",serif;font-size:18px;font-weight:900;color:var(--verde-claro)}
+.stat-label{font-size:11px;color:rgba(254,250,224,.5);margin-top:2px}
+
+.sec{padding:32px 20px}
+.sec-inner{width:min(520px,100%);margin:0 auto}
+.eyebrow{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--laranja);margin-bottom:10px}
+.sec h2{font-family:"Fraunces",serif;font-size:clamp(22px,5vw,32px);font-weight:900;color:var(--verde);line-height:1.1;margin-bottom:16px}
+
+.versus{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.versus-bad{background:#FEF2F2;border:1px solid #FCA5A5;border-radius:10px;padding:14px}
+.v-title-bad{font-size:12px;font-weight:700;color:#7F1D1D;margin-bottom:8px}
+.versus-bad p{font-size:13px;color:#991B1B;line-height:1.55}
+.versus-good{background:#F0FDF4;border:1px solid #86EFAC;border-radius:10px;padding:14px}
+.v-title-good{font-size:12px;font-weight:700;color:#14532D;margin-bottom:8px}
+.versus-good p{font-size:13px;color:#166534;line-height:1.55}
+
+.sec-alt{padding:32px 20px;background:var(--creme-2)}
+.mockup-phone{border:1px solid var(--borda);border-radius:14px;overflow:hidden;background:var(--branco)}
+.mockup-top{background:var(--verde);padding:14px 16px}
+.mockup-top strong{font-family:"Fraunces",serif;font-size:16px;color:var(--creme);display:block}
+.mockup-top span{font-size:11px;color:rgba(254,250,224,.55)}
+.mockup-tabs{display:flex;gap:6px;padding:10px 12px;background:var(--branco);border-bottom:1px solid #E4DDC8}
+.mtab{border-radius:999px;background:#F4F0E2;color:var(--muted);padding:5px 10px;font-size:11px;font-weight:700}
+.mtab.on{background:var(--verde-bg);color:var(--verde)}
+.mockup-posts{padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.mpost{background:#F9F7F2;border:1px solid #E4DDC8;border-radius:8px;padding:10px 12px}
+.mpost-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.mav{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.mpost-name{font-size:12px;font-weight:700;color:var(--texto)}
+.mpost-dist{font-size:11px;color:var(--muted)}
+.mtag{display:inline-flex;border-radius:999px;padding:3px 8px;font-size:10px;font-weight:700;margin-bottom:6px}
+.tag-prob{background:#FFF1E9;color:#BF4A1C}
+.tag-ajuda{background:#E8F3F8;color:#28536B}
+.tag-aviso{background:#F0FBF4;color:#1B4D37}
+.mpost p{font-size:12px;color:var(--muted);line-height:1.5}
+.mpost-actions{display:flex;gap:6px;margin-top:8px}
+.mact{border:1px solid #BEE8CC;color:var(--verde);background:#F0FBF4;border-radius:999px;padding:5px 9px;font-size:10px;font-weight:700}
+
+.benefits{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
+.benefit{background:var(--branco);border:1px solid var(--borda);border-radius:10px;padding:14px}
+.benefit-icon{font-size:20px;margin-bottom:8px}
+.benefit strong{display:block;font-size:13px;font-weight:700;color:var(--verde);margin-bottom:4px}
+.benefit span{font-size:12px;color:var(--muted);line-height:1.5}
+
+.sec-dark{padding:32px 20px;background:var(--verde)}
+.install-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.install-card{background:rgba(255,255,255,.08);border:1px solid rgba(254,250,224,.15);border-radius:10px;padding:14px}
+.install-card strong{display:block;font-size:13px;font-weight:700;color:var(--creme);margin-bottom:8px}
+.install-card span{font-size:12px;color:rgba(254,250,224,.6);line-height:1.8}
+.install-card b{color:rgba(254,250,224,.9)}
+.install-note{margin-top:14px;background:rgba(231,111,81,.14);border:1px solid rgba(231,111,81,.25);border-radius:8px;padding:14px;font-size:13px;color:rgba(254,250,224,.7);line-height:1.6}
 .install-note strong{color:#fff}
-.faq{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:32px}
-.qa{background:#fff;border:1px solid var(--borda);border-radius:8px;padding:20px}
-.qa strong{display:block;color:var(--verde);font-size:16px;margin-bottom:7px}
-.qa span{display:block;color:var(--muted);font-size:14px;line-height:1.6}
-.final{
-  background:var(--laranja);color:#fff;text-align:center;padding:74px 0 86px;
-}
-.final h2{font-family:"Fraunces",serif;font-size:clamp(32px,5vw,58px);line-height:1.04;max-width:760px;margin:0 auto}
-.final p{max-width:560px;margin:16px auto 28px;color:rgba(255,255,255,.76);font-size:17px;line-height:1.6}
-footer{background:#07140E;color:rgba(254,250,224,.36);text-align:center;padding:28px}
-footer strong{font-family:"Fraunces",serif;color:var(--creme)}
-footer strong span{color:var(--verde-claro)}
-.sticky-cta{
-  position:fixed;z-index:30;left:12px;right:12px;bottom:12px;
-  display:none;align-items:center;justify-content:center;
-  min-height:52px;border-radius:8px;background:var(--laranja);color:#fff;
-  text-decoration:none;font-weight:900;box-shadow:0 14px 34px rgba(0,0,0,.24);
-}
-.r{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+
+.cta-final{background:var(--laranja);padding:40px 20px;text-align:center}
+.cta-final-inner{width:min(520px,100%);margin:0 auto}
+.cta-final h2{font-family:"Fraunces",serif;font-size:clamp(24px,6vw,36px);font-weight:900;color:#fff;line-height:1.1;margin-bottom:10px}
+.cta-final p{font-size:14px;color:rgba(255,255,255,.75);margin-bottom:20px;line-height:1.6}
+.btn-white{display:inline-flex;align-items:center;justify-content:center;width:100%;max-width:340px;height:52px;background:#fff;color:var(--laranja);border-radius:8px;font:700 15px "DM Sans",sans-serif;transition:opacity .2s}
+.btn-white:hover{opacity:.92}
+
+footer{background:#07140E;padding:24px 20px;text-align:center}
+.footer-logo{font-family:"Fraunces",serif;font-size:18px;font-weight:900;color:var(--creme)}
+.footer-logo span{color:var(--verde-claro)}
+footer p{font-size:12px;color:rgba(254,250,224,.3);margin-top:6px}
+
+.sticky{position:fixed;z-index:50;left:12px;right:12px;bottom:12px;display:none;align-items:center;justify-content:center;height:52px;border-radius:8px;background:var(--laranja);color:#fff;font:700 15px "DM Sans",sans-serif;box-shadow:0 8px 28px rgba(0,0,0,.28)}
+
+.r{opacity:0;transform:translateY(18px);transition:opacity .6s ease,transform .6s ease}
 .r.v{opacity:1;transform:none}
-@media(max-width:900px){
-  .hero-grid,.split{grid-template-columns:1fr;gap:34px}
-  .hero{min-height:auto}
-  .hero-grid{padding:34px 0 58px}
-  .signup-card{max-width:520px}
-  .benefits{grid-template-columns:repeat(2,1fr)}
-  .steps,.install-grid,.faq{grid-template-columns:1fr}
-}
-@media(max-width:620px){
-  .wrap{padding:0 18px}
-  .nav{padding:16px 0}
-  .nav-link{display:none}
-  .hero-grid{padding-top:24px}
-  .hero h1{font-size:clamp(39px,13vw,58px)}
-  .hero-sub{font-size:16px}
-  .cta-row{display:grid}
-  .btn-primary,.btn-secondary,.btn-light{width:100%;padding:0 18px}
-  .hero-proof{grid-template-columns:1fr}
-  .proof-item{border-right:0;border-bottom:1px solid rgba(254,250,224,.13)}
-  .proof-item:last-child{border-bottom:0}
-  .section{padding:54px 0}
-  .benefits{grid-template-columns:1fr}
-  .phone-screen{min-height:560px}
-  .sticky-cta{display:flex}
+
+@media(max-width:540px){
+  .sticky{display:flex}
   body{padding-bottom:72px}
+  .versus,.install-cards{grid-template-columns:1fr}
 }
 </style>
 </head>
 <body>
-<div class="page">
-  <header class="hero">
-    <div class="wrap">
-      <nav class="nav">
-        <a href="/" class="logo">Vizinho<span>Certo</span></a>
-        <a href="/app" class="nav-link">Entrar</a>
-      </nav>
 
-      <div class="hero-grid">
-        <div>
-          <div class="pill">Cadastro gratuito em Londrina</div>
-          <h1>Sua rua de Londrina, sem a bagunça do grupo de WhatsApp.</h1>
-          <p class="hero-sub">Crie sua conta grátis no Vizinho Certo para acompanhar vizinhos próximos, reportar problemas da rua e encontrar ajuda do bairro com mais foco e privacidade.</p>
-          <div class="cta-row">
-            <a href="/app" class="btn-primary">Criar cadastro gratuito</a>
-            <a href="#como-funciona" class="btn-secondary">Ver como funciona</a>
-            <a href="#instalar" class="btn-secondary">Como instalar</a>
-          </div>
-          <div class="microcopy">
-            <span>Sem cartão de crédito</span>
-            <span>Endereço exato privado</span>
-            <span>Feito para uso no celular</span>
-          </div>
-        </div>
+<nav class="nav">
+  <a href="/" class="logo">Vizinho<span>Certo</span></a>
+  <a href="/app" class="nav-entrar">Já tenho conta →</a>
+</nav>
 
-        <aside class="signup-card" aria-label="Resumo do cadastro gratuito">
-          <div class="signup-head">
-            <strong>Entre na vizinhança de Londrina hoje</strong>
-            <p>O cadastro leva poucos passos e libera o feed da sua rua depois da configuração do raio.</p>
-          </div>
-          <div class="signup-body">
-            <div class="checklist">
-              <div class="check"><b>1</b><div><strong>Crie sua conta</strong><span>Nome, email, senha e CEP para localizar sua região.</span></div></div>
-              <div class="check"><b>2</b><div><strong>Escolha o raio</strong><span>Veja apenas o que acontece perto de você.</span></div></div>
-              <div class="check"><b>3</b><div><strong>Participe da rua</strong><span>Publique alertas, pedidos de ajuda e avisos do bairro.</span></div></div>
-            </div>
-            <form class="form-preview" id="landing-signup-form" action="/app" method="get">
-              <input class="field" id="landing-nome" name="nome" type="text" autocomplete="name" placeholder="Nome completo" required>
-              <input class="field" id="landing-email" name="email" type="email" autocomplete="email" placeholder="Email" required>
-              <input class="field" id="landing-cep" name="cep" type="tel" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="CEP de Londrina" required>
-              <div class="field-error" id="landing-form-error">Confira nome, email e CEP para continuar.</div>
-            </form>
-            <button type="submit" form="landing-signup-form" class="btn-primary" style="width:100%;border:0;cursor:pointer;font-family:'DM Sans',sans-serif">Começar grátis agora</button>
-            <p class="privacy">Seu endereço exato nunca aparece para outros usuários. Ele serve para calcular proximidade entre vizinhos.</p>
-          </div>
-        </aside>
+<section class="hero">
+  <div class="hero-inner">
+    <div class="pill"><div class="pill-dot"></div><span>Cadastro gratuito em Londrina</span></div>
+    <h1>Sua rua em Londrina ainda tem<br><em>grupo de WhatsApp?</em></h1>
+    <p class="hero-sub">Veja o que acontece na sua rua, reporte problemas e encontre vizinhos no seu bairro em Londrina.</p>
+    <div class="form-card">
+      <div class="form-card-title">Entre na vizinhança de Londrina agora</div>
+      <p class="form-card-sub">Leva menos de 1 minuto. 100% gratuito.</p>
+      <form id="landing-form" action="/app" method="get">
+        <input class="field" id="f-nome" name="nome" type="text" autocomplete="name" placeholder="Seu nome completo" required>
+        <input class="field" id="f-email" name="email" type="email" autocomplete="email" placeholder="Seu email" required>
+        <input class="field" id="f-cep" name="cep" type="tel" inputmode="numeric" autocomplete="postal-code" maxlength="9" placeholder="CEP de Londrina" required>
+        <div class="field-error" id="form-error">Confira nome, email e CEP para continuar.</div>
+        <button type="submit" class="btn-submit">Criar conta gratuita →</button>
+      </form>
+      <p class="form-note">🔒 Gratuito e sem limite de uso · Endereço privado</p>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-num">Grátis</div><div class="stat-label">para morador</div></div>
+    <div class="stat"><div class="stat-num">150m</div><div class="stat-label">raio padrão</div></div>
+    <div class="stat"><div class="stat-num">100%</div><div class="stat-label">privado</div></div>
+  </div>
+</section>
+
+<section class="sec r">
+  <div class="sec-inner">
+    <div class="eyebrow">Por que existe</div>
+    <h2>O grupo de WhatsApp virou uma bagunça?</h2>
+    <div class="versus">
+      <div class="versus-bad">
+        <div class="v-title-bad">Grupo de WhatsApp</div>
+        <p>300 msgs por dia, corrente de bom dia, spam de promoção e seu aviso urgente perdido no meio.</p>
+      </div>
+      <div class="versus-good">
+        <div class="v-title-good">Vizinho Certo</div>
+        <p>Só vizinhos do seu raio. Posts por assunto. Sem spam, sem corrente, sem ruído.</p>
       </div>
     </div>
+  </div>
+</section>
 
-    <div class="hero-proof">
-      <div class="proof-item"><div class="proof-k">Grátis</div><div class="proof-v">Para entrar, testar e participar da plataforma.</div></div>
-      <div class="proof-item"><div class="proof-k">Local</div><div class="proof-v">Experiência pensada para moradores de Londrina.</div></div>
-      <div class="proof-item"><div class="proof-k">Privado</div><div class="proof-v">Mostramos distância aproximada, não seu número.</div></div>
+<section class="sec-alt r">
+  <div class="sec-inner">
+    <div class="eyebrow">Como é na prática</div>
+    <h2>O feed da sua rua em tempo real</h2>
+    <div class="mockup-phone">
+      <div class="mockup-top">
+        <strong>Londrina</strong>
+        <span>Raio de 150m ao redor da sua casa em Londrina</span>
+      </div>
+      <div class="mockup-tabs">
+        <span class="mtab on">Tudo</span>
+        <span class="mtab">Problemas</span>
+        <span class="mtab">Ajuda</span>
+        <span class="mtab">Serviços</span>
+      </div>
+      <div class="mockup-posts">
+        <div class="mpost">
+          <div class="mpost-row">
+            <div class="mav" style="background:#D8F3DC;color:#1B4D37;">A</div>
+            <div><div class="mpost-name">Ana · 80m</div><div class="mpost-dist">Minha vizinha</div></div>
+          </div>
+          <div class="mtag tag-prob">Problema da rua</div>
+          <p>Buraco fundo na esquina. Já danificou dois carros essa semana.</p>
+          <div class="mpost-actions"><span class="mact">Apoiar</span><span class="mact">Comentar</span></div>
+        </div>
+        <div class="mpost">
+          <div class="mpost-row">
+            <div class="mav" style="background:#E9C46A;color:#6D4B00;">R</div>
+            <div><div class="mpost-name">Rafael · 120m</div><div class="mpost-dist">Meu vizinho</div></div>
+          </div>
+          <div class="mtag tag-ajuda">Ajuda</div>
+          <p>Alguém tem furadeira para empréstimo rápido?</p>
+          <div class="mpost-actions"><span class="mact">Responder</span></div>
+        </div>
+        <div class="mpost">
+          <div class="mpost-row">
+            <div class="mav" style="background:#F0B6A6;color:#7D2E1D;">M</div>
+            <div><div class="mpost-name">Márcia · 200m</div><div class="mpost-dist">Minha vizinha</div></div>
+          </div>
+          <div class="mtag tag-aviso">Aviso</div>
+          <p>Coleta passou mais cedo hoje. Deixem o lixo para amanhã.</p>
+          <div class="mpost-actions"><span class="mact">Obrigado</span></div>
+        </div>
+      </div>
     </div>
-  </header>
+  </div>
+</section>
 
-  <main>
-    <section class="section alt r">
-      <div class="wrap split">
-        <div>
-          <div class="eyebrow">Por que existe</div>
-          <h2 class="h2">O problema da rua se perde quando todo mundo fala ao mesmo tempo.</h2>
-          <p class="lead">Grupos grandes misturam corrente, venda, aviso urgente e conversa paralela. Quem quer resolver algo simples acaba sem contexto, sem prioridade e sem saber quem mora por perto.</p>
-          <div class="pain-list">
-            <div class="pain"><b>01</b><div><strong>Mensagem importante some rápido</strong><span>Um buraco, uma queda de energia ou um pedido de ajuda competem com dezenas de assuntos.</span></div></div>
-            <div class="pain"><b>02</b><div><strong>Você não sabe quem está perto</strong><span>O Vizinho Certo organiza a conversa por raio, para o problema chegar a quem realmente pode ver ou ajudar.</span></div></div>
-            <div class="pain"><b>03</b><div><strong>Privacidade vira preocupação</strong><span>A plataforma usa seu endereço para proximidade, mas não exibe sua casa para outros moradores.</span></div></div>
-          </div>
-        </div>
-        <div class="phone" aria-label="Prévia visual do feed do Vizinho Certo">
-          <div class="phone-screen">
-            <div class="app-top"><strong>Londrina</strong><span>Raio de 150m ao redor da sua rua</span></div>
-            <div class="tabs"><div class="tab active">Tudo</div><div class="tab">Problemas</div><div class="tab">Ajuda</div><div class="tab">Serviços</div></div>
-            <article class="post">
-              <div class="post-body">
-                <div class="post-row"><div class="avatar">P</div><div><div class="post-name">Paulo, 110m</div><div class="post-dist">Jardim Higienópolis</div></div></div>
-                <div class="tag">Problema da rua</div>
-                <p>Calçada completamente destruída na Av. Higienópolis. Idosos com dificuldade para passar.</p>
-                <div class="actions"><span class="action">Apoiar pedido</span><span class="action">Comentar</span></div>
-              </div>
-            </article>
-            <article class="post">
-              <div class="post-body">
-                <div class="post-row"><div class="avatar" style="background:#E9C46A;color:#6D4B00">T</div><div><div class="post-name">Tatiana, 85m</div><div class="post-dist">Centro</div></div></div>
-                <div class="tag" style="background:#E8F3F8;color:#28536B">Ajuda</div>
-                <p>Alguém indica uma boa diarista perto do Calçadão? Preciso para essa semana.</p>
-                <div class="actions"><span class="action">Responder</span><span class="action">Indicar</span></div>
-              </div>
-            </article>
-            <article class="post">
-              <div class="post-body">
-                <div class="post-row"><div class="avatar" style="background:#F0B6A6;color:#7D2E1D">S</div><div><div class="post-name">Sandra, 190m</div><div class="post-dist">Gleba Palhano</div></div></div>
-                <div class="tag" style="background:#F0FBF4;color:#1B4D37">Aviso</div>
-                <p>Obra na rua vai fechar o trânsito amanhã das 7h às 18h. Use a paralela.</p>
-                <div class="actions"><span class="action">Obrigado</span><span class="action">Compartilhar</span></div>
-              </div>
-            </article>
-          </div>
-        </div>
+<section class="sec r">
+  <div class="sec-inner">
+    <div class="eyebrow">O que você encontra</div>
+    <h2>Tudo que um bairro precisa</h2>
+    <div class="benefits">
+      <div class="benefit">
+        <div class="benefit-icon">🆘</div>
+        <strong>Botão de emergência</strong>
+        <span>Alerta todos os vizinhos do raio na hora. Acesso a SAMU, Polícia e Bombeiros.</span>
       </div>
-    </section>
-
-    <section class="section white r">
-      <div class="wrap">
-        <div class="eyebrow">Dentro do Vizinho Certo</div>
-        <h2 class="h2">Veja o que acontece perto da sua rua, sem depender de grupo lotado.</h2>
-        <p class="lead">Depois do cadastro, você escolhe o raio da vizinhança e acompanha publicações organizadas por assunto: problemas, avisos, pedidos de ajuda e serviços do bairro.</p>
-        <div class="benefits">
-          <div class="benefit"><b>01</b><strong>Raio ajustável</strong><span>Escolha de 50m a 500m para acompanhar sua calçada, sua rua, o quarteirão ou o bairro.</span></div>
-          <div class="benefit"><b>02</b><strong>Problemas com apoio</strong><span>Publique buracos, postes, calçadas e outros problemas para vizinhos comentarem e apoiarem.</span></div>
-          <div class="benefit"><b>03</b><strong>Serviços do bairro</strong><span>Veja prestadores e comércios próximos com contato por WhatsApp ou telefone.</span></div>
-          <div class="benefit"><b>04</b><strong>Alerta de emergência</strong><span>Use o botão de emergência para avisar vizinhos do seu raio e acessar SAMU, polícia e bombeiros.</span></div>
-        </div>
+      <div class="benefit">
+        <div class="benefit-icon">🔧</div>
+        <strong>Serviços do bairro</strong>
+        <span>Encanador, eletricista, diarista e mais — perto de você, com WhatsApp direto.</span>
       </div>
-    </section>
-
-    <section class="section dark r" id="como-funciona">
-      <div class="wrap">
-        <div class="eyebrow">Como funciona</div>
-        <h2 class="h2">Em poucos passos, Londrina começa a aparecer no seu feed.</h2>
-        <p class="lead">O Vizinho Certo usa seu CEP e o raio escolhido para mostrar publicações, vizinhos e serviços realmente próximos de você.</p>
-        <div class="steps">
-          <div class="step"><b>1</b><strong>Crie sua conta grátis</strong><span>Informe nome, email, senha e CEP para entrar na vizinhança certa.</span></div>
-          <div class="step"><b>2</b><strong>Escolha a distância</strong><span>Defina se quer acompanhar 50m, 150m, 300m ou até 500m ao redor de você.</span></div>
-          <div class="step"><b>3</b><strong>Use as abas do app</strong><span>Navegue por feed, serviços, vizinhos e perfil para participar do bairro do seu jeito.</span></div>
-        </div>
+      <div class="benefit">
+        <div class="benefit-icon">🔒</div>
+        <strong>Endereço privado</strong>
+        <span>Ninguém vê sua casa. Só calculamos a distância entre vizinhos.</span>
       </div>
-    </section>
-
-    <section class="section alt r">
-      <div class="wrap">
-        <div class="eyebrow">Dúvidas antes de entrar</div>
-        <h2 class="h2">Sem truque: o convite é para cadastro gratuito.</h2>
-        <div class="faq">
-          <div class="qa"><strong>Preciso pagar para criar conta?</strong><span>Não. O cadastro inicial é gratuito e não pede cartão de crédito.</span></div>
-          <div class="qa"><strong>Meu endereço fica público?</strong><span>Não. O endereço é usado para calcular distância e organizar o feed por proximidade.</span></div>
-          <div class="qa"><strong>Serve para qualquer bairro de Londrina?</strong><span>Sim. O raio ajuda a aproximar pessoas da mesma região, rua ou quarteirão.</span></div>
-          <div class="qa"><strong>Por que não usar só WhatsApp?</strong><span>Porque grupos são bons para conversa geral, mas ruins para organizar pedido, urgência, distância e histórico.</span></div>
-        </div>
+      <div class="benefit">
+        <div class="benefit-icon">📍</div>
+        <strong>Raio ajustável</strong>
+        <span>De 50m a 500m. Sua calçada, sua rua ou seu bairro inteiro.</span>
       </div>
-    </section>
+    </div>
+  </div>
+</section>
 
-    <section class="section dark r" id="instalar">
-      <div class="wrap">
-        <div class="eyebrow">Deixe no celular</div>
-        <h2 class="h2">Depois de criar sua conta, adicione o Vizinho Certo na tela inicial.</h2>
-        <p class="lead">Assim o app fica sempre à mão para acompanhar avisos da rua, responder vizinhos, consultar serviços do bairro e receber alertas importantes.</p>
-        <div class="install-grid">
-          <div class="install-card">
-            <strong>iPhone (Safari)</strong>
-            <span>1. Abra <b>vizinhocerto.com.br</b><br>2. Toque em <b>compartilhar</b><br>3. Escolha <b>Adicionar à Tela de Início</b><br>4. Confirme em <b>Adicionar</b></span>
-          </div>
-          <div class="install-card">
-            <strong>Android (Chrome)</strong>
-            <span>1. Abra <b>vizinhocerto.com.br</b><br>2. Toque nos <b>três pontinhos</b><br>3. Escolha <b>Adicionar à tela inicial</b><br>4. Confirme em <b>Adicionar</b></span>
-          </div>
-        </div>
-        <div class="install-note"><strong>Por que vale fazer isso?</strong> O Vizinho Certo funciona melhor como app no celular: acesso rápido, notificações e menos chance de perder algo importante da sua vizinhança.</div>
+<section class="sec-dark r">
+  <div class="sec-inner">
+    <div class="eyebrow" style="color:var(--verde-claro);">Instalar no celular</div>
+    <h2 style="font-family:'Fraunces',serif;font-size:clamp(22px,5vw,32px);font-weight:900;color:var(--creme);line-height:1.1;margin-bottom:8px;">Adicione na tela inicial</h2>
+    <p style="font-size:14px;color:rgba(254,250,224,.65);line-height:1.6;">Para receber notificações da rua e ter acesso rápido.</p>
+    <div class="install-cards">
+      <div class="install-card">
+        <strong>iPhone (Safari)</strong>
+        <span>1. Abra <b>vizinhocerto.com.br</b><br>2. Toque em <b>compartilhar</b> ⬆<br>3. Toque em <b>Adicionar à Tela de Início</b><br>4. Confirme em <b>Adicionar</b></span>
       </div>
-    </section>
-
-    <section class="final r">
-      <div class="wrap">
-        <h2>Londrina pode ter uma vizinhança mais útil no celular.</h2>
-        <p>Comece grátis, defina seu raio e veja o que está acontecendo perto da sua rua.</p>
-        <a href="/app" class="btn-light">Criar cadastro gratuito</a>
+      <div class="install-card">
+        <strong>Android (Chrome)</strong>
+        <span>1. Abra <b>vizinhocerto.com.br</b><br>2. Toque nos <b>três pontinhos</b> ⋮<br>3. Toque em <b>Adicionar à tela inicial</b><br>4. Confirme em <b>Adicionar</b></span>
       </div>
-    </section>
-  </main>
+    </div>
+    <div class="install-note"><strong>Por que vale?</strong> Com o ícone na tela inicial você recebe notificações de emergência e avisos da rua — como qualquer outro app.</div>
+  </div>
+</section>
 
-  <footer>
-    <strong>Vizinho<span>Certo</span></strong>
-    <p>vizinhocerto.com.br · Sua rua. Seus vizinhos. Do seu jeito.</p>
-  </footer>
-</div>
+<section class="cta-final r">
+  <div class="cta-final-inner">
+    <h2>Londrina pode ter uma vizinhança mais útil no celular.</h2>
+    <p>Gratuito. Sem spam. Só vizinhos de verdade.</p>
+    <a href="/app" class="btn-white">Criar conta gratuita →</a>
+  </div>
+</section>
 
-<a href="/app" class="sticky-cta">Criar cadastro gratuito</a>
+<footer>
+  <div class="footer-logo">Vizinho<span>Certo</span></div>
+  <p>vizinhocerto.com.br · Sua rua. Seus vizinhos. Do seu jeito.</p>
+</footer>
+
+<a href="/app" class="sticky">Criar conta gratuita →</a>
 
 <script>
 const obs = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) entry.target.classList.add('v');
-  });
-}, { threshold: 0.12 });
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('v'); });
+}, { threshold: 0.1 });
 document.querySelectorAll('.r').forEach(el => obs.observe(el));
 
-const landingForm = document.getElementById('landing-signup-form');
-const landingCep = document.getElementById('landing-cep');
-const landingError = document.getElementById('landing-form-error');
+const form = document.getElementById('landing-form');
+const cepEl = document.getElementById('f-cep');
+const errEl = document.getElementById('form-error');
 
-function onlyDigits(value) {
-  return (value || '').replace(/\D/g, '');
+function digits(v){ return (v||'').replace(/\D/g,''); }
+function fmtCep(v){
+  const d = digits(v).slice(0,8);
+  return d.length > 5 ? d.slice(0,5)+'-'+d.slice(5) : d;
 }
 
-function formatCep(value) {
-  const digits = onlyDigits(value).slice(0, 8);
-  return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits;
-}
+cepEl.addEventListener('input', () => { cepEl.value = fmtCep(cepEl.value); });
 
-if (landingCep) {
-  landingCep.addEventListener('input', () => {
-    landingCep.value = formatCep(landingCep.value);
-  });
-}
-
-if (landingForm) {
-  landingForm.addEventListener('submit', event => {
-    const nome = document.getElementById('landing-nome').value.trim();
-    const email = document.getElementById('landing-email').value.trim();
-    const cep = onlyDigits(landingCep.value);
-
-    if (!nome || !email.includes('@') || cep.length !== 8) {
-      event.preventDefault();
-      if (landingError) landingError.classList.add('show');
-      return;
-    }
-
-    localStorage.setItem('vc_landing_signup_prefill', JSON.stringify({
-      nome,
-      email,
-      cep,
-      city: 'londrina'
-    }));
-
-    landingCep.value = formatCep(cep);
-  });
-}
+form.addEventListener('submit', e => {
+  const nome = document.getElementById('f-nome').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const cep = digits(cepEl.value);
+  if(!nome || !email.includes('@') || cep.length !== 8){
+    e.preventDefault();
+    errEl.classList.add('show');
+    return;
+  }
+  localStorage.setItem('vc_landing_signup_prefill', JSON.stringify({ nome, email, cep, city: 'londrina' }));
+  cepEl.value = fmtCep(cep);
+});
 </script>
 </body>
 </html>
