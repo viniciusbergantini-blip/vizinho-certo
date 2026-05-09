@@ -25,13 +25,10 @@ module.exports = async (req, res) => {
   const todayStart = startOfSaoPauloDay(now);
   const sevenDaysStart = new Date(todayStart);
   sevenDaysStart.setDate(sevenDaysStart.getDate() - 6);
+  const lastMonthStart = new Date(todayStart);
+  lastMonthStart.setDate(lastMonthStart.getDate() - 29);
 
-  const { data: events, error } = await sb
-    .from('analytics_events')
-    .select('event_type, session_id, city, user_id, created_at')
-    .gte('created_at', sevenDaysStart.toISOString())
-    .order('created_at', { ascending: false })
-    .limit(10000);
+  const { events, error } = await fetchAnalyticsEvents(sb);
 
   if (error) {
     console.error('Dashboard metrics error:', error);
@@ -42,7 +39,9 @@ module.exports = async (req, res) => {
     generated_at: now.toISOString(),
     windows: {
       today: buildWindow(events || [], todayStart, now),
-      seven_days: buildWindow(events || [], sevenDaysStart, now)
+      seven_days: buildWindow(events || [], sevenDaysStart, now),
+      last_month: buildWindow(events || [], lastMonthStart, now),
+      all_time: buildWindow(events || [], null, now)
     }
   });
 };
@@ -71,7 +70,7 @@ function startOfSaoPauloDay(date) {
 function buildWindow(events, start, end) {
   const scoped = events.filter(event => {
     const createdAt = new Date(event.created_at);
-    return createdAt >= start && createdAt <= end;
+    return (!start || createdAt >= start) && createdAt <= end;
   });
 
   const byCity = {};
@@ -108,11 +107,32 @@ function buildWindow(events, start, end) {
   totals.abandonment_rate = rate(totals.not_registered, totals.visitors);
 
   return {
-    start: start.toISOString(),
+    start: start ? start.toISOString() : null,
     end: end.toISOString(),
     totals,
     cities: byCity
   };
+}
+
+async function fetchAnalyticsEvents(sb) {
+  const pageSize = 1000;
+  let from = 0;
+  const events = [];
+
+  while (true) {
+    const { data, error } = await sb
+      .from('analytics_events')
+      .select('event_type, session_id, city, user_id, created_at')
+      .order('created_at', { ascending: false })
+      .range(from, from + pageSize - 1);
+
+    if (error) return { events, error };
+    events.push(...(data || []));
+    if (!data || data.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return { events, error: null };
 }
 
 function sessions(events, type, city) {

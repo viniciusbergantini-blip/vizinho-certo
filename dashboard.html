@@ -43,7 +43,7 @@
   .metric .label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;}
   .metric .value{font-size:26px;font-weight:700;color:var(--verde-escuro);margin-top:8px;}
   .metric .hint{font-size:12px;color:var(--muted);margin-top:4px;}
-  .tabs{display:flex;gap:8px;margin-bottom:16px;}
+  .tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
   .tab{border:1px solid var(--borda);background:var(--branco);color:var(--texto);border-radius:8px;padding:9px 12px;cursor:pointer;font-weight:700;}
   .tab.active{background:var(--verde);color:white;border-color:var(--verde);}
   .panel{background:var(--branco);border:1px solid var(--borda);border-radius:8px;overflow:hidden;}
@@ -88,6 +88,8 @@
     <div class="tabs">
       <button id="tab-today" class="tab active" onclick="selectWindow('today')">Hoje</button>
       <button id="tab-seven_days" class="tab" onclick="selectWindow('seven_days')">Últimos 7 dias</button>
+      <button id="tab-last_month" class="tab" onclick="selectWindow('last_month')">&Uacute;ltimo m&ecirc;s</button>
+      <button id="tab-all_time" class="tab" onclick="selectWindow('all_time')">Per&iacute;odo completo</button>
     </div>
 
     <div id="summary" class="summary"></div>
@@ -243,6 +245,7 @@ function selectWindow(name){
 function render(){
   if(!metrics) return;
   const data = metrics.windows[activeWindow];
+  if(!data) return;
   const totals = data.totals;
   document.getElementById('status').textContent = `Atualizado em ${formatDate(metrics.generated_at)}`;
   document.getElementById('summary').innerHTML = [
