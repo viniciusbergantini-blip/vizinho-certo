@@ -5,6 +5,7 @@
     { "source": "/dashboard", "destination": "/dashboard.html" },
     { "source": "/maringa", "destination": "/maringa.html" },
     { "source": "/londrina", "destination": "/londrina.html" },
-    { "source": "/indaiatuba", "destination": "/indaiatuba.html" }
+    { "source": "/indaiatuba", "destination": "/indaiatuba.html" },
+    { "source": "/saojoao", "destination": "/saojoao.html" }
   ]
 }
