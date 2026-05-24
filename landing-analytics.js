@@ -1,5 +1,5 @@
 (function () {
-  const CITIES = new Set(['indaiatuba', 'maringa', 'londrina']);
+  const CITIES = new Set(['indaiatuba', 'maringa', 'londrina', 'saojoao']);
 
   function getCity() {
     const configured = document.documentElement.dataset.city || '';
