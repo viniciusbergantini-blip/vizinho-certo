@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
-const CITIES = ['indaiatuba', 'maringa', 'londrina'];
+const CITIES = ['indaiatuba', 'maringa', 'londrina', 'saojoao'];
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
