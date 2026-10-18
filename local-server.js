@@ -50,7 +50,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(port, host, () => {
   console.log(`Vizinho Certo local: http://${host}:${port}`);
-  console.log('Use .env.local for GROQ_API_KEY and MP_ACCESS_TOKEN when testing API flows.');
+  console.log('Use .env.local for Supabase, Stripe, Groq and VAPID credentials when testing API flows.');
 });
 
 function serveStatic(requestPath, res) {
@@ -61,6 +61,7 @@ function serveStatic(requestPath, res) {
   if (filePath === '/indaiatuba') filePath = '/indaiatuba.html';
   if (filePath === '/maringa') filePath = '/maringa.html';
   if (filePath === '/londrina') filePath = '/londrina.html';
+  if (filePath === '/saojoao') filePath = '/saojoao.html';
 
   const resolved = path.resolve(root, `.${decodeURIComponent(filePath)}`);
   if (!resolved.startsWith(root)) {

@@ -836,8 +836,16 @@ async function irRaio(){
   if(!E.bairro)                    { toast('Aguarde o CEP ser validado...'); return; }
   if(!num)                         { toast('Digite o número da sua casa!'); return; }
   const btn = document.getElementById('btn-cadastrar');
-  btn.disabled = true; btn.textContent = 'Criando conta...';
+  btn.disabled = true; btn.textContent = 'Localizando endereço...';
   try {
+    const coordenadas = await geocodificar(E.rua, num, E.cidade, E.uf, cep);
+    if(!coordenadas){
+      toast('Não conseguimos localizar esse endereço. Confira o CEP e o número.');
+      btn.disabled=false; btn.textContent='Criar conta →';
+      return;
+    }
+    E.lat=coordenadas.lat; E.lon=coordenadas.lon;
+    btn.textContent = 'Criando conta...';
     trackCadastro('signup_started');
     const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
     if(authErr){ toast('Erro: ' + authErr.message); btn.disabled=false; btn.textContent='Criar conta →'; return; }
@@ -965,7 +973,7 @@ async function buscaCEPEnd(cep){
     addrEl.value = (d.logradouro?d.logradouro+', ':'')+d.bairro+' — '+d.localidade+'/'+d.uf;
     numWrap.style.display = '';
     endTemp = { cep, rua: d.logradouro||'', bairro: d.bairro||d.localidade, cidade: d.localidade, uf: d.uf };
-    geocodificar(d.logradouro,'',d.localidade,d.uf).then(c=>{ if(c){ endTemp.lat=c.lat; endTemp.lon=c.lon; }});
+    geocodificar(d.logradouro,'',d.localidade,d.uf,cep).then(c=>{ if(c){ endTemp.lat=c.lat; endTemp.lon=c.lon; }});
   } catch(e){
     addrEl.value = 'CEP encontrado';
     numWrap.style.display = '';
@@ -978,17 +986,30 @@ async function salvarEndereco(){
   if(!num){ toast('Digite o número da sua casa!'); return; }
   const btn = document.querySelector('#m-endereco .bpost');
   btn.disabled=true; btn.textContent='Salvando...';
-  await sb.from('usuarios').update({
-    cep: endTemp.cep, rua: endTemp.rua, numero: num,
-    bairro: endTemp.bairro, cidade: endTemp.cidade, uf: endTemp.uf,
-    lat: endTemp.lat || null, lon: endTemp.lon || null
-  }).eq('id', E.userId);
-  E.cep=endTemp.cep; E.rua=endTemp.rua; E.bairro=endTemp.bairro;
-  E.cidade=endTemp.cidade; E.uf=endTemp.uf; E.lat=endTemp.lat; E.lon=endTemp.lon;
-  document.getElementById('fsub').textContent = `${E.cidade||E.bairro} · ${E.raio}m`;
-  btn.disabled=false; btn.textContent='Salvar →';
-  fecharAlterarEndereco();
-  toast('Endereço atualizado! 📍');
+  try{
+    const coordenadas = await geocodificar(endTemp.rua, num, endTemp.cidade, endTemp.uf, endTemp.cep);
+    if(!coordenadas){
+      toast('Não conseguimos localizar esse endereço. Confira rua, número e CEP.');
+      return;
+    }
+    const { error } = await sb.from('usuarios').update({
+      cep: endTemp.cep, rua: endTemp.rua, numero: num,
+      bairro: endTemp.bairro, cidade: endTemp.cidade, uf: endTemp.uf,
+      lat: coordenadas.lat, lon: coordenadas.lon
+    }).eq('id', E.userId);
+    if(error) throw error;
+    E.cep=endTemp.cep; E.rua=endTemp.rua; E.bairro=endTemp.bairro;
+    E.cidade=endTemp.cidade; E.uf=endTemp.uf; E.lat=coordenadas.lat; E.lon=coordenadas.lon;
+    document.getElementById('fsub').textContent = `${E.cidade||E.bairro} · ${E.raio}m`;
+    fecharAlterarEndereco();
+    await carregarPosts();
+    toast('Endereço atualizado! 📍');
+  }catch(e){
+    console.error(e);
+    toast('Erro ao atualizar endereço. Tente novamente.');
+  }finally{
+    btn.disabled=false; btn.textContent='Salvar →';
+  }
 }
 
 async function carregarPosts(){
@@ -1070,26 +1091,26 @@ function distanciaKm(lat1, lon1, lat2, lon2){
   return R*2*Math.atan2(Math.sqrt(h), Math.sqrt(1-h));
 }
 
-function enriquecerAnuncio(anuncio){
-  const distKm=distanciaKm(E.lat,E.lon,anuncio.lat,anuncio.lon);
-  return {...anuncio, distancia_km:distKm, distancia_fmt:distKm===null?'':formatarDistancia(distKm*1000)};
-}
-
-function anuncioNoRaio(anuncio){
-  const distKm=distanciaKm(E.lat,E.lon,anuncio.lat,anuncio.lon);
-  if(distKm === null) return false;
-  return distKm <= (parseFloat(anuncio.raio_km) || 0);
-}
-
 async function carregarAnunciosVisiveis(){
-  const { data, error } = await sb.from('anuncios')
-    .select('*')
-    .eq('ativo', true)
-    .gt('expira_em', new Date().toISOString())
-    .order('destaque', {ascending:false})
-    .order('criado_em', {ascending:false});
-  if(error){ console.error(error); return []; }
-  return (data||[]).filter(anuncioNoRaio).map(enriquecerAnuncio);
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session?.access_token) return [];
+  try{
+    const resposta = await fetch('/api/anuncios-visiveis', {
+      headers:{'Authorization':'Bearer '+session.access_token}
+    });
+    const resultado = await resposta.json();
+    if(!resposta.ok) throw new Error(resultado.error||'Erro ao carregar anúncios');
+    anunciosLocationStatus = resultado.location_status || 'precise';
+    return (resultado.anuncios||[]).map(anuncio=>({
+      ...anuncio,
+      distancia_fmt: Number.isFinite(Number(anuncio.distancia_metros)) && anuncio.distancia_metros!==null
+        ? formatarDistancia(Number(anuncio.distancia_metros))
+        : anuncio.proximidade==='mesma_rua' ? 'mesma rua' : ''
+    }));
+  }catch(error){
+    console.error('Erro ao carregar anúncios:', error);
+    return [];
+  }
 }
 
 function anunciosComoPosts(anuncios){
@@ -1348,7 +1369,7 @@ async function buscaCEP(cep){
     addrEl.value=(logr?logr+', ':'')+bairro+(d.localidade?' — '+d.localidade+'/'+d.uf:'');
     if(numWrap) numWrap.style.display='';
     E.rua=logr; E.bairro=bairro||d.localidade; E.cidade=d.localidade; E.uf=d.uf; E.cep=cep;
-    geocodificar(logr,'',d.localidade,d.uf).then(c=>{if(c){E.lat=c.lat;E.lon=c.lon;}});
+    geocodificar(logr,'',d.localidade,d.uf,cep).then(c=>{if(c){E.lat=c.lat;E.lon=c.lon;}});
   } catch(e){
     addrEl.value='CEP '+cep.slice(0,5)+'-'+cep.slice(5)+' encontrado';
     if(numWrap) numWrap.style.display='';
@@ -1357,16 +1378,21 @@ async function buscaCEP(cep){
 }
 async function geocodificarComNumero(num){
   if(!num || !E.rua) return;
-  const c = await geocodificar(E.rua, num, E.cidade, E.uf);
+  const c = await geocodificar(E.rua, num, E.cidade, E.uf, E.cep);
   if(c){ E.lat=c.lat; E.lon=c.lon; }
 }
-async function geocodificar(rua,numero,cidade,uf){
+async function geocodificar(rua,numero,cidade,uf,cep){
   try{
-    const q=encodeURIComponent((rua?rua+(numero?' '+numero:'')+(', '):'')+cidade+', '+uf+', Brasil');
-    const r=await fetch('https://nominatim.openstreetmap.org/search?q='+q+'&format=json&limit=1',{headers:{'Accept-Language':'pt-BR','User-Agent':'VizinhoCerto/1.0'}});
+    const r=await fetch('/api/geocode',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({rua,numero,cidade,uf,cep})
+    });
+    if(!r.ok) return null;
     const d=await r.json();
-    if(d&&d[0]) return {lat:parseFloat(d[0].lat),lon:parseFloat(d[0].lon)};
-  } catch(e){}
+    const lat=Number(d.lat), lon=Number(d.lon);
+    if(Number.isFinite(lat)&&Number.isFinite(lon)) return {lat,lon,precision:d.precision};
+  } catch(e){ console.error('Falha ao localizar endereço:', e); }
   return null;
 }
 
@@ -1473,6 +1499,7 @@ let catAtiva='todos';
 const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Costureira','Jardineiro','Pedreiro','Marido de Aluguel','Anúncio','Outros Serviços'];
 const CAT_ICONS={'Encanador':'🔧','Eletricista':'⚡','Diarista':'🧹','Comércio':'🍕','Costureira':'🧵','Jardineiro':'🌿','Pedreiro':'🏗️','Marido de Aluguel':'🔨','Anúncio':'🛒','Outros Serviços':'🛠️'};
 let anunciosVisiveisCache=[];
+let anunciosLocationStatus='precise';
 
 function navTab(tab,el){
   const feedEl = document.getElementById('feed');
@@ -1560,6 +1587,9 @@ async function renderServicos(){
   anunciosVisiveisCache = anuncios;
   const fil = catAtiva==='todos' ? anuncios : anuncios.filter(s=>s.tipo===catAtiva);
   const cats=CATS.map(c=>`<div class="srv-cat ${c===catAtiva?'at':''}" onclick="setcat('${c}')">${c==='todos'?'Todos':c}</div>`).join('');
+  const avisoLocalizacao=anunciosLocationStatus==='same_street_only'
+    ? '<div style="margin-bottom:1rem;padding:12px 14px;border-radius:10px;background:#FFF4D6;color:#72530A;font-size:12px;line-height:1.5;">📍 Estamos mostrando serviços da sua rua. Atualize seu endereço no perfil para ampliar a busca pelo raio.</div>'
+    : '';
   const cards=fil.map(s=>`<div class="srv-card ${s.destaque?'destaque':''}">
     ${s.destaque?'<div class="srv-destaque-label">★ PARCEIRO DESTAQUE</div>':''}
     <div class="srv-body"><div class="srv-top"><div class="srv-logo" style="background:#E8F5E9">${s.icon||'🏪'}</div><div class="srv-info"><div class="srv-nome">${s.nome}</div><div class="srv-tipo">${s.tipo}</div></div></div>
@@ -1567,7 +1597,7 @@ async function renderServicos(){
     <div class="srv-tags"><span class="srv-tag">${s.tipo}</span>${s.distancia_fmt?`<span class="srv-tag">a ${s.distancia_fmt}</span>`:''}${s.destaque?'<span class="srv-tag">✓ Verificado</span>':''}</div>
     <div class="srv-acoes"><button class="srv-btn-wa" onclick="window.open('https://wa.me/55${(s.telefone||'').replace(/[^0-9]/g,'')}','_blank')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligar('${(s.telefone||'').replace(/[^0-9]/g,'')}')">📞 Ligar</button></div>
     ${s.usuario_id===E.userId?`<button class="srv-btn-edit" onclick="abrirEditarAnuncio('${s.id}')">Editar anúncio</button>`:''}</div></div>`).join('');
-  el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div><div class="srv-cats">${cats}</div><div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div><div class="srv-grid">${fil.length===0?'<div style="text-align:center;padding:2rem;color:var(--texto-muted);font-size:14px;">Nenhum serviço cadastrado ainda.<br>Seja o primeiro!</div>':cards}</div></div>`;
+  el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div>${avisoLocalizacao}<div class="srv-cats">${cats}</div><div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div><div class="srv-grid">${fil.length===0?'<div style="text-align:center;padding:2rem;color:var(--texto-muted);font-size:14px;">Nenhum serviço disponível para sua localização.<br>Atualize o endereço ou seja o primeiro a anunciar.</div>':cards}</div></div>`;
 }
 function setcat(cat){ catAtiva=cat; renderServicos(); }
 
@@ -1694,13 +1724,11 @@ async function anunFinalizar(){
   const btn=document.querySelector('#as4 .anun-next');
   btn.textContent='Abrindo pagamento...';btn.disabled=true;
   try{
-    const retorno = window.location.origin + '/app';
     const { data: { session } } = await sb.auth.getSession();
-    const resp=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      nome:anunState.nome, tipo:anunState.tipo, dias:anunState.dias, preco:anunState.preco,
-      icon:anunState.icon, desc:anunState.desc, tel:anunState.tel,
-      usuario_id: E.userId, lat: E.lat, lon: E.lon, retorno,
-      email: session?.user?.email || ''
+    if(!session?.access_token) throw new Error('Entre na sua conta novamente.');
+    const resp=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({
+      nome:anunState.nome, tipo:anunState.tipo, dias:anunState.dias,
+      icon:anunState.icon, desc:anunState.desc, tel:anunState.tel
     })});
     const data=await resp.json();
     if(data.url){
@@ -1710,7 +1738,7 @@ async function anunFinalizar(){
     else{ throw new Error(data.error||'sem link de pagamento'); }
   } catch(e){
     btn.disabled=false; btn.textContent='Pagar e publicar →';
-    toast('Erro ao conectar com pagamento. Tente novamente.');
+    toast(e.message||'Erro ao conectar com pagamento. Tente novamente.');
   }
 }
 
