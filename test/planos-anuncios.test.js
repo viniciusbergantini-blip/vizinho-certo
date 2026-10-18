@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { TIPOS_ANUNCIO, obterPlano } = require('../lib/planos-anuncios');
+const { ICONES_ANUNCIO, TIPOS_ANUNCIO, obterPlano } = require('../lib/planos-anuncios');
 
 test('mantem precos e raios definidos no servidor', () => {
   assert.deepEqual(obterPlano(10), { centavos: 990, raio_km: 1.5, destaque: false });
@@ -15,4 +15,5 @@ test('recusa plano nao cadastrado', () => {
 test('reconhece diarista e recusa categoria arbitraria', () => {
   assert.equal(TIPOS_ANUNCIO.has('Diarista'), true);
   assert.equal(TIPOS_ANUNCIO.has('Administrador'), false);
+  assert.equal(ICONES_ANUNCIO.get('Diarista'), '🧹');
 });

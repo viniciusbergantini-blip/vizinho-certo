@@ -1,18 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
+const { ICONES_ANUNCIO, TIPOS_ANUNCIO } = require('../lib/planos-anuncios');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
-const ALLOWED_TYPES = new Set([
-  'Encanador',
-  'Eletricista',
-  'Diarista',
-  'Comércio',
-  'Costureira',
-  'Jardineiro',
-  'Pedreiro',
-  'Marido de Aluguel',
-  'Anúncio',
-  'Outros Serviços',
-]);
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -20,11 +9,11 @@ module.exports = async (req, res) => {
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
   if (!token) return res.status(401).json({ error: 'Login obrigatório' });
 
-  const { id, tipo, nome, descricao, telefone, icon } = req.body || {};
+  const { id, tipo, nome, descricao, telefone } = req.body || {};
   if (!id || !tipo || !nome || !descricao || !telefone) {
     return res.status(400).json({ error: 'Dados incompletos' });
   }
-  if (!ALLOWED_TYPES.has(tipo)) {
+  if (!TIPOS_ANUNCIO.has(tipo)) {
     return res.status(400).json({ error: 'Categoria inválida' });
   }
 
@@ -43,7 +32,7 @@ module.exports = async (req, res) => {
       nome: String(nome).trim().slice(0, 120),
       descricao: String(descricao).trim().slice(0, 500),
       telefone: String(telefone).trim().slice(0, 40),
-      icon: icon || '🏪',
+      icon: ICONES_ANUNCIO.get(tipo) || '🏪',
     };
 
     const { data, error } = await sb
@@ -51,7 +40,8 @@ module.exports = async (req, res) => {
       .update(updates)
       .eq('id', id)
       .eq('usuario_id', userData.user.id)
-      .select('*')
+      .eq('ativo', true)
+      .select('id, usuario_id, nome, tipo, descricao, telefone, icon, raio_km, dias, destaque, ativo, expira_em, criado_em')
       .single();
 
     if (error || !data) {
