@@ -10,6 +10,7 @@ const limiteArg = process.argv.find(item => item.startsWith('--limit='));
 const limite = limiteArg ? Math.max(1, Number(limiteArg.split('=')[1]) || 1) : Infinity;
 const supabaseUrl = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
 const serviceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+const cacheBrasilApi = new Map();
 
 if (!serviceKey) throw new Error('SUPABASE_SERVICE_KEY nao configurada');
 
@@ -35,6 +36,7 @@ async function executar() {
     nao_localizados: 0,
     erros: 0,
     anuncios_atualizados: 0,
+    por_precisao: {},
   };
 
   if (!aplicar) {
@@ -56,13 +58,14 @@ async function executar() {
           .eq('id', usuario.id);
         if (updateError) throw updateError;
         resumo.atualizados += 1;
+        resumo.por_precisao[coordenadas.precision] = (resumo.por_precisao[coordenadas.precision] || 0) + 1;
         console.log(`[${indice + 1}/${candidatos.length}] ${prefixo(usuario.id)} atualizado (${coordenadas.precision})`);
       }
     } catch (erro) {
       resumo.erros += 1;
       console.error(`[${indice + 1}/${candidatos.length}] ${prefixo(usuario.id)} erro: ${erro.message}`);
     }
-    if (indice < candidatos.length - 1) await esperar(1100);
+    if (indice < candidatos.length - 1) await esperar(250);
   }
 
   resumo.anuncios_atualizados = await atualizarAnuncios();
@@ -70,6 +73,9 @@ async function executar() {
 }
 
 async function geocodificar(usuario) {
+  const cepBrasilApi = await consultarBrasilApi(usuario);
+  if (cepBrasilApi) return { ...cepBrasilApi, precision: 'cep-brasilapi' };
+
   const exato = await consultarNominatim(usuario, true);
   if (exato) return { ...exato, precision: 'number' };
   await esperar(1100);
@@ -79,6 +85,32 @@ async function geocodificar(usuario) {
   await esperar(1100);
   const cep = await consultarCep(usuario);
   return cep ? { ...cep, precision: 'cep' } : null;
+}
+
+async function consultarBrasilApi(usuario) {
+  const cep = normalizarCep(usuario.cep);
+  if (cep.length !== 8) return null;
+
+  if (!cacheBrasilApi.has(cep)) {
+    cacheBrasilApi.set(cep, buscarBrasilApi(cep));
+  }
+
+  const resultado = await cacheBrasilApi.get(cep);
+  if (!resultado || !municipioUfCompativeis(resultado.city, resultado.state, usuario)) return null;
+
+  const lat = Number(resultado.location?.coordinates?.latitude);
+  const lon = Number(resultado.location?.coordinates?.longitude);
+  if (!coordenadaBrasil(lat, lon) || (lat === 0 && lon === 0)) return null;
+  return { lat, lon };
+}
+
+async function buscarBrasilApi(cep) {
+  const resposta = await fetch(`https://brasilapi.com.br/api/cep/v2/${cep}`, {
+    headers: { 'User-Agent': 'VizinhoCerto/1.0 (https://vizinhocerto.com.br)' },
+  });
+  if (resposta.status === 404) return null;
+  if (!resposta.ok) throw new Error(`BrasilAPI respondeu ${resposta.status}`);
+  return resposta.json();
 }
 
 async function consultarNominatim(usuario, incluirNumero) {
@@ -145,6 +177,11 @@ function resultadoValido(resultado, usuario) {
     .map(normalizarTexto)
     .filter(Boolean);
   return Boolean(esperado && localidades.includes(esperado));
+}
+
+function municipioUfCompativeis(cidade, uf, usuario) {
+  return normalizarTexto(cidade) === normalizarTexto(usuario.cidade)
+    && String(uf || '').toUpperCase() === String(usuario.uf || '').toUpperCase();
 }
 
 function formatarCep(cep) {

@@ -18,7 +18,7 @@ Nunca versionar `.env.local`, chaves `service_role`, segredos Stripe, Groq ou VA
 - `npm run check`: sintaxe dos principais arquivos server-side.
 - `npm audit --omit=dev`: dependencias de producao.
 - `npm run backfill:locations`: somente diagnostica perfis sem coordenadas.
-- `npm run backfill:locations:apply`: geocodifica sequencialmente perfis validos e atualiza anuncios sem coordenadas.
+- `npm run backfill:locations:apply`: valida CEP, municipio e UF na BrasilAPI, geocodifica sequencialmente os perfis validos e atualiza anuncios sem coordenadas. Nominatim e usado somente como fallback.
 
 ## Fluxo de anuncios
 
