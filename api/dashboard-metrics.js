@@ -1,7 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
+const { buildWindow } = require('../lib/analytics-dashboard');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
-const CITIES = ['indaiatuba', 'maringa', 'londrina', 'saojoao'];
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -67,53 +67,6 @@ function startOfSaoPauloDay(date) {
   return new Date(`${parts.year}-${parts.month}-${parts.day}T00:00:00-03:00`);
 }
 
-function buildWindow(events, start, end) {
-  const scoped = events.filter(event => {
-    const createdAt = new Date(event.created_at);
-    return (!start || createdAt >= start) && createdAt <= end;
-  });
-
-  const byCity = {};
-  for (const city of CITIES) {
-    const views = sessions(scoped, 'landing_view', city);
-    const clicks = sessions(scoped, 'cta_click', city);
-    const signups = sessions(scoped, 'signup_completed', city);
-    const conversions = intersection(views, signups);
-    const notRegistered = difference(views, signups);
-
-    byCity[city] = {
-      visitors: views.size,
-      cta_clicks: clicks.size,
-      signups: signups.size,
-      conversions: conversions.size,
-      not_registered: notRegistered.size,
-      conversion_rate: rate(conversions.size, views.size),
-      abandonment_rate: rate(notRegistered.size, views.size)
-    };
-  }
-
-  const directSignups = sessions(scoped.filter(event => !event.city), 'signup_completed');
-  const totals = CITIES.reduce((acc, city) => {
-    const item = byCity[city];
-    acc.visitors += item.visitors;
-    acc.cta_clicks += item.cta_clicks;
-    acc.signups += item.signups;
-    acc.conversions += item.conversions;
-    acc.not_registered += item.not_registered;
-    return acc;
-  }, { visitors: 0, cta_clicks: 0, signups: 0, conversions: 0, not_registered: 0, direct_signups: directSignups.size });
-
-  totals.conversion_rate = rate(totals.conversions, totals.visitors);
-  totals.abandonment_rate = rate(totals.not_registered, totals.visitors);
-
-  return {
-    start: start ? start.toISOString() : null,
-    end: end.toISOString(),
-    totals,
-    cities: byCity
-  };
-}
-
 async function fetchAnalyticsEvents(sb) {
   const pageSize = 1000;
   let from = 0;
@@ -122,7 +75,7 @@ async function fetchAnalyticsEvents(sb) {
   while (true) {
     const { data, error } = await sb
       .from('analytics_events')
-      .select('event_type, session_id, city, user_id, created_at')
+      .select('event_type, session_id, city, path, metadata, created_at')
       .order('created_at', { ascending: false })
       .range(from, from + pageSize - 1);
 
@@ -133,23 +86,4 @@ async function fetchAnalyticsEvents(sb) {
   }
 
   return { events, error: null };
-}
-
-function sessions(events, type, city) {
-  return new Set(events
-    .filter(event => event.event_type === type && (city === undefined || event.city === city))
-    .map(event => event.session_id)
-    .filter(Boolean));
-}
-
-function intersection(a, b) {
-  return new Set([...a].filter(item => b.has(item)));
-}
-
-function difference(a, b) {
-  return new Set([...a].filter(item => !b.has(item)));
-}
-
-function rate(value, total) {
-  return total > 0 ? Number(((value / total) * 100).toFixed(1)) : 0;
 }

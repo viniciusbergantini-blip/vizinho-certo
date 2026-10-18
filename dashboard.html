@@ -46,16 +46,23 @@
   .tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
   .tab{border:1px solid var(--borda);background:var(--branco);color:var(--texto);border-radius:8px;padding:9px 12px;cursor:pointer;font-weight:700;}
   .tab.active{background:var(--verde);color:white;border-color:var(--verde);}
+  .section{margin-top:18px;}
+  .section-head{display:flex;justify-content:space-between;gap:12px;align-items:end;margin-bottom:8px;}
+  .section-title{font-family:Fraunces,serif;color:var(--verde-escuro);font-size:20px;}
+  .section-note{font-size:12px;color:var(--muted);}
   .panel{background:var(--branco);border:1px solid var(--borda);border-radius:8px;overflow:hidden;}
   table{width:100%;border-collapse:collapse;}
   th,td{padding:13px 14px;text-align:left;border-bottom:1px solid var(--borda);font-size:14px;}
   th{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:#FBF7E7;}
   tr:last-child td{border-bottom:0;}
-  .city{font-weight:700;color:var(--verde-escuro);text-transform:capitalize;}
+  .link{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;font-weight:700;color:var(--verde-escuro);overflow-wrap:anywhere;}
+  .location{font-size:12px;color:var(--muted);line-height:1.45;}
+  .badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;background:var(--verde-bg);color:var(--verde-escuro);}
+  .badge.no{background:#FFE8E3;color:#9A3412;}
   .positive{color:var(--verde);font-weight:700;}
   .negative{color:var(--laranja);font-weight:700;}
   .empty{padding:40px;text-align:center;color:var(--muted);}
-  @media(max-width:900px){.summary{grid-template-columns:repeat(2,1fr);} .top{flex-direction:column;} .status{text-align:left;} .actions{justify-content:flex-start;} .panel{overflow-x:auto;} table{min-width:780px;}}
+  @media(max-width:900px){.summary{grid-template-columns:repeat(2,1fr);} .top{flex-direction:column;} .status{text-align:left;} .actions{justify-content:flex-start;} .section-head{align-items:flex-start;flex-direction:column;} .panel{overflow-x:auto;} table{min-width:780px;}}
 </style>
 </head>
 <body>
@@ -73,7 +80,7 @@
     <div class="top">
       <div>
         <div class="brand">Vizinho Certo</div>
-        <div class="sub">Conversão das landings por cidade</div>
+        <div class="sub">Acessos, localização aproximada e conversão por link</div>
       </div>
       <div>
         <div id="status" class="status">Carregando...</div>
@@ -93,7 +100,14 @@
     </div>
 
     <div id="summary" class="summary"></div>
-    <div id="table" class="panel"></div>
+    <section class="section">
+      <div class="section-head"><div class="section-title">Desempenho por link</div><div class="section-note">Visitantes únicos e conversões atribuídas à mesma sessão.</div></div>
+      <div id="links-table" class="panel"></div>
+    </section>
+    <section class="section">
+      <div class="section-head"><div class="section-title">Acessos recentes</div><div class="section-note">Localização aproximada da rede; nenhum IP ou coordenada exata é armazenado.</div></div>
+      <div id="accesses-table" class="panel"></div>
+    </section>
     <div id="dashboard-error" class="error"></div>
   </section>
 </main>
@@ -108,7 +122,6 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     detectSessionInUrl: true
   }
 });
-const CITY_LABELS = { indaiatuba:'Indaiatuba', maringa:'Maringá', londrina:'Londrina', saojoao:'São João da Boa Vista' };
 const AUTO_REFRESH_MS = 60000;
 let metrics = null;
 let activeWindow = 'today';
@@ -249,31 +262,56 @@ function render(){
   const totals = data.totals;
   document.getElementById('status').textContent = `Atualizado em ${formatDate(metrics.generated_at)}`;
   document.getElementById('summary').innerHTML = [
-    metric('Visitantes', totals.visitors, 'sessões únicas'),
+    metric('Acessos', totals.visitors, 'visitantes únicos'),
     metric('Cliques CTA', totals.cta_clicks, 'links para cadastro'),
-    metric('Cadastros', totals.signups, 'com origem de landing'),
-    metric('Conversão', `${totals.conversion_rate}%`, 'visita → cadastro'),
+    metric('Cadastros', totals.signups, 'concluídos no período'),
+    metric('Conversões', totals.conversions, `${totals.conversion_rate}% dos acessos`),
     metric('Não cadastrou', `${totals.abandonment_rate}%`, `${totals.not_registered} visitantes`),
-    metric('Orgânico/direto', totals.direct_signups, 'sem landing de origem')
+    metric('Diretos', totals.direct_signups, 'cadastros sem acesso atribuído')
   ].join('');
-  renderTable(data.cities);
+  renderLinks(data.links || []);
+  renderAccesses(data.accesses || []);
 }
 
-function renderTable(cities){
-  const rows = Object.entries(cities).map(([city, item]) => `
+function renderLinks(links){
+  if(!links.length){
+    document.getElementById('links-table').innerHTML = '<div class="empty">Nenhum acesso neste período.</div>';
+    return;
+  }
+  const rows = links.map(item => `
     <tr>
-      <td class="city">${CITY_LABELS[city] || city}</td>
+      <td class="link">${escapeHtml(item.link)}</td>
+      <td>${escapeHtml(item.campaign)}</td>
+      <td class="location">${item.locations.slice(0, 3).map(location => `${escapeHtml(location.label)} (${location.total})`).join('<br>')}</td>
       <td>${item.visitors}</td>
       <td>${item.cta_clicks}</td>
-      <td>${item.signups}</td>
       <td>${item.conversions}</td>
       <td class="positive">${item.conversion_rate}%</td>
-      <td class="negative">${item.abandonment_rate}%</td>
-      <td>${item.not_registered}</td>
     </tr>`).join('');
-  document.getElementById('table').innerHTML = `
+  document.getElementById('links-table').innerHTML = `
     <table>
-      <thead><tr><th>Cidade</th><th>Visitantes</th><th>Cliques</th><th>Cadastros</th><th>Conversões</th><th>Conv.</th><th>Abandono</th><th>Sem cadastro</th></tr></thead>
+      <thead><tr><th>Link acessado</th><th>Campanha</th><th>Localizações</th><th>Visitantes</th><th>Cliques</th><th>Conversões</th><th>Taxa</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+}
+
+function renderAccesses(accesses){
+  if(!accesses.length){
+    document.getElementById('accesses-table').innerHTML = '<div class="empty">Nenhum acesso neste período.</div>';
+    return;
+  }
+  const rows = accesses.map(item => `
+    <tr>
+      <td>${formatDate(item.occurred_at)}</td>
+      <td><span class="badge">${escapeHtml(item.visitor)}</span></td>
+      <td class="link">${escapeHtml(item.link)}</td>
+      <td class="location">${escapeHtml(item.location)}</td>
+      <td>${escapeHtml(item.campaign)}</td>
+      <td><span class="badge${item.converted ? '' : ' no'}">${item.converted ? 'Sim' : 'Não'}</span></td>
+    </tr>`).join('');
+  document.getElementById('accesses-table').innerHTML = `
+    <table>
+      <thead><tr><th>Horário</th><th>Visitante anônimo</th><th>Link acessado</th><th>Localização</th><th>Campanha</th><th>Converteu</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
@@ -301,6 +339,12 @@ function setError(id, message){
 
 function formatDate(value){
   return new Date(value).toLocaleString('pt-BR', { dateStyle:'short', timeStyle:'short' });
+}
+
+function escapeHtml(value){
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;'
+  })[char]);
 }
 </script>
 </body>

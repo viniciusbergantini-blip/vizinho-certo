@@ -31,6 +31,14 @@ Nunca versionar `.env.local`, chaves `service_role`, segredos Stripe, Groq ou VA
 
 Coordenadas e endereco dos anunciantes nao sao devolvidos ao navegador. Usuarios com localizacao incompleta recebem uma indicacao para atualizar o perfil.
 
+## Monitoramento de links
+
+1. As paginas publicas com `landing-analytics.js` registram o caminho acessado e apenas parametros de campanha permitidos.
+2. A localizacao aproximada usa os cabecalhos de cidade, regiao e pais fornecidos pela Vercel. IP, CEP e coordenadas nao sao armazenados.
+3. Uma conversao acontece quando a mesma sessao anonima registra `landing_view` e depois `signup_completed` dentro do periodo selecionado.
+4. `/dashboard` exige uma conta presente em `DASHBOARD_ADMIN_EMAILS` e mostra desempenho por link e os acessos recentes com identificadores anonimos.
+5. Dados anteriores a essa instrumentacao continuam no historico, mas podem aparecer como `Localizacao indisponivel`.
+
 ## Publicacao
 
 A producao principal esta na Vercel. Validar a URL de preview, os fluxos autenticados e as APIs antes de promover ou enviar mudancas para `main`. O GitHub Pages serve somente os arquivos estaticos e nao substitui as APIs da Vercel.
