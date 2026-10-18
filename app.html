@@ -204,6 +204,42 @@
   .srv-anunciar p{font-size:13px;color:var(--texto-muted);margin-bottom:10px;line-height:1.5;}
   .srv-anunciar strong{color:var(--texto);font-weight:500;}
   .srv-btn-anunciar{padding:10px 20px;background:#2D6A4F;color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
+  .evt-header{background:linear-gradient(135deg,#2D6A4F,#52B788);padding:1.25rem;border-radius:var(--radius);margin-bottom:1rem;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .evt-header h2{font-family:'Fraunces',serif;font-size:20px;color:white;margin-bottom:4px;}
+  .evt-header p{font-size:12px;color:rgba(255,255,255,.75);line-height:1.45;}
+  .evt-add{border:1px solid rgba(255,255,255,.45);background:rgba(255,255,255,.14);color:white;border-radius:20px;padding:8px 11px;font:500 12px 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;}
+  .evt-filtros{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin-bottom:1rem;}
+  .evt-filtros::-webkit-scrollbar{display:none;}
+  .evt-filtro{padding:7px 14px;border-radius:20px;border:1.5px solid var(--borda);background:var(--branco);font:500 12px 'DM Sans',sans-serif;color:var(--texto-muted);cursor:pointer;white-space:nowrap;}
+  .evt-filtro.at{background:var(--verde);border-color:var(--verde);color:white;}
+  .evt-card{display:flex;gap:12px;background:var(--branco);border:1px solid var(--borda);border-radius:var(--radius);padding:1rem;margin-bottom:10px;animation:fu .3s ease;}
+  .evt-data{width:52px;min-width:52px;height:60px;border-radius:12px;background:var(--verde-bg);color:var(--verde);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;}
+  .evt-data-dia{font-family:'Fraunces',serif;font-size:24px;font-weight:600;}
+  .evt-data-mes{font-size:10px;font-weight:500;text-transform:uppercase;margin-top:4px;letter-spacing:.4px;}
+  .evt-info{min-width:0;flex:1;}
+  .evt-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px;}
+  .evt-titulo{font-size:15px;font-weight:500;color:var(--texto);line-height:1.35;}
+  .evt-categoria{font-size:10px;padding:3px 7px;border-radius:20px;background:#FFF1E8;color:#A34122;white-space:nowrap;}
+  .evt-meta{font-size:12px;color:var(--texto-muted);line-height:1.55;}
+  .evt-desc{font-size:13px;color:var(--texto-muted);line-height:1.5;margin-top:8px;}
+  .evt-acoes{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .evt-acao{padding:7px 10px;border-radius:20px;border:1px solid var(--borda);background:var(--branco);color:var(--verde);font:500 11px 'DM Sans',sans-serif;cursor:pointer;}
+  .evt-sugestoes{background:#EDF8F2;border:1px solid #B7DEC8;border-radius:var(--radius);padding:1rem;margin-bottom:1rem;}
+  .evt-sugestoes h3{font-family:'Fraunces',serif;font-size:17px;color:var(--verde);margin-bottom:3px;}
+  .evt-sugestoes p{font-size:11px;color:var(--texto-muted);margin-bottom:9px;}
+  .evt-sugestao{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid rgba(45,106,79,.13);font-size:12px;}
+  .evt-sugestao span:first-child{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .evt-status{font-size:10px;padding:3px 7px;border-radius:20px;font-weight:500;background:#FFF4D6;color:#72530A;}
+  .evt-status.aprovado{background:var(--verde-bg);color:var(--verde);}
+  .evt-status.rejeitado,.evt-status.cancelado{background:#FFE8E3;color:#9A3412;}
+  .evt-vazio{text-align:center;padding:2rem 1rem;background:var(--branco);border:1px solid var(--borda);border-radius:var(--radius);color:var(--texto-muted);font-size:13px;line-height:1.6;}
+  .evt-form{max-height:88vh;overflow-y:auto;}
+  .evt-form .ig input,.evt-form .ig textarea,.evt-form .ig select{width:100%;padding:11px 14px;border:1.5px solid var(--borda);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;background:var(--branco);color:var(--texto);outline:none;}
+  .evt-form .ig textarea{min-height:74px;resize:vertical;line-height:1.45;}
+  .evt-form .ig input:focus,.evt-form .ig textarea:focus,.evt-form .ig select:focus{border-color:var(--verde-claro);}
+  .evt-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .evt-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--texto-muted);margin-bottom:12px;}
+  .evt-check input{width:18px;height:18px;accent-color:var(--verde);}
   .anun-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:500;align-items:flex-end;justify-content:center;}
   .anun-overlay.ab{display:flex;}
   .anun-sheet{background:var(--creme);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;animation:su .3s ease;}
@@ -407,14 +443,34 @@
   </div>
   <div class="fb" id="feed"></div>
   <div id="servicos-tab" style="display:none;padding:1rem 1rem 5rem;"></div>
+  <div id="eventos-tab" style="display:none;padding:1rem 1rem 5rem;"></div>
   <div class="bnav">
     <div class="nitem at" id="nav-feed" onclick="navTab('feed',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>Feed</div>
     <div class="nitem" id="nav-servicos" onclick="navTab('servicos',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>Serviços</div>
-    <div class="nitem" onclick="navTab('vizinhos',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Vizinhos</div>
-    <div class="nitem" onclick="navTab('perfil',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Perfil</div>
+    <div class="nitem" id="nav-eventos" onclick="navTab('eventos',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="15" r="1"/><circle cx="12" cy="15" r="1"/><circle cx="16" cy="15" r="1"/></svg>Eventos</div>
+    <div class="nitem" id="nav-vizinhos" onclick="navTab('vizinhos',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Vizinhos</div>
+    <div class="nitem" id="nav-perfil" onclick="navTab('perfil',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Perfil</div>
   </div>
   <button class="fab" onclick="abrirM()">+</button>
   <button class="panico-fab visivel" id="panico-fab" onclick="abrirPanico()" title="Emergência">🆘</button>
+</div>
+
+<div class="moverlay" id="m-evento">
+  <div class="msheet evt-form">
+    <div class="mhandle"></div>
+    <div class="mtitle">📅 Sugerir evento local</div>
+    <p style="font-size:13px;color:var(--texto-muted);line-height:1.5;margin:-8px 0 14px;">A sugestão será revisada antes de aparecer para a cidade.</p>
+    <div class="ig"><label>Título</label><input id="evt-titulo" maxlength="120" placeholder="Ex: Feira de artesanato na praça"></div>
+    <div class="ig"><label>Categoria</label><select id="evt-categoria"><option>Feira</option><option>Show</option><option>Cultura</option><option>Esporte</option><option>Infantil</option><option>Gastronomia</option><option>Curso</option><option>Comunidade</option><option>Outros</option></select></div>
+    <div class="evt-row"><div class="ig"><label>Data</label><input type="date" id="evt-data"></div><div class="ig"><label>Horário</label><input type="time" id="evt-hora"></div></div>
+    <div class="ig"><label>Local</label><input id="evt-local" maxlength="120" placeholder="Ex: Praça Central"></div>
+    <div class="evt-row"><div class="ig"><label>Bairro</label><input id="evt-bairro" maxlength="100" placeholder="Opcional"></div><div class="ig"><label>Endereço</label><input id="evt-endereco" maxlength="180" placeholder="Rua e número"></div></div>
+    <div class="ig"><label>Descrição</label><textarea id="evt-descricao" maxlength="1000" placeholder="Conte o que vai acontecer e para quem é o evento."></textarea></div>
+    <label class="evt-check"><input type="checkbox" id="evt-gratuito" checked onchange="alternarPrecoEvento()"> Evento gratuito</label>
+    <div class="ig" id="evt-preco-wrap" style="display:none;"><label>Preço</label><input id="evt-preco" maxlength="80" placeholder="Ex: R$ 20 ou ingressos no local"></div>
+    <div class="ig"><label>Link da fonte</label><input type="url" id="evt-fonte" maxlength="500" placeholder="Site ou rede social oficial (opcional)"></div>
+    <div class="mac"><button class="bcanc" onclick="fecharSugestaoEvento()">Cancelar</button><button class="bpost" id="evt-enviar" onclick="enviarSugestaoEvento()">Enviar para análise →</button></div>
+  </div>
 </div>
 
 <div class="anun-overlay" id="manun">
@@ -688,11 +744,14 @@ function initPullToRefresh() {
       // Detecta qual aba está ativa e atualiza a correta
       const feedEl = document.getElementById('feed');
       const srvEl = document.getElementById('servicos-tab');
+      const eventosEl = document.getElementById('eventos-tab');
       const navAtivo = document.querySelector('.nitem.at');
       const tabAtiva = navAtivo ? navAtivo.id : 'nav-feed';
 
       if(tabAtiva === 'nav-feed' || feedEl.style.display !== 'none') {
         await carregarPosts();
+      } else if(tabAtiva === 'nav-eventos' || eventosEl.style.display !== 'none') {
+        await carregarEventos();
       } else if(srvEl.style.display !== 'none') {
         const txt = srvEl.innerHTML;
         if(txt.includes('Serviços do Bairro')) await renderServicos();
@@ -1525,6 +1584,9 @@ const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Costureira
 let anunciosVisiveisCache=[];
 let meusAnunciosCache=[];
 let anunciosLocationStatus='precise';
+let eventosPeriodo='7dias';
+let eventosCache=[];
+let minhasSugestoesEventos=[];
 
 function navTab(tab,el){
   const feedEl = document.getElementById('feed');
@@ -1540,12 +1602,15 @@ function navTab(tab,el){
   el.classList.add('at');
   const tabsEl=document.getElementById('feed-tabs');
   const srvEl=document.getElementById('servicos-tab');
+  const eventosEl=document.getElementById('eventos-tab');
   const fabEl=document.querySelector('.fab');
-  feedEl.style.display='none'; tabsEl.style.display='none'; srvEl.style.display='none'; fabEl.style.display='none';
+  feedEl.style.display='none'; tabsEl.style.display='none'; srvEl.style.display='none'; eventosEl.style.display='none'; fabEl.style.display='none';
   if(tab==='feed'){
     feedEl.style.display=''; tabsEl.style.display=''; fabEl.style.display='flex';
   } else if(tab==='servicos'){
     srvEl.style.display=''; renderServicos();
+  } else if(tab==='eventos'){
+    eventosEl.style.display=''; carregarEventos();
   } else if(tab==='vizinhos'){
     srvEl.style.display='';
     srvEl.innerHTML='<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Buscando vizinhos...</div>';
@@ -1576,6 +1641,121 @@ function navTab(tab,el){
       <button style="width:100%;margin-top:10px;padding:12px;background:transparent;border:1.5px solid #E24B4A;border-radius:10px;color:#A32D2D;font-size:14px;cursor:pointer;font-family:DM Sans,sans-serif;" onclick="sair()">Sair da conta</button>
     </div>`;
   }
+}
+
+async function tokenAtualEventos(){
+  const {data:{session},error}=await sb.auth.getSession();
+  if(error||!session?.access_token) throw new Error('Entre novamente para acessar os eventos.');
+  return session.access_token;
+}
+
+async function carregarEventos(periodo=eventosPeriodo){
+  eventosPeriodo=periodo;
+  const el=document.getElementById('eventos-tab');
+  el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando eventos locais...</div>';
+  try{
+    const token=await tokenAtualEventos();
+    const resp=await fetch(`/api/eventos?periodo=${encodeURIComponent(eventosPeriodo)}`,{headers:{Authorization:`Bearer ${token}`}});
+    const data=await resp.json();
+    if(!resp.ok) throw new Error(data.error||'Não foi possível carregar os eventos.');
+    eventosCache=data.eventos||[];
+    minhasSugestoesEventos=data.minhas_sugestoes||[];
+    renderEventos(data.cidade||E.cidade,data.uf||E.uf);
+  }catch(error){
+    el.innerHTML=`<div class="evt-vazio"><div style="font-size:38px;margin-bottom:8px;">📅</div><strong style="color:var(--texto);">Não foi possível abrir a agenda</strong><br>${htmlSeguro(error.message)}<br><button class="evt-acao" style="margin-top:12px;" onclick="carregarEventos()">Tentar novamente</button></div>`;
+  }
+}
+
+function renderEventos(cidade,uf){
+  const el=document.getElementById('eventos-tab');
+  const filtros=[['hoje','Hoje'],['7dias','7 dias'],['30dias','30 dias']]
+    .map(([valor,label])=>`<button class="evt-filtro ${eventosPeriodo===valor?'at':''}" onclick="carregarEventos('${valor}')">${label}</button>`).join('');
+  const sugestoes=minhasSugestoesEventos.length?`<section class="evt-sugestoes"><h3>Minhas sugestões</h3><p>Acompanhe o resultado da análise.</p>${minhasSugestoesEventos.map(item=>`<div class="evt-sugestao"><span>${htmlSeguro(item.titulo)}</span><span class="evt-status ${htmlSeguro(item.status)}">${rotuloStatusEvento(item.status)}</span></div>`).join('')}</section>`:'';
+  const cards=eventosCache.map(cardEvento).join('');
+  const vazio=`<div class="evt-vazio"><div style="font-size:42px;margin-bottom:8px;">🗓️</div><strong style="color:var(--texto);">Nada programado neste período</strong><br>Conhece uma feira, show ou atividade local?<br><button class="evt-acao" style="margin-top:12px;" onclick="abrirSugestaoEvento()">Sugerir evento</button></div>`;
+  el.innerHTML=`<div class="evt-header"><div><h2>Eventos locais</h2><p>${htmlSeguro(cidade||'Sua cidade')}${uf?`/${htmlSeguro(uf)}`:''} · agenda revisada pela comunidade</p></div><button class="evt-add" onclick="abrirSugestaoEvento()">＋ Sugerir</button></div>${sugestoes}<div class="evt-filtros">${filtros}</div><div>${cards||vazio}</div>`;
+}
+
+function cardEvento(evento){
+  const inicio=new Date(evento.inicio_em);
+  const dia=Number.isNaN(inicio.getTime())?'—':inicio.toLocaleDateString('pt-BR',{day:'2-digit'});
+  const mes=Number.isNaN(inicio.getTime())?'':inicio.toLocaleDateString('pt-BR',{month:'short'}).replace('.','');
+  const horario=Number.isNaN(inicio.getTime())?'Horário a confirmar':inicio.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const local=[evento.local_nome,evento.bairro].filter(Boolean).map(htmlSeguro).join(' · ');
+  const preco=evento.gratuito?'Gratuito':htmlSeguro(evento.preco_texto||'Consulte o valor');
+  const descricao=evento.descricao?`<div class="evt-desc">${htmlSeguro(evento.descricao)}</div>`:'';
+  const temMapa=Boolean(evento.endereco||evento.local_nome);
+  const temFonte=evento.fonte_url&&/^https?:\/\//i.test(evento.fonte_url);
+  return `<article class="evt-card"><div class="evt-data"><div class="evt-data-dia">${dia}</div><div class="evt-data-mes">${htmlSeguro(mes)}</div></div><div class="evt-info"><div class="evt-top"><div class="evt-titulo">${htmlSeguro(evento.titulo)}</div><span class="evt-categoria">${htmlSeguro(evento.categoria)}</span></div><div class="evt-meta">🕒 ${htmlSeguro(horario)} · ${preco}<br>📍 ${local}</div>${descricao}<div class="evt-acoes">${temMapa?`<button class="evt-acao" onclick="abrirMapaEvento('${htmlSeguro(evento.id)}')">Como chegar</button>`:''}${temFonte?`<button class="evt-acao" onclick="abrirFonteEvento('${htmlSeguro(evento.id)}')">Fonte</button>`:''}<button class="evt-acao" onclick="compartilharEvento('${htmlSeguro(evento.id)}')">Compartilhar</button></div></div></article>`;
+}
+
+function rotuloStatusEvento(status){
+  return ({pendente:'Em análise',aprovado:'Aprovado',rejeitado:'Não aprovado',cancelado:'Cancelado'})[status]||'Em análise';
+}
+
+function eventoPorId(id){ return eventosCache.find(item=>String(item.id)===String(id)); }
+
+function abrirMapaEvento(id){
+  const evento=eventoPorId(id); if(!evento) return;
+  const destino=[evento.endereco,evento.local_nome,evento.bairro,evento.cidade,evento.uf].filter(Boolean).join(', ');
+  window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destino)}`,'_blank','noopener');
+}
+
+function abrirFonteEvento(id){
+  const evento=eventoPorId(id); if(!evento||!/^https?:\/\//i.test(evento.fonte_url||'')) return;
+  window.open(evento.fonte_url,'_blank','noopener');
+}
+
+async function compartilharEvento(id){
+  const evento=eventoPorId(id); if(!evento) return;
+  const quando=new Date(evento.inicio_em).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'});
+  const texto=`${evento.titulo} · ${quando} · ${evento.local_nome}, ${evento.cidade}`;
+  if(navigator.share){ try{ await navigator.share({title:evento.titulo,text:texto,url:'https://vizinhocerto.com.br/app'}); }catch(e){} }
+  else navigator.clipboard.writeText(`${texto} — https://vizinhocerto.com.br/app`).then(()=>toast('Evento copiado! 📋'));
+}
+
+function abrirSugestaoEvento(){
+  const agora=new Date();
+  const local=new Date(agora.getTime()-agora.getTimezoneOffset()*60000);
+  document.getElementById('evt-data').min=local.toISOString().slice(0,10);
+  if(!document.getElementById('evt-data').value) document.getElementById('evt-data').value=local.toISOString().slice(0,10);
+  if(!document.getElementById('evt-hora').value) document.getElementById('evt-hora').value=String(Math.min(23,agora.getHours()+1)).padStart(2,'0')+':00';
+  document.getElementById('evt-bairro').value=document.getElementById('evt-bairro').value||E.bairro||'';
+  document.getElementById('m-evento').classList.add('ab');
+}
+
+function fecharSugestaoEvento(){ document.getElementById('m-evento').classList.remove('ab'); }
+function alternarPrecoEvento(){ document.getElementById('evt-preco-wrap').style.display=document.getElementById('evt-gratuito').checked?'none':''; }
+
+async function enviarSugestaoEvento(){
+  const data=document.getElementById('evt-data').value;
+  const hora=document.getElementById('evt-hora').value;
+  const inicio=data&&hora?new Date(`${data}T${hora}:00`):null;
+  const btn=document.getElementById('evt-enviar');
+  const payload={
+    titulo:document.getElementById('evt-titulo').value,
+    categoria:document.getElementById('evt-categoria').value,
+    inicio_em:inicio&&!Number.isNaN(inicio.getTime())?inicio.toISOString():'',
+    local_nome:document.getElementById('evt-local').value,
+    bairro:document.getElementById('evt-bairro').value,
+    endereco:document.getElementById('evt-endereco').value,
+    descricao:document.getElementById('evt-descricao').value,
+    gratuito:document.getElementById('evt-gratuito').checked,
+    preco_texto:document.getElementById('evt-preco').value,
+    fonte_url:document.getElementById('evt-fonte').value,
+  };
+  btn.disabled=true; btn.textContent='Enviando...';
+  try{
+    const token=await tokenAtualEventos();
+    const resp=await fetch('/api/eventos',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(payload)});
+    const resposta=await resp.json();
+    if(!resp.ok) throw new Error(resposta.error||'Não foi possível enviar a sugestão.');
+    fecharSugestaoEvento();
+    ['evt-titulo','evt-local','evt-endereco','evt-descricao','evt-preco','evt-fonte'].forEach(id=>document.getElementById(id).value='');
+    toast('Sugestão enviada para análise! ✓');
+    await carregarEventos();
+  }catch(error){ toast(error.message); }
+  finally{ btn.disabled=false; btn.textContent='Enviar para análise →'; }
 }
 
 function compartilharApp(){

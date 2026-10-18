@@ -59,6 +59,11 @@
   .location{font-size:12px;color:var(--muted);line-height:1.45;}
   .badge{display:inline-flex;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;background:var(--verde-bg);color:var(--verde-escuro);}
   .badge.no{background:#FFE8E3;color:#9A3412;}
+  .moderation-actions{display:flex;gap:6px;}
+  .moderation-btn{border:0;border-radius:7px;padding:7px 10px;color:white;cursor:pointer;font-weight:700;font-size:12px;}
+  .moderation-btn.approve{background:var(--verde);}
+  .moderation-btn.reject{background:var(--laranja);}
+  .event-detail{font-size:12px;color:var(--muted);line-height:1.45;max-width:360px;}
   .positive{color:var(--verde);font-weight:700;}
   .negative{color:var(--laranja);font-weight:700;}
   .empty{padding:40px;text-align:center;color:var(--muted);}
@@ -108,6 +113,11 @@
       <div class="section-head"><div class="section-title">Acessos recentes</div><div class="section-note">Localização aproximada da rede; nenhum IP ou coordenada exata é armazenado.</div></div>
       <div id="accesses-table" class="panel"></div>
     </section>
+    <section class="section">
+      <div class="section-head"><div class="section-title">Eventos aguardando aprovação</div><div class="section-note">Revise data, local e fonte antes de publicar na agenda local.</div></div>
+      <div id="events-table" class="panel"><div class="empty">Carregando sugestões...</div></div>
+      <div id="events-error" class="error"></div>
+    </section>
     <div id="dashboard-error" class="error"></div>
   </section>
 </main>
@@ -128,6 +138,7 @@ let activeWindow = 'today';
 let currentSession = null;
 let autoRefreshTimer = null;
 let isLoadingMetrics = false;
+let pendingEvents = [];
 
 window.addEventListener('DOMContentLoaded', init);
 sb.auth.onAuthStateChange((event, session) => {
@@ -225,6 +236,7 @@ async function loadMetrics(){
     if(!resp.ok) throw new Error(data.error || 'Erro ao carregar dashboard');
     metrics = data;
     render();
+    await loadPendingEvents(session);
   } catch(e){
     setError('dashboard-error', e.message);
     document.getElementById('status').textContent = 'Falha ao carregar';
@@ -316,6 +328,51 @@ function renderAccesses(accesses){
     </table>`;
 }
 
+async function loadPendingEvents(session=currentSession){
+  setError('events-error','');
+  try{
+    if(!session?.access_token) return;
+    const resp=await fetch('/api/eventos-admin',{headers:{Authorization:`Bearer ${session.access_token}`}});
+    const data=await resp.json();
+    if(!resp.ok) throw new Error(data.error||'Erro ao carregar eventos');
+    pendingEvents=data.eventos||[];
+    renderPendingEvents();
+  }catch(error){
+    pendingEvents=[];
+    document.getElementById('events-table').innerHTML='<div class="empty">Não foi possível carregar a fila.</div>';
+    setError('events-error',error.message);
+  }
+}
+
+function renderPendingEvents(){
+  const el=document.getElementById('events-table');
+  if(!pendingEvents.length){
+    el.innerHTML='<div class="empty">Nenhum evento aguardando aprovação.</div>';
+    return;
+  }
+  const rows=pendingEvents.map(item=>{
+    const fonte=safeExternalUrl(item.fonte_url);
+    return `<tr><td><strong>${escapeHtml(item.titulo)}</strong><div class="event-detail">${escapeHtml(item.descricao||'Sem descrição')}</div></td><td>${formatDate(item.inicio_em)}<div class="event-detail">${escapeHtml(item.categoria)}</div></td><td>${escapeHtml(item.local_nome)}<div class="event-detail">${escapeHtml([item.bairro,item.cidade,item.uf].filter(Boolean).join(' · '))}</div></td><td>${fonte?`<a href="${escapeHtml(fonte)}" target="_blank" rel="noopener">Abrir fonte</a>`:'Sem link'}</td><td><div class="moderation-actions"><button class="moderation-btn approve" onclick="moderateEvent('${escapeHtml(item.id)}','aprovado')">Aprovar</button><button class="moderation-btn reject" onclick="moderateEvent('${escapeHtml(item.id)}','rejeitado')">Rejeitar</button></div></td></tr>`;
+  }).join('');
+  el.innerHTML=`<table><thead><tr><th>Evento</th><th>Quando</th><th>Local</th><th>Fonte</th><th>Ação</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+async function moderateEvent(id,status){
+  const item=pendingEvents.find(evento=>evento.id===id);
+  const acao=status==='aprovado'?'aprovar':'rejeitar';
+  if(!item||!window.confirm(`Deseja ${acao} “${item.titulo}”?`)) return;
+  setError('events-error','');
+  try{
+    const session=await getActiveSession();
+    if(!session) throw new Error('Sessão expirada.');
+    const resp=await fetch('/api/eventos-admin',{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({id,status})});
+    const data=await resp.json();
+    if(!resp.ok) throw new Error(data.error||'Erro ao moderar evento');
+    pendingEvents=pendingEvents.filter(evento=>evento.id!==id);
+    renderPendingEvents();
+  }catch(error){ setError('events-error',error.message); }
+}
+
 function metric(label, value, hint){
   return `<div class="metric"><div class="label">${label}</div><div class="value">${value}</div><div class="hint">${hint}</div></div>`;
 }
@@ -345,6 +402,13 @@ function escapeHtml(value){
   return String(value ?? '').replace(/[&<>"']/g, char => ({
     '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;'
   })[char]);
+}
+
+function safeExternalUrl(value){
+  try{
+    const url=new URL(value);
+    return ['http:','https:'].includes(url.protocol)?url.toString():null;
+  }catch(e){ return null; }
 }
 </script>
 </body>

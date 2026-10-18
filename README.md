@@ -39,6 +39,16 @@ Coordenadas e endereco dos anunciantes nao sao devolvidos ao navegador. Usuarios
 4. `/dashboard` exige uma conta presente em `DASHBOARD_ADMIN_EMAILS` e mostra desempenho por link e os acessos recentes com identificadores anonimos.
 5. Dados anteriores a essa instrumentacao continuam no historico, mas podem aparecer como `Localizacao indisponivel`.
 
+## Eventos locais
+
+1. A aba `Eventos` mostra somente eventos aprovados da cidade e UF do perfil autenticado.
+2. Os filtros `Hoje`, `7 dias` e `30 dias` incluem eventos em andamento dentro da janela escolhida.
+3. Moradores podem sugerir ate cinco eventos por 24 horas. Toda sugestao entra como `pendente` e nao e publicada diretamente.
+4. O dashboard administrativo permite revisar a data, o local e a fonte antes de aprovar ou rejeitar a sugestao.
+5. A tabela usa RLS e nao concede acesso direto a `anon` ou `authenticated`; leitura e escrita passam pelas APIs autenticadas do servidor.
+
+Antes de disponibilizar o recurso, aplique `supabase/eventos.sql` no projeto Supabase correspondente e valide os advisors de seguranca e desempenho. O campo `fonte_tipo=importado` prepara uma coleta automatizada futura, mas conteudo coletado por IA tambem deve passar por verificacao e moderacao.
+
 ## Publicacao
 
 A producao principal esta na Vercel. Validar a URL de preview, os fluxos autenticados e as APIs antes de promover ou enviar mudancas para `main`. O GitHub Pages serve somente os arquivos estaticos e nao substitui as APIs da Vercel.
