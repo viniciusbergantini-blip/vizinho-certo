@@ -25,15 +25,28 @@ module.exports = async (req, res) => {
   if (visitanteError) return res.status(500).json({ error: visitanteError.message });
   if (!visitante) return res.status(409).json({ error: 'Complete seu cadastro antes de ver os anuncios' });
 
-  const { data: anuncios, error: anunciosError } = await sb
-    .from('anuncios')
-    .select('id, usuario_id, nome, tipo, descricao, telefone, icon, raio_km, dias, destaque, ativo, expira_em, criado_em, lat, lon')
-    .eq('ativo', true)
-    .gt('expira_em', new Date().toISOString())
-    .order('destaque', { ascending: false })
-    .order('criado_em', { ascending: false });
+  const campos = 'id, usuario_id, nome, tipo, descricao, telefone, icon, raio_km, dias, destaque, ativo, expira_em, criado_em, lat, lon';
+  const agora = new Date().toISOString();
+  const [resultadoPublicos, resultadoProprios] = await Promise.all([
+    sb
+      .from('anuncios')
+      .select(campos)
+      .eq('ativo', true)
+      .gt('expira_em', agora)
+      .order('destaque', { ascending: false })
+      .order('criado_em', { ascending: false }),
+    sb
+      .from('anuncios')
+      .select(campos)
+      .eq('usuario_id', userData.user.id)
+      .eq('ativo', true)
+      .order('criado_em', { ascending: false }),
+  ]);
 
-  if (anunciosError) return res.status(500).json({ error: anunciosError.message });
+  if (resultadoPublicos.error) return res.status(500).json({ error: resultadoPublicos.error.message });
+  if (resultadoProprios.error) return res.status(500).json({ error: resultadoProprios.error.message });
+  const anuncios = resultadoPublicos.data || [];
+  const anunciosProprios = resultadoProprios.data || [];
 
   const proprietariosIds = [...new Set((anuncios || []).map(item => item.usuario_id).filter(Boolean))];
   let proprietarios = [];
@@ -62,11 +75,24 @@ module.exports = async (req, res) => {
       ...seguro,
       distancia_metros: resultado.distancia_metros,
       proximidade: resultado.proximidade,
+      pode_gerenciar: anuncio.usuario_id === userData.user.id,
     });
   }
 
+  const meusAnuncios = anunciosProprios.map(anuncio => {
+    const { lat, lon, ...seguro } = anuncio;
+    return {
+      ...seguro,
+      distancia_metros: 0,
+      proximidade: 'proprio',
+      pode_gerenciar: true,
+      status: new Date(anuncio.expira_em).getTime() > Date.now() ? 'ativo' : 'expirado',
+    };
+  });
+
   return res.json({
     anuncios: visiveis,
+    meus_anuncios: meusAnuncios,
     location_status: coordenadasValidas(visitante) ? 'precise' : 'same_street_only',
   });
 };

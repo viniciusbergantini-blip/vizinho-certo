@@ -193,6 +193,13 @@
   .srv-btn-wa{flex:1;padding:9px;background:#25D366;color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;display:flex;align-items:center;justify-content:center;gap:6px;}
   .srv-btn-tel{flex:1;padding:9px;background:var(--verde);color:white;border:none;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;}
   .srv-btn-edit{width:100%;padding:9px;background:var(--branco);color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;font-family:"DM Sans",sans-serif;margin-top:8px;}
+  .srv-meus{margin-bottom:1rem;padding:1rem;background:#EDF8F2;border:1px solid #B7DEC8;border-radius:var(--radius);}
+  .srv-meus-titulo{font-family:"Fraunces",serif;font-size:18px;color:var(--verde);margin-bottom:2px;}
+  .srv-meus-sub{font-size:12px;color:var(--texto-muted);margin-bottom:12px;}
+  .srv-owner-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+  .srv-owner-edit,.srv-owner-delete{padding:10px;border-radius:var(--radius-sm);font:500 13px "DM Sans",sans-serif;cursor:pointer;}
+  .srv-owner-edit{background:var(--verde);border:1.5px solid var(--verde);color:white;}
+  .srv-owner-delete{background:white;border:1.5px solid #E24B4A;color:#A32D2D;}
   .srv-anunciar{position:sticky;top:0;z-index:10;background:var(--creme);border:2px dashed var(--borda);border-radius:var(--radius);padding:1.25rem;text-align:center;margin:10px 0;}
   .srv-anunciar p{font-size:13px;color:var(--texto-muted);margin-bottom:10px;line-height:1.5;}
   .srv-anunciar strong{color:var(--texto);font-weight:500;}
@@ -1101,16 +1108,24 @@ async function carregarAnunciosVisiveis(){
     const resultado = await resposta.json();
     if(!resposta.ok) throw new Error(resultado.error||'Erro ao carregar anúncios');
     anunciosLocationStatus = resultado.location_status || 'precise';
+    meusAnunciosCache = (resultado.meus_anuncios||[]).map(formatarAnuncioRecebido);
     return (resultado.anuncios||[]).map(anuncio=>({
-      ...anuncio,
-      distancia_fmt: Number.isFinite(Number(anuncio.distancia_metros)) && anuncio.distancia_metros!==null
-        ? formatarDistancia(Number(anuncio.distancia_metros))
-        : anuncio.proximidade==='mesma_rua' ? 'mesma rua' : ''
+      ...formatarAnuncioRecebido(anuncio)
     }));
   }catch(error){
     console.error('Erro ao carregar anúncios:', error);
+    meusAnunciosCache = [];
     return [];
   }
+}
+
+function formatarAnuncioRecebido(anuncio){
+  return {
+    ...anuncio,
+    distancia_fmt: Number.isFinite(Number(anuncio.distancia_metros)) && anuncio.distancia_metros!==null
+      ? formatarDistancia(Number(anuncio.distancia_metros))
+      : anuncio.proximidade==='mesma_rua' ? 'mesma rua' : ''
+  };
 }
 
 function anunciosComoPosts(anuncios){
@@ -1497,8 +1512,8 @@ function copiarIA(){navigator.clipboard.writeText(document.getElementById('iatx'
 const SERVICOS=[];
 let catAtiva='todos';
 const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Costureira','Jardineiro','Pedreiro','Marido de Aluguel','Anúncio','Outros Serviços'];
-const CAT_ICONS={'Encanador':'🔧','Eletricista':'⚡','Diarista':'🧹','Comércio':'🍕','Costureira':'🧵','Jardineiro':'🌿','Pedreiro':'🏗️','Marido de Aluguel':'🔨','Anúncio':'🛒','Outros Serviços':'🛠️'};
 let anunciosVisiveisCache=[];
+let meusAnunciosCache=[];
 let anunciosLocationStatus='precise';
 
 function navTab(tab,el){
@@ -1583,27 +1598,50 @@ async function carregarVizinhos(){
 async function renderServicos(){
   const el=document.getElementById('servicos-tab');
   el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando serviços...</div>';
-  let anuncios = await carregarAnunciosVisiveis();
-  anunciosVisiveisCache = anuncios;
-  const fil = catAtiva==='todos' ? anuncios : anuncios.filter(s=>s.tipo===catAtiva);
+  const anuncios = await carregarAnunciosVisiveis();
+  anunciosVisiveisCache = [...new Map([...meusAnunciosCache,...anuncios].map(item=>[String(item.id),item])).values()];
+  const anunciosDoBairro = anuncios.filter(s=>!s.pode_gerenciar);
+  const fil = catAtiva==='todos' ? anunciosDoBairro : anunciosDoBairro.filter(s=>s.tipo===catAtiva);
   const cats=CATS.map(c=>`<div class="srv-cat ${c===catAtiva?'at':''}" onclick="setcat('${c}')">${c==='todos'?'Todos':c}</div>`).join('');
   const avisoLocalizacao=anunciosLocationStatus==='same_street_only'
     ? '<div style="margin-bottom:1rem;padding:12px 14px;border-radius:10px;background:#FFF4D6;color:#72530A;font-size:12px;line-height:1.5;">📍 Estamos mostrando serviços da sua rua. Atualize seu endereço no perfil para ampliar a busca pelo raio.</div>'
     : '';
-  const cards=fil.map(s=>`<div class="srv-card ${s.destaque?'destaque':''}">
+  const cards=fil.map(s=>cardServico(s)).join('');
+  const meusCards=meusAnunciosCache.map(s=>cardServico(s,true)).join('');
+  const meusHtml=meusAnunciosCache.length?`<section class="srv-meus"><div class="srv-meus-titulo">Meus anúncios</div><div class="srv-meus-sub">Edite ou exclua o que você publicou.</div>${meusCards}</section>`:'';
+  el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div>${avisoLocalizacao}${meusHtml}<div class="srv-cats">${cats}</div><div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div><div class="srv-grid">${fil.length===0?'<div style="text-align:center;padding:2rem;color:var(--texto-muted);font-size:14px;">Nenhum outro serviço disponível para sua localização.<br>Atualize o endereço ou seja o primeiro a anunciar.</div>':cards}</div></div>`;
+}
+
+function cardServico(s,proprio=false){
+  const id=String(s.id||'');
+  const nome=htmlSeguro(s.nome);
+  const tipo=htmlSeguro(s.tipo);
+  const descricao=htmlSeguro(s.descricao||'');
+  const icone=htmlSeguro(s.icon||'🏪');
+  const telefone=String(s.telefone||'').replace(/[^0-9]/g,'');
+  const status=s.status==='expirado'?'Expirado':`Ativo até ${formatarDataCurta(s.expira_em)}`;
+  return `<div class="srv-card ${s.destaque?'destaque':''}">
     ${s.destaque?'<div class="srv-destaque-label">★ PARCEIRO DESTAQUE</div>':''}
-    <div class="srv-body"><div class="srv-top"><div class="srv-logo" style="background:#E8F5E9">${s.icon||'🏪'}</div><div class="srv-info"><div class="srv-nome">${s.nome}</div><div class="srv-tipo">${s.tipo}</div></div></div>
-    <div class="srv-desc">${s.descricao||''}</div>
-    <div class="srv-tags"><span class="srv-tag">${s.tipo}</span>${s.distancia_fmt?`<span class="srv-tag">a ${s.distancia_fmt}</span>`:''}${s.destaque?'<span class="srv-tag">✓ Verificado</span>':''}</div>
-    <div class="srv-acoes"><button class="srv-btn-wa" onclick="window.open('https://wa.me/55${(s.telefone||'').replace(/[^0-9]/g,'')}','_blank')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligar('${(s.telefone||'').replace(/[^0-9]/g,'')}')">📞 Ligar</button></div>
-    ${s.usuario_id===E.userId?`<button class="srv-btn-edit" onclick="abrirEditarAnuncio('${s.id}')">Editar anúncio</button>`:''}</div></div>`).join('');
-  el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div>${avisoLocalizacao}<div class="srv-cats">${cats}</div><div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div><div class="srv-grid">${fil.length===0?'<div style="text-align:center;padding:2rem;color:var(--texto-muted);font-size:14px;">Nenhum serviço disponível para sua localização.<br>Atualize o endereço ou seja o primeiro a anunciar.</div>':cards}</div></div>`;
+    <div class="srv-body"><div class="srv-top"><div class="srv-logo" style="background:#E8F5E9">${icone}</div><div class="srv-info"><div class="srv-nome">${nome}</div><div class="srv-tipo">${tipo}</div></div></div>
+    <div class="srv-desc">${descricao}</div>
+    <div class="srv-tags"><span class="srv-tag">${tipo}</span>${proprio?`<span class="srv-tag">${status}</span>`:(s.distancia_fmt?`<span class="srv-tag">a ${htmlSeguro(s.distancia_fmt)}</span>`:'')}${s.destaque?'<span class="srv-tag">✓ Verificado</span>':''}</div>
+    ${proprio?`<div class="srv-owner-actions"><button class="srv-owner-edit" onclick="abrirEditarAnuncio('${id}')">✏️ Editar</button><button class="srv-owner-delete" data-delete-id="${id}" onclick="excluirAnuncio('${id}')">🗑️ Excluir</button></div>`:`<div class="srv-acoes"><button class="srv-btn-wa" onclick="window.open('https://wa.me/55${telefone}','_blank')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligar('${telefone}')">📞 Ligar</button></div>`}
+    </div></div>`;
+}
+
+function htmlSeguro(valor){
+  return String(valor??'').replace(/[&<>"']/g,caractere=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[caractere]));
+}
+
+function formatarDataCurta(valor){
+  const data=new Date(valor);
+  return Number.isNaN(data.getTime())?'—':data.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'});
 }
 function setcat(cat){ catAtiva=cat; renderServicos(); }
 
 function abrirEditarAnuncio(id){
   const anuncio=anunciosVisiveisCache.find(a=>String(a.id)===String(id));
-  if(!anuncio){ toast('Anúncio não encontrado.'); return; }
+  if(!anuncio||!anuncio.pode_gerenciar){ toast('Você só pode editar seus próprios anúncios.'); return; }
   const sel=document.getElementById('edit-anun-tipo');
   sel.innerHTML=CATS.filter(c=>c!=='todos').map(c=>`<option value="${c}">${c}</option>`).join('');
   document.getElementById('edit-anun-id').value=anuncio.id;
@@ -1634,7 +1672,7 @@ async function salvarEditarAnuncio(){
     const resp=await fetch('/api/anuncio-update',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+(session?.access_token||'')},
-      body:JSON.stringify({id,tipo,nome,descricao,telefone,icon:CAT_ICONS[tipo]||'🏪'})
+      body:JSON.stringify({id,tipo,nome,descricao,telefone})
     });
     const data=await resp.json();
     if(!resp.ok) throw new Error(data.error||'Erro ao salvar');
@@ -1652,9 +1690,15 @@ async function salvarEditarAnuncio(){
 async function excluirEditarAnuncio(){
   const id=document.getElementById('edit-anun-id').value;
   if(!id){ toast('Anúncio não encontrado.'); return; }
+  await excluirAnuncio(id,true);
+}
+
+async function excluirAnuncio(id,fecharModal=false){
+  const anuncio=anunciosVisiveisCache.find(a=>String(a.id)===String(id));
+  if(!anuncio||!anuncio.pode_gerenciar){ toast('Você só pode excluir seus próprios anúncios.'); return; }
   if(!confirm('Tem certeza que deseja excluir este anúncio? Ele deixará de aparecer para os vizinhos.')) return;
-  const btn=document.getElementById('delete-anun-btn');
-  btn.disabled=true; btn.textContent='Excluindo...';
+  const btn=fecharModal?document.getElementById('delete-anun-btn'):document.querySelector(`[data-delete-id="${id}"]`);
+  if(btn){ btn.disabled=true; btn.textContent='Excluindo...'; }
   try{
     const { data:{ session } } = await sb.auth.getSession();
     const resp=await fetch('/api/anuncio-delete',{
@@ -1664,14 +1708,17 @@ async function excluirEditarAnuncio(){
     });
     const data=await resp.json();
     if(!resp.ok) throw new Error(data.error||'Erro ao excluir');
-    fecharEditarAnuncio();
+    if(fecharModal) fecharEditarAnuncio();
     await renderServicos();
     await carregarPosts();
     toast('Anúncio excluído!');
   }catch(e){
     toast(e.message || 'Erro ao excluir anúncio.');
   }finally{
-    btn.disabled=false; btn.textContent='Excluir anúncio';
+    if(btn?.isConnected){
+      btn.disabled=false;
+      btn.textContent=fecharModal?'Excluir anúncio':'🗑️ Excluir';
+    }
   }
 }
 
