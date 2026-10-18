@@ -571,9 +571,13 @@ function getAnalyticsSessionId(){
   return sessionId;
 }
 
-function getLandingSourceCity(){
-  const city = localStorage.getItem('vc_landing_source_city');
-  return ['indaiatuba','maringa','londrina'].includes(city) ? city : null;
+function getLandingSource(){
+  try {
+    const source=JSON.parse(localStorage.getItem('vc_landing_source')||'null');
+    if(source&&typeof source==='object') return source;
+  } catch(e) {}
+  const legacyCity=String(localStorage.getItem('vc_landing_source_city')||'').trim();
+  return legacyCity?{landing_city:legacyCity,link_url:`/${legacyCity}`}:{link_url:'/app'};
 }
 
 function getLandingSignupPrefill(){
@@ -618,16 +622,21 @@ function aplicarLandingSignupPrefill(){
   }
 }
 
-function trackCadastro(eventType, userId){
+async function trackCadastro(eventType){
+  const source=getLandingSource();
+  const {data:{session}}=await sb.auth.getSession();
   fetch('/api/track', {
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    headers:{
+      'Content-Type':'application/json',
+      ...(session?.access_token?{'Authorization':'Bearer '+session.access_token}:{})
+    },
     body: JSON.stringify({
       event_type: eventType,
       session_id: getAnalyticsSessionId(),
-      city: getLandingSourceCity(),
-      path: window.location.pathname,
-      user_id: userId || E.userId || null
+      city: source.landing_city||null,
+      path: source.link_url||window.location.pathname,
+      metadata: source
     })
   }).catch(()=>{});
 }
@@ -1440,10 +1449,11 @@ async function irFeed(){
     cidade: d.cidade||E.cidade||'', uf: d.uf||E.uf||'', raio: E.raio,
     lat: d.lat||E.lat||null, lon: d.lon||E.lon||null
   }, { onConflict: 'id' });
-  trackCadastro('signup_completed', uid);
+  trackCadastro('signup_completed');
   cadastroTemp = {};
   sessionStorage.removeItem('vc_cadastro');
   localStorage.removeItem('vc_landing_source_city');
+  localStorage.removeItem('vc_landing_source');
   localStorage.removeItem('vc_landing_signup_prefill');
   await carregarPerfil(uid);
   await carregarPosts();

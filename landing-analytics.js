@@ -1,12 +1,8 @@
 (function () {
-  const CITIES = new Set(['indaiatuba', 'maringa', 'londrina', 'saojoao']);
+  const CAMPAIGN_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term', 'ref', 'src'];
 
-  function getCity() {
-    const configured = document.documentElement.dataset.city || '';
-    if (CITIES.has(configured)) return configured;
-
-    const pathCity = window.location.pathname.replace(/^\/+/, '').split('/')[0];
-    return CITIES.has(pathCity) ? pathCity : null;
+  function getLandingCity() {
+    return String(document.documentElement.dataset.city || '').trim().toLowerCase().slice(0, 80) || null;
   }
 
   function getSessionId() {
@@ -19,15 +15,13 @@
     return sessionId;
   }
 
-  function track(eventType, city, metadata) {
-    if (!city) return;
-
+  function track(eventType, source, metadata) {
     const body = JSON.stringify({
       event_type: eventType,
       session_id: getSessionId(),
-      city,
-      path: window.location.pathname,
-      metadata: metadata || {}
+      city: source.landing_city,
+      path: source.link_url,
+      metadata: { ...source, ...(metadata || {}) }
     });
 
     if (navigator.sendBeacon) {
@@ -43,30 +37,54 @@
     }).catch(() => {});
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    const city = getCity();
-    if (!city) return;
+  function getSource() {
+    const params = new URLSearchParams(window.location.search);
+    const safeParams = new URLSearchParams();
+    const source = {
+      link_url: window.location.pathname || '/',
+      landing_city: getLandingCity(),
+      title: document.title.slice(0, 160)
+    };
 
-    localStorage.setItem('vc_landing_source_city', city);
-    track('landing_view', city, { title: document.title });
+    for (const key of CAMPAIGN_KEYS) {
+      const value = String(params.get(key) || '').trim().slice(0, 120);
+      if (!value) continue;
+      source[key] = value;
+      safeParams.set(key, value);
+    }
+
+    const query = safeParams.toString();
+    if (query) source.link_url += `?${query}`;
+
+    if (document.referrer) {
+      try { source.referrer_host = new URL(document.referrer).hostname.slice(0, 160); } catch (_) {}
+    }
+    return source;
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const source = getSource();
+    localStorage.setItem('vc_landing_source', JSON.stringify(source));
+    if (source.landing_city) localStorage.setItem('vc_landing_source_city', source.landing_city);
+    track('landing_view', source);
 
     document.querySelectorAll('a[href="/app"], a[href="/app.html"]').forEach(link => {
       link.addEventListener('click', () => {
-        localStorage.setItem('vc_landing_source_city', city);
-        track('cta_click', city, {
-          text: (link.textContent || '').trim().slice(0, 120),
-          href: link.getAttribute('href')
+        localStorage.setItem('vc_landing_source', JSON.stringify(source));
+        track('cta_click', source, {
+          cta_text: (link.textContent || '').trim().slice(0, 120),
+          cta_href: link.getAttribute('href')
         });
       });
     });
 
     document.querySelectorAll('form[action="/app"], form[action="/app.html"]').forEach(form => {
       form.addEventListener('submit', () => {
-        localStorage.setItem('vc_landing_source_city', city);
+        localStorage.setItem('vc_landing_source', JSON.stringify(source));
         const submitter = document.querySelector(`[form="${form.id}"][type="submit"]`);
-        track('cta_click', city, {
-          text: (submitter && submitter.textContent || 'submit').trim().slice(0, 120),
-          href: form.getAttribute('action')
+        track('cta_click', source, {
+          cta_text: (submitter && submitter.textContent || 'submit').trim().slice(0, 120),
+          cta_href: form.getAttribute('action')
         });
       });
     });
