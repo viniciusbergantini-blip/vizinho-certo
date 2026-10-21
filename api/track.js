@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const { EVENTOS } = require('../lib/analytics-dashboard');
+const { EVENTOS, EVENTOS_ADOCAO } = require('../lib/analytics-dashboard');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
 const METADATA_KEYS = new Set([
@@ -16,6 +16,10 @@ const METADATA_KEYS = new Set([
   'referrer_host',
   'cta_text',
   'cta_href',
+  'platform',
+  'source',
+  'status',
+  'action',
 ]);
 
 module.exports = async (req, res) => {
@@ -38,15 +42,16 @@ module.exports = async (req, res) => {
   if (landingCity) metadata.landing_city = landingCity;
   metadata.link_url = normalizarLink(metadata.link_url || path);
   metadata.geo = geolocalizacaoAproximada(req.headers || {});
+  const persisted = prepararEventoPersistido(eventType, metadata);
 
   const userId = await usuarioAutenticado(sb, req.headers?.authorization);
   const { error } = await sb.from('analytics_events').insert({
-    event_type: eventType,
+    event_type: persisted.eventType,
     session_id: sessionId.slice(0, 120),
     city: null,
     path: path || null,
     user_id: userId,
-    metadata,
+    metadata: persisted.metadata,
   });
 
   if (error) {
@@ -71,6 +76,16 @@ function sanitizarMetadata(value) {
     if (text) result[key] = text;
   }
   return result;
+}
+
+function prepararEventoPersistido(eventType, metadata) {
+  const safeMetadata = { ...metadata };
+  if (EVENTOS_ADOCAO.has(eventType)) safeMetadata.action = eventType;
+  else delete safeMetadata.action;
+  return {
+    eventType: EVENTOS_ADOCAO.has(eventType) ? 'cta_click' : eventType,
+    metadata: safeMetadata,
+  };
 }
 
 function geolocalizacaoAproximada(headers) {
@@ -118,6 +133,7 @@ async function usuarioAutenticado(sb, authorization) {
 module.exports._private = {
   geolocalizacaoAproximada,
   normalizarLink,
+  prepararEventoPersistido,
   sanitizarMetadata,
   sanitizarSlug,
 };

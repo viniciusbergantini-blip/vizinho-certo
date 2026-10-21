@@ -28,6 +28,64 @@
     return { android, ios, safari, standalone };
   }
 
+  function emitInstallEvent(action, platform) {
+    if (typeof root.dispatchEvent !== 'function' || typeof root.CustomEvent !== 'function') return;
+    root.dispatchEvent(new root.CustomEvent('vizinhocerto:install', {
+      detail: { action, platform }
+    }));
+  }
+
+  function getNotificationPresentation(environment = detectEnvironment()) {
+    const navigator = root.navigator || {};
+    const supported = Boolean(
+      root.Notification
+      && 'serviceWorker' in navigator
+      && root.PushManager
+    );
+
+    if (!supported) {
+      return {
+        status: 'unsupported',
+        label: 'Notificações indisponíveis neste navegador',
+        copy: 'Você ainda pode usar normalmente o feed e os serviços locais.',
+        action: ''
+      };
+    }
+
+    if (environment.ios && !environment.standalone) {
+      return {
+        status: 'install_required',
+        label: 'Instale primeiro no iPhone',
+        copy: 'No iPhone, as notificações ficam disponíveis depois que o Vizinho Certo é adicionado à Tela de Início.',
+        action: 'Ver como instalar no iPhone'
+      };
+    }
+
+    const permission = root.Notification.permission || 'default';
+    if (permission === 'granted') {
+      return {
+        status: 'enabled',
+        label: 'Notificações ativadas',
+        copy: 'Você pode receber avisos importantes da sua vizinhança.',
+        action: ''
+      };
+    }
+    if (permission === 'denied') {
+      return {
+        status: 'blocked',
+        label: 'Notificações bloqueadas',
+        copy: 'Abra as configurações do navegador ou do celular e permita notificações para o Vizinho Certo.',
+        action: 'Ver instruções'
+      };
+    }
+    return {
+      status: 'available',
+      label: 'Notificações desativadas',
+      copy: 'Ative quando quiser receber avisos importantes. A permissão só será solicitada ao tocar no botão.',
+      action: 'Ativar notificações'
+    };
+  }
+
   function addStyles() {
     if (!document || document.getElementById('vc-install-styles')) return;
     const style = document.createElement('style');
@@ -130,6 +188,7 @@
   function showInstructions(platform) {
     const environment = detectEnvironment();
     const selectedPlatform = platform || (environment.ios ? 'ios' : environment.android ? 'android' : 'desktop');
+    emitInstallEvent('guide_opened', selectedPlatform);
     const overlay = ensureDialog();
     if (!overlay) return;
     const title = overlay.querySelector('#vc-install-title');
@@ -179,8 +238,10 @@
       : platform;
 
     if (deferredPrompt && selectedPlatform !== 'ios') {
+      emitInstallEvent('guide_opened', selectedPlatform);
       deferredPrompt.prompt();
       const result = await deferredPrompt.userChoice;
+      if (result && result.outcome === 'accepted') emitInstallEvent('accepted', selectedPlatform);
       deferredPrompt = null;
       refresh();
       return result;
@@ -251,6 +312,8 @@
       refresh();
     });
     root.addEventListener('appinstalled', () => {
+      const environment = detectEnvironment();
+      emitInstallEvent('accepted', environment.ios ? 'ios' : environment.android ? 'android' : 'desktop');
       deferredPrompt = null;
       closeDialog();
       refresh();
@@ -270,6 +333,7 @@
     closeDialog,
     detectEnvironment,
     getButtonPresentation,
+    getNotificationPresentation,
     init,
     refresh,
     showInstructions,

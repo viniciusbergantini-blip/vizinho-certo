@@ -88,5 +88,19 @@
         });
       });
     });
+
+    window.addEventListener('vizinhocerto:install', event => {
+      const action = event.detail && event.detail.action;
+      const eventType = action === 'accepted'
+        ? 'install_accepted'
+        : action === 'guide_opened'
+          ? 'install_guide_opened'
+          : null;
+      if (!eventType) return;
+      track(eventType, source, {
+        platform: String(event.detail.platform || '').slice(0, 40),
+        source: 'landing'
+      });
+    });
   });
 })();

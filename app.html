@@ -9,7 +9,7 @@
     })(window, document, "clarity", "script", "wm312oi1no");
 </script>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#2D6A4F">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -324,12 +324,34 @@
   .foto-remove{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:rgba(0,0,0,.6);color:white;border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
   .foto-loading{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--verde);padding:8px 0;}
   .post-foto{width:100%;max-height:280px;object-fit:cover;display:block;border-top:1px solid var(--borda);}
+  .offline-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:1100;align-items:center;justify-content:center;gap:10px;padding:10px 14px;background:#6B3D16;color:white;font-size:13px;text-align:center;box-shadow:0 2px 12px rgba(0,0,0,.2);}
+  .offline-banner.vis{display:flex;}
+  .offline-banner button{border:1px solid rgba(255,255,255,.55);border-radius:20px;background:transparent;color:white;padding:5px 10px;font:500 12px 'DM Sans',sans-serif;cursor:pointer;}
+  .onboarding-overlay{display:none;position:fixed;inset:0;z-index:950;align-items:center;justify-content:center;padding:18px;background:rgba(10,28,20,.7);}
+  .onboarding-overlay.ab{display:flex;}
+  .onboarding-card{width:100%;max-width:410px;max-height:calc(100vh - 36px);overflow:auto;border-radius:20px;background:var(--creme);padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+  .onboarding-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .onboarding-top h2{font-family:'Fraunces',serif;color:var(--verde);font-size:24px;line-height:1.2;}
+  .onboarding-close{border:0;background:transparent;color:var(--texto-muted);font-size:27px;line-height:1;cursor:pointer;}
+  .onboarding-copy{margin:8px 0 16px;color:var(--texto-muted);font-size:13px;line-height:1.55;}
+  .onboarding-list{display:grid;gap:9px;list-style:none;}
+  .onboarding-list li{display:grid;grid-template-columns:32px 1fr;gap:10px;padding:12px;border:1px solid var(--borda);border-radius:12px;background:white;font-size:13px;line-height:1.5;}
+  .onboarding-list span{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--verde-bg);color:var(--verde);font-weight:700;}
+  .onboarding-actions{display:grid;gap:8px;margin-top:16px;}
+  .profile-help-card{margin-bottom:16px;padding:16px;border:1px solid #B7DEC8;border-radius:14px;background:#EDF8F2;}
+  .profile-help-card.neutral{border-color:var(--borda);background:var(--branco);}
+  .profile-help-status{margin-top:8px;color:var(--verde);font-size:12px;font-weight:600;}
   html,body{height:100%;overflow-x:hidden;}
   @media(max-width:479px){.tela{width:100%;min-height:100vh;}.bv-inner{padding:0 1rem;}.card{border-radius:var(--radius);margin:0;}input,textarea,select{font-size:16px!important;}}
   @media(min-width:480px){.tela{max-width:420px;margin:0 auto}body{background:#E8E0CC}.fab{right:calc(50% - 210px + 24px)}.panico-fab{left:calc(50% - 210px + 16px)!important;right:auto!important}}
 </style>
 </head>
 <body>
+
+<div class="offline-banner" id="offline-banner" role="status" aria-live="polite">
+  <span>Você está sem internet. Alguns conteúdos podem não atualizar.</span>
+  <button type="button" onclick="tentarReconectar()">Tentar novamente</button>
+</div>
 
 <div class="tela ativa" id="t-loading">
   <div class="loading-logo">Vizinho<br><span>Certo</span></div>
@@ -608,6 +630,25 @@
   </div>
 </div>
 
+<div class="onboarding-overlay" id="m-onboarding" role="dialog" aria-modal="true" aria-labelledby="onboarding-title">
+  <section class="onboarding-card">
+    <div class="onboarding-top">
+      <h2 id="onboarding-title">Comece pela sua vizinhança</h2>
+      <button type="button" class="onboarding-close" aria-label="Fechar guia" onclick="fecharOnboarding()">×</button>
+    </div>
+    <p class="onboarding-copy">Três passos rápidos para aproveitar o Vizinho Certo sem mudar seu jeito de usar.</p>
+    <ol class="onboarding-list">
+      <li><span>1</span><div><strong>Veja o que está perto.</strong><br>O feed, os serviços e os eventos respeitam sua cidade e seu raio atual.</div></li>
+      <li><span>2</span><div><strong>Publique quando precisar.</strong><br>Use o botão + para avisar, pedir ajuda ou compartilhar algo com seus vizinhos.</div></li>
+      <li><span>3</span><div><strong>Escolha seus atalhos.</strong><br>Instale na tela inicial e ative notificações somente se quiser.</div></li>
+    </ol>
+    <div class="onboarding-actions">
+      <button type="button" class="btnp" onclick="concluirOnboarding()">Entendi, começar</button>
+      <button type="button" class="bcanc" onclick="fecharOnboarding()">Ver depois</button>
+    </div>
+  </section>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -681,7 +722,7 @@ function aplicarLandingSignupPrefill(){
   }
 }
 
-async function trackCadastro(eventType){
+async function trackAppEvent(eventType, extraMetadata={}){
   const source=getLandingSource();
   const {data:{session}}=await sb.auth.getSession();
   fetch(apiUrl('/api/track'), {
@@ -695,9 +736,29 @@ async function trackCadastro(eventType){
       session_id: getAnalyticsSessionId(),
       city: source.landing_city||null,
       path: source.link_url||window.location.pathname,
-      metadata: source
+      metadata: {...source, ...extraMetadata}
     })
   }).catch(()=>{});
+}
+
+function trackCadastro(eventType){
+  return trackAppEvent(eventType, {source:'signup'});
+}
+
+window.addEventListener('vizinhocerto:install', event => {
+  const action=event.detail?.action;
+  const eventType=action==='accepted'?'install_accepted':action==='guide_opened'?'install_guide_opened':null;
+  if(!eventType) return;
+  trackAppEvent(eventType, {platform:String(event.detail?.platform||'').slice(0,40),source:'app'});
+});
+
+function appEstaInstalado(){
+  return Boolean(window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone===true);
+}
+
+if(appEstaInstalado() && !sessionStorage.getItem('vc_standalone_tracked')){
+  sessionStorage.setItem('vc_standalone_tracked','1');
+  trackAppEvent('app_opened_standalone',{source:'app'});
 }
 
 const PALAVROES=['idiota','burro','imbecil','merda','fdp','filho da','viado','vadia','puta','vagabundo','cretino','otário','lixo'];
@@ -775,15 +836,16 @@ ptrStyle.textContent = '@keyframes ptr-rotate { from { transform: rotate(0deg); 
 document.head.appendChild(ptrStyle);
 
 // ── PUSH NOTIFICATIONS ──
-async function registrarNotificacoes() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+async function registrarNotificacoes({solicitarPermissao=false}={}) {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return false;
   try {
     const reg = await navigator.serviceWorker.register('/sw.js');
     await navigator.serviceWorker.ready;
-    if (Notification.permission === 'denied') return;
+    if (Notification.permission === 'denied') return false;
     if (Notification.permission === 'default') {
+      if(!solicitarPermissao) return false;
       const perm = await Notification.requestPermission();
-      if (perm !== 'granted') return;
+      if (perm !== 'granted') return false;
     }
     let sub = await reg.pushManager.getSubscription();
     if (!sub) {
@@ -798,9 +860,72 @@ async function registrarNotificacoes() {
         token: JSON.stringify(sub)
       }, { onConflict: 'usuario_id,token' });
     }
+    if(!localStorage.getItem('vc_notifications_tracked')){
+      localStorage.setItem('vc_notifications_tracked','1');
+      trackAppEvent('notifications_enabled',{source:'profile',status:'granted'});
+    }
+    return true;
   } catch(e) {
     console.log('Push não disponível:', e.message);
+    return false;
   }
+}
+
+function sincronizarNotificacoesConcedidas(){
+  if('Notification' in window && Notification.permission==='granted') registrarNotificacoes();
+}
+
+async function acaoNotificacaoPerfil(){
+  const presentation=window.VizinhoCertoInstall?.getNotificationPresentation();
+  if(!presentation) return;
+  if(presentation.status==='install_required'){
+    window.VizinhoCertoInstall?.showInstructions('ios');
+    return;
+  }
+  if(presentation.status==='blocked'){
+    alert('As notificações foram bloqueadas. Abra as configurações do navegador ou do celular, procure o Vizinho Certo e permita notificações.');
+    return;
+  }
+  if(presentation.status==='available'){
+    const ativou=await registrarNotificacoes({solicitarPermissao:true});
+    toast(ativou?'Notificações ativadas! 🔔':'A permissão não foi ativada.');
+    navTab('perfil',document.getElementById('nav-perfil'));
+  }
+}
+
+function atualizarEstadoRede(){
+  document.getElementById('offline-banner')?.classList.toggle('vis',!navigator.onLine);
+}
+function tentarReconectar(){
+  if(navigator.onLine){ atualizarEstadoRede(); window.location.reload(); }
+  else toast('Ainda estamos sem conexão. Tente novamente em instantes.');
+}
+window.addEventListener('online',atualizarEstadoRede);
+window.addEventListener('offline',atualizarEstadoRede);
+
+function abrirOnboarding({automatico=false}={}){
+  const modal=document.getElementById('m-onboarding');
+  if(!modal) return;
+  modal.classList.add('ab');
+  document.body.style.overflow='hidden';
+  if(!automatico || !sessionStorage.getItem('vc_onboarding_opened')){
+    sessionStorage.setItem('vc_onboarding_opened','1');
+    trackAppEvent('onboarding_opened',{source:automatico?'first_use':'profile'});
+  }
+}
+function fecharOnboarding(){
+  localStorage.setItem('vc_onboarding_seen_v1','1');
+  document.getElementById('m-onboarding')?.classList.remove('ab');
+  document.body.style.overflow='';
+}
+function concluirOnboarding(){
+  localStorage.setItem('vc_onboarding_seen_v1','1');
+  trackAppEvent('onboarding_completed',{source:'first_use'});
+  fecharOnboarding();
+}
+function agendarOnboarding(){
+  if(localStorage.getItem('vc_onboarding_seen_v1')) return;
+  setTimeout(()=>abrirOnboarding({automatico:true}),600);
 }
 
 function urlBase64ToUint8Array(base64String) {
@@ -811,6 +936,7 @@ function urlBase64ToUint8Array(base64String) {
 }
 
 window.addEventListener('DOMContentLoaded', async () => {
+  atualizarEstadoRede();
   atuRaio(150);
   verificarRetornoPagamento();
   aplicarLandingSignupPrefill();
@@ -855,7 +981,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
     await carregarPosts();
     irTela('t-feed');
-    registrarNotificacoes();
+    sincronizarNotificacoesConcedidas();
+    agendarOnboarding();
     initPullToRefresh();
   } catch(e) {
     console.error('Erro no init:', e);
@@ -894,7 +1021,7 @@ async function salvarNovaSenha(){
   modoRecuperacaoSenha = false;
   btn.disabled=false; btn.textContent='Salvar nova senha →';
   const { data: { session } } = await sb.auth.getSession();
-  if(session){ await carregarPerfil(session.user.id); await carregarPosts(); irTela('t-feed'); registrarNotificacoes(); }
+  if(session){ await carregarPerfil(session.user.id); await carregarPosts(); irTela('t-feed'); sincronizarNotificacoesConcedidas(); agendarOnboarding(); }
 }
 
 let cadastroTemp = {};
@@ -959,7 +1086,7 @@ async function fazerLogin(){
   const { data: perfil } = await sb.from('usuarios').select('id,raio').eq('id', data.user.id).single();
   btn.disabled=false; btn.textContent='Entrar →';
   if(!perfil || !perfil.id){ irTela('t-raio'); }
-  else { await carregarPosts(); irTela('t-feed'); registrarNotificacoes(); }
+  else { await carregarPosts(); irTela('t-feed'); sincronizarNotificacoesConcedidas(); agendarOnboarding(); }
 }
 
 async function carregarPerfil(uid){
@@ -1241,6 +1368,7 @@ async function postar(){
     return;
   }
   if(!E.userId){ toast('Você precisa estar logado!'); return; }
+  const eraPrimeiroPost=!E.posts.some(p=>p.usuario_id===E.userId);
   const btn = document.querySelector('.bpost');
   btn.disabled=true; btn.textContent='Publicando...';
   let uploadedUrl = null;
@@ -1267,6 +1395,10 @@ async function postar(){
   });
   render();
   toast('Publicado! 🎉');
+  if(eraPrimeiroPost && !localStorage.getItem('vc_first_post_tracked')){
+    localStorage.setItem('vc_first_post_tracked','1');
+    trackAppEvent('first_post_created',{source:'composer'});
+  }
   fetch(apiUrl('/api/notify'), {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'📢 Nova publicação na sua rua!', corpo: (txt||'').slice(0,80), url:'/app', lat:E.lat, lon:E.lon, raio:E.raio})}).catch(()=>{});
 }
 
@@ -1520,7 +1652,8 @@ async function irFeed(){
   await carregarPerfil(uid);
   await carregarPosts();
   irTela('t-feed');
-  registrarNotificacoes();
+  sincronizarNotificacoesConcedidas();
+  agendarOnboarding();
 }
 
 function irTela(id){
@@ -1620,6 +1753,9 @@ function navTab(tab,el){
     carregarVizinhos();
   } else if(tab==='perfil'){
     srvEl.style.display='';
+    const notificacao=window.VizinhoCertoInstall?.getNotificationPresentation?.()||{
+      status:'unsupported',label:'Notificações indisponíveis',copy:'Este navegador não oferece notificações para o aplicativo.',action:''
+    };
     const fotoHtml = E.fotoUrl
       ? `<img src="${E.fotoUrl}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:3px solid var(--verde-claro);cursor:pointer;" onclick="document.getElementById('perfil-foto-input').click()" title="Trocar foto">`
       : `<div onclick="document.getElementById('perfil-foto-input').click()" style="width:72px;height:72px;border-radius:50%;background:#D8F3DC;display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:32px;color:#2D6A4F;cursor:pointer;border:2px dashed var(--verde-claro);position:relative;" title="Adicionar foto">
@@ -1638,6 +1774,17 @@ function navTab(tab,el){
         <div class="vc-install-profile-title">Acesso rápido pelo celular</div>
         <div class="vc-install-profile-copy">Coloque o Vizinho Certo na tela inicial para abrir pelo ícone, sem precisar procurar o site.</div>
         <button type="button" class="vc-install-button vc-install-profile" data-vc-install="auto">📲 Colocar o Vizinho Certo na tela inicial</button>
+      </div>
+      <div class="profile-help-card neutral">
+        <div class="vc-install-profile-title">🔔 Avisos da vizinhança</div>
+        <div class="profile-help-status">${htmlSeguro(notificacao.label)}</div>
+        <div class="vc-install-profile-copy">${htmlSeguro(notificacao.copy)}</div>
+        ${notificacao.action?`<button type="button" class="vc-install-button vc-install-profile" onclick="acaoNotificacaoPerfil()">${htmlSeguro(notificacao.action)}</button>`:''}
+      </div>
+      <div class="profile-help-card neutral">
+        <div class="vc-install-profile-title">Precisa de uma ajuda rápida?</div>
+        <div class="vc-install-profile-copy">Reabra o guia com os primeiros passos, atalhos e formas de participar.</div>
+        <button type="button" class="vc-install-button vc-install-profile" onclick="abrirOnboarding()">Ver guia inicial</button>
       </div>
       <div style="background:var(--branco);border-radius:12px;border:1px solid var(--borda);overflow:hidden;">
         <div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Raio atual</span><span style="font-weight:500;">${E.raio}m</span></div>

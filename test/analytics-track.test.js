@@ -28,9 +28,28 @@ test('mantem apenas metadados de campanha permitidos', () => {
     cep: '00000-000',
     landing_city: '<script>',
     link_url: '/campanha',
+    platform: 'ios',
+    source: 'app_profile',
+    status: 'accepted',
+    action: 'install_accepted',
     geo: { latitude: -23 },
   }), {
     utm_source: 'instagram',
     link_url: '/campanha',
+    platform: 'ios',
+    source: 'app_profile',
+    status: 'accepted',
+    action: 'install_accepted',
+  });
+});
+
+test('armazena acao de adocao sem exigir um novo tipo na tabela', () => {
+  assert.deepEqual(_private.prepararEventoPersistido('install_accepted', { source: 'app' }), {
+    eventType: 'cta_click',
+    metadata: { source: 'app', action: 'install_accepted' },
+  });
+  assert.deepEqual(_private.prepararEventoPersistido('cta_click', { action: 'forjada' }), {
+    eventType: 'cta_click',
+    metadata: {},
   });
 });

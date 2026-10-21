@@ -1,12 +1,51 @@
 // Vizinho Certo — Service Worker
-const CACHE_NAME = 'vizinho-certo-v1';
+const CACHE_NAME = 'vizinho-certo-static-v2';
+const STATIC_ASSETS = [
+  '/offline.html',
+  '/app-runtime.js',
+  '/install-app.js',
+  '/manifest.json',
+  '/icon.svg',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/apple-touch-icon.png'
+];
 
 self.addEventListener('install', e => {
-  self.skipWaiting();
+  e.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => Promise.allSettled(STATIC_ASSETS.map(asset => cache.add(asset))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', e => {
-  e.waitUntil(clients.claim());
+  e.waitUntil(
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))))
+      .then(() => clients.claim())
+  );
+});
+
+self.addEventListener('fetch', e => {
+  const request = e.request;
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
+
+  if (request.mode === 'navigate') {
+    e.respondWith(fetch(request).catch(() => caches.match('/offline.html')));
+    return;
+  }
+
+  if (!STATIC_ASSETS.includes(url.pathname)) return;
+  e.respondWith(
+    caches.match(request).then(cached => cached || fetch(request).then(response => {
+      if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()));
+      return response;
+    }))
+  );
 });
 
 // Recebe notificação push

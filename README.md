@@ -26,6 +26,9 @@ O webapp continua sendo a unica aplicacao publicada. Ainda nao existe projeto na
 
 - `app-runtime.js` centraliza a origem das APIs sem alterar as URLs usadas no navegador.
 - `install-app.js` registra o service worker, aciona a instalacao nativa no Android quando disponivel e mostra o passo a passo correto do Safari no iPhone.
+- O primeiro acesso autenticado apresenta um guia curto, que pode ser reaberto em **Perfil**.
+- A permissao de notificacoes nunca e pedida automaticamente: o usuario inicia a acao em **Perfil**. No iPhone, o app orienta primeiro a instalacao na Tela de Inicio.
+- `sw.js` guarda somente arquivos publicos do aplicativo e `offline.html`; respostas de API, feed e dados do Supabase nao entram no cache.
 - Em um futuro container Capacitor, as chamadas passam automaticamente a usar `https://www.vizinhocerto.com.br`.
 - Ambientes de homologacao podem definir `window.__VIZINHO_CERTO_CONFIG__.apiOrigin` antes de carregar `app-runtime.js`.
 - O manifesto inclui os PNGs de 192 px, 512 px e o icone Apple exigidos pelas etapas de empacotamento.
@@ -52,6 +55,9 @@ Coordenadas e endereco dos anunciantes nao sao devolvidos ao navegador. Usuarios
 3. Uma conversao acontece quando a mesma sessao anonima registra `landing_view` e depois `signup_completed` dentro do periodo selecionado.
 4. `/dashboard` exige uma conta presente em `DASHBOARD_ADMIN_EMAILS` e mostra desempenho por link e os acessos recentes com identificadores anonimos.
 5. Dados anteriores a essa instrumentacao continuam no historico, mas podem aparecer como `Localizacao indisponivel`.
+6. O painel tambem resume a adocao do aplicativo: guia inicial, instalacao, retorno pelo icone, notificacoes e primeiro post.
+
+As novas acoes de adocao sao armazenadas pela API dentro da telemetria ja permitida, com um identificador interno sanitizado. Isso preserva a restricao e o RLS atuais da tabela, sem exigir uma migracao de producao.
 
 ## Eventos locais
 
