@@ -21,6 +21,7 @@
 <link rel="manifest" href="/manifest.json">
 <script src="/app-runtime.js"></script>
 <script src="/install-app.js"></script>
+<script src="/engagement.js"></script>
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://sdk.mercadopago.com/js/v2"></script>
@@ -174,6 +175,10 @@
   .srv-header{background:linear-gradient(135deg,#2D6A4F,#52B788);padding:1.25rem;margin-bottom:1rem;border-radius:var(--radius);}
   .srv-header h2{font-family:"Fraunces",serif;font-size:20px;color:white;margin-bottom:4px;}
   .srv-header p{font-size:12px;color:rgba(255,255,255,.7);}
+  .srv-search{position:relative;margin-bottom:12px;}
+  .srv-search input{width:100%;padding:12px 42px 12px 14px;border:1.5px solid var(--borda);border-radius:var(--radius-sm);background:var(--branco);color:var(--texto);font:400 14px 'DM Sans',sans-serif;outline:none;}
+  .srv-search input:focus{border-color:var(--verde-claro);}
+  .srv-search span{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:17px;pointer-events:none;}
   .srv-cats{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;margin-bottom:1rem;}
   .srv-cats::-webkit-scrollbar{display:none;}
   .srv-cat{padding:6px 14px;border-radius:20px;border:1.5px solid var(--borda);background:var(--branco);font-size:12px;font-weight:500;color:var(--texto-muted);cursor:pointer;white-space:nowrap;transition:all .15s;}
@@ -341,6 +346,37 @@
   .profile-help-card{margin-bottom:16px;padding:16px;border:1px solid #B7DEC8;border-radius:14px;background:#EDF8F2;}
   .profile-help-card.neutral{border-color:var(--borda);background:var(--branco);}
   .profile-help-status{margin-top:8px;color:var(--verde);font-size:12px;font-weight:600;}
+  .neighborhood-summary{margin-bottom:12px;padding:16px;border-radius:var(--radius);background:linear-gradient(135deg,#1B4D37,#2D6A4F);color:white;box-shadow:0 4px 14px rgba(27,77,55,.16);}
+  .neighborhood-summary h2{font-family:'Fraunces',serif;font-size:19px;margin-bottom:3px;}
+  .neighborhood-summary-copy{font-size:12px;line-height:1.45;color:rgba(255,255,255,.74);}
+  .neighborhood-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:13px;}
+  .neighborhood-metric{min-width:0;padding:9px 5px;border:1px solid rgba(255,255,255,.18);border-radius:10px;background:rgba(255,255,255,.09);color:white;text-align:center;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .neighborhood-metric strong{display:block;font-size:19px;line-height:1;}
+  .neighborhood-metric span{display:block;margin-top:4px;font-size:10px;color:rgba(255,255,255,.76);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .neighborhood-footer{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:11px;padding-top:10px;border-top:1px solid rgba(255,255,255,.14);font-size:11px;color:rgba(255,255,255,.72);}
+  .neighborhood-link{border:0;background:transparent;color:white;font:600 11px 'DM Sans',sans-serif;text-decoration:underline;cursor:pointer;white-space:nowrap;}
+  .neighborhood-invite{width:100%;margin-top:10px;padding:9px;border:1px solid rgba(255,255,255,.36);border-radius:9px;background:rgba(255,255,255,.08);color:white;font:600 12px 'DM Sans',sans-serif;cursor:pointer;}
+  .feed-empty{padding:26px 16px;border:1px solid var(--borda);border-radius:var(--radius);background:var(--branco);text-align:center;color:var(--texto-muted);font-size:13px;line-height:1.55;}
+  .feed-empty-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px;}
+  .feed-empty-actions button{padding:10px;border-radius:9px;border:1px solid var(--verde);background:white;color:var(--verde);font:600 12px 'DM Sans',sans-serif;cursor:pointer;}
+  .feed-empty-actions button:first-child{background:var(--verde);color:white;}
+  .activity-shell{padding:1rem 1rem 5rem;}
+  .activity-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;}
+  .activity-back{width:36px;height:36px;border:1px solid var(--borda);border-radius:50%;background:white;color:var(--verde);font-size:18px;cursor:pointer;flex-shrink:0;}
+  .activity-head h2{font-family:'Fraunces',serif;color:var(--verde);font-size:22px;}
+  .activity-head p{margin-top:2px;color:var(--texto-muted);font-size:12px;line-height:1.4;}
+  .activity-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+  .activity-metric{padding:12px 5px;border:1px solid var(--borda);border-radius:11px;background:white;text-align:center;}
+  .activity-metric strong{display:block;color:var(--verde);font-size:21px;}
+  .activity-metric span{font-size:10px;color:var(--texto-muted);}
+  .activity-section{margin-top:14px;}
+  .activity-section h3{font-family:'Fraunces',serif;color:var(--verde);font-size:17px;margin-bottom:7px;}
+  .activity-item{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:12px;border:1px solid var(--borda);border-radius:11px;background:white;}
+  .activity-item-main{min-width:0;flex:1;}
+  .activity-item-title{font-size:13px;font-weight:600;color:var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .activity-item-meta{margin-top:3px;font-size:11px;color:var(--texto-muted);}
+  .activity-item button{padding:7px 9px;border:1px solid var(--verde);border-radius:8px;background:white;color:var(--verde);font:600 11px 'DM Sans',sans-serif;cursor:pointer;}
+  .activity-empty{padding:13px;border:1px dashed var(--borda);border-radius:10px;color:var(--texto-muted);font-size:12px;line-height:1.5;background:rgba(255,255,255,.45);}
   html,body{height:100%;overflow-x:hidden;}
   @media(max-width:479px){.tela{width:100%;min-height:100vh;}.bv-inner{padding:0 1rem;}.card{border-radius:var(--radius);margin:0;}input,textarea,select{font-size:16px!important;}}
   @media(min-width:480px){.tela{max-width:420px;margin:0 auto}body{background:#E8E0CC}.fab{right:calc(50% - 210px + 24px)}.panico-fab{left:calc(50% - 210px + 16px)!important;right:auto!important}}
@@ -766,8 +802,24 @@ const PALAVRAS_ANUNCIO=['vendo ','à venda','a venda','compro e vendo','troco po
 const COR=['#5E60CE','#E76F51','#2D6A4F','#D4A017','#48CAE4'];
 const E={
   userId:null, nome:'', apelido:'', bairro:'', cidade:'', uf:'', rua:'', cep:'', lat:null, lon:null,
-  raio:150, tipo:'problema', filtro:'tudo', abCom:new Set(), abOq:new Set(), posts:[], fotoUrl:null
+  raio:150, tipo:'problema', filtro:'tudo', abCom:new Set(), abOq:new Set(), posts:[], fotoUrl:null,
+  ultimaVisita:null, resumoEventos:0
 };
+let usuarioVisitaAtual=null;
+
+function iniciarVisita(uid){
+  if(!uid||usuarioVisitaAtual===uid) return;
+  usuarioVisitaAtual=uid;
+  const chave=`vc_last_visit_${uid}`;
+  const anterior=localStorage.getItem(chave);
+  const agora=new Date();
+  E.ultimaVisita=anterior;
+  localStorage.setItem(chave,agora.toISOString());
+  if(window.VizinhoCertoEngagement?.isReturningVisit(anterior,agora)&&!sessionStorage.getItem('vc_return_tracked')){
+    sessionStorage.setItem('vc_return_tracked','1');
+    trackAppEvent('registered_return',{source:'app'});
+  }
+}
 
 // ── PULL TO REFRESH ──
 let ptrStart = 0, ptrAtivo = false, ptrEl = null;
@@ -952,6 +1004,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     if(!session || !session.user){ irTela('t-bv'); aplicarLandingSignupPrefill(); return; }
     if(modoRecuperacaoSenha){ irTela('t-nova-senha'); return; }
     E.userId = session.user.id;
+    iniciarVisita(E.userId);
     const { data: perfil } = await sb.from('usuarios').select('*').eq('id', session.user.id).single();
     if(!perfil || !perfil.apelido){
       irTela('t-bv'); mostrarCadastro();
@@ -981,6 +1034,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
     await carregarPosts();
     irTela('t-feed');
+    carregarResumoEventosSilencioso();
     sincronizarNotificacoesConcedidas();
     agendarOnboarding();
     initPullToRefresh();
@@ -1021,7 +1075,7 @@ async function salvarNovaSenha(){
   modoRecuperacaoSenha = false;
   btn.disabled=false; btn.textContent='Salvar nova senha →';
   const { data: { session } } = await sb.auth.getSession();
-  if(session){ await carregarPerfil(session.user.id); await carregarPosts(); irTela('t-feed'); sincronizarNotificacoesConcedidas(); agendarOnboarding(); }
+  if(session){ await carregarPerfil(session.user.id); await carregarPosts(); irTela('t-feed'); carregarResumoEventosSilencioso(); sincronizarNotificacoesConcedidas(); agendarOnboarding(); }
 }
 
 let cadastroTemp = {};
@@ -1086,11 +1140,12 @@ async function fazerLogin(){
   const { data: perfil } = await sb.from('usuarios').select('id,raio').eq('id', data.user.id).single();
   btn.disabled=false; btn.textContent='Entrar →';
   if(!perfil || !perfil.id){ irTela('t-raio'); }
-  else { await carregarPosts(); irTela('t-feed'); sincronizarNotificacoesConcedidas(); agendarOnboarding(); }
+  else { await carregarPosts(); irTela('t-feed'); carregarResumoEventosSilencioso(); sincronizarNotificacoesConcedidas(); agendarOnboarding(); }
 }
 
 async function carregarPerfil(uid){
   E.userId = uid;
+  iniciarVisita(uid);
   const { data } = await sb.from('usuarios').select('*').eq('id', uid).single();
   if(data){
     E.nome    = data.apelido || data.nome;
@@ -1140,7 +1195,7 @@ async function uploadFotoPerfil(input){
 async function sair(){
   if(!confirm('Deseja sair da sua conta?')) return;
   await sb.auth.signOut();
-  E.userId=null; E.nome=''; E.posts=[];
+  E.userId=null; E.nome=''; E.posts=[]; E.ultimaVisita=null; E.resumoEventos=0; usuarioVisitaAtual=null;
   irTela('t-bv');
 }
 
@@ -1242,7 +1297,7 @@ async function carregarPosts(){
     av: (p.apelido_autor||'V').charAt(0).toUpperCase(),
     cor: COR[Math.abs(hashStr(p.id+'')) % COR.length],
     foto_url: p.foto_url || null, usuario_id: p.usuario_id,
-    tempo: formatarTempo(p.criado_em),
+    tempo: formatarTempo(p.criado_em), criado_em:p.criado_em||null,
     coms: (comMap[p.id]||[]).map(c=>({
       nome: c.apelido_autor||'Vizinho', dist: '0m', txt: c.texto, usuario_id: c.usuario_id,
       av: (c.apelido_autor||'V').charAt(0).toUpperCase(),
@@ -1331,7 +1386,7 @@ function anunciosComoPosts(anuncios){
     id:'anun-'+a.id, nome:a.nome, dist:a.distancia_fmt, tipo:'info',
     txt:`${a.icon||'🏪'} ${a.descricao||'Anúncio disponível para vizinhos no raio.'}`,
     ap:0, apd:false, av:(a.nome||'A').charAt(0).toUpperCase(), cor:'#2D6A4F',
-    foto_url:null, usuario_id:a.usuario_id, tempo:formatarTempo(a.criado_em), coms:[],
+    foto_url:null, usuario_id:a.usuario_id, tempo:formatarTempo(a.criado_em), criado_em:a.criado_em||null, coms:[],
     isAnuncio:true, telefone:a.telefone, categoria:a.tipo, destaque:a.destaque
   }));
 }
@@ -1391,7 +1446,7 @@ async function postar(){
     id: data.id, nome: E.apelido, dist:'0m', tipo:tipoAt,
     txt: txt||'', ap:0, apd:false, av: E.apelido.charAt(0).toUpperCase(),
     cor: COR[Math.abs(hashStr(data.id+'')) % COR.length],
-    foto_url: uploadedUrl, usuario_id: E.userId, coms:[]
+    foto_url: uploadedUrl, usuario_id: E.userId, criado_em:data.criado_em||new Date().toISOString(), coms:[]
   });
   render();
   toast('Publicado! 🎉');
@@ -1497,11 +1552,54 @@ function temPalavrão(t){return PALAVROES.some(p=>t.toLowerCase().includes(p));}
 function temAnuncio(t){return PALAVRAS_ANUNCIO.some(p=>t.toLowerCase().includes(p));}
 function buscarNoGoogle(termo){ const cidade = encodeURIComponent((E.cidade||'') + ' ' + termo); window.open('https://www.google.com/search?q='+cidade, '_blank'); }
 
+function renderResumoVizinhanca(){
+  const resumo=window.VizinhoCertoEngagement?.summarizeNeighborhood({
+    posts:E.posts,
+    eventCount:E.resumoEventos,
+    lastVisit:E.ultimaVisita
+  })||{posts:0,services:0,events:0,newItems:0,total:0};
+  const mensagem=resumo.newItems>0
+    ? `${resumo.newItems} novidade${resumo.newItems!==1?'s':''} desde sua última visita.`
+    : resumo.total>0
+      ? 'Informações úteis da sua vizinhança reunidas em um só lugar.'
+      : 'Você chegou cedo. Ajude a movimentar sua vizinhança.';
+  const convite=resumo.total<3
+    ? '<button class="neighborhood-invite" onclick="compartilharApp()">📤 Convidar vizinhos para fortalecer a região</button>'
+    : '';
+  return `<section class="neighborhood-summary" aria-label="Resumo da vizinhança">
+    <h2>Perto de você agora</h2>
+    <div class="neighborhood-summary-copy">${mensagem}</div>
+    <div class="neighborhood-metrics">
+      <button class="neighborhood-metric" onclick="rolarFeedConteudo()"><strong>${resumo.posts}</strong><span>publicações</span></button>
+      <button class="neighborhood-metric" onclick="navTab('servicos',document.getElementById('nav-servicos'))"><strong>${resumo.services}</strong><span>serviços</span></button>
+      <button class="neighborhood-metric" onclick="navTab('eventos',document.getElementById('nav-eventos'))"><strong>${resumo.events}</strong><span>eventos</span></button>
+    </div>
+    <div class="neighborhood-footer"><span>📍 ${htmlSeguro(E.cidade||E.bairro||'Sua região')} · raio de ${E.raio}m</span><button class="neighborhood-link" onclick="alterarRaio()">Ajustar raio</button></div>
+    ${convite}
+  </section>`;
+}
+
+function rolarFeedConteudo(){
+  const primeiro=document.querySelector('#feed .pc');
+  if(primeiro) primeiro.scrollIntoView({behavior:'smooth',block:'start'});
+  else abrirM();
+}
+
+function limparFiltroFeed(){
+  E.filtro='tudo';
+  document.querySelectorAll('.ftab').forEach((tab,index)=>tab.classList.toggle('ativo',index===0));
+  render();
+}
+
 function render(){
   const lista = document.getElementById('feed');
   const scrollPos = lista.scrollTop || window.scrollY;
   const ps = E.filtro==='tudo' ? E.posts : E.posts.filter(p=>p.tipo===E.filtro);
-  if(!ps.length){ lista.innerHTML='<div style="text-align:center;padding:3rem 1rem;color:var(--texto-muted);font-size:14px;">Nenhum post aqui ainda.<br>Seja o primeiro! 🏡</div>'; return; }
+  const resumoHtml=renderResumoVizinhanca();
+  if(!ps.length){
+    lista.innerHTML=`${resumoHtml}<div class="feed-empty"><strong style="color:var(--texto);">Nada nesta categoria por enquanto</strong><br>Você pode mostrar todos os conteúdos ou iniciar uma conversa com seus vizinhos.<div class="feed-empty-actions"><button onclick="abrirM()">Criar publicação</button><button onclick="limparFiltroFeed()">Mostrar tudo</button></div></div>`;
+    return;
+  }
   const rows = ps.map(p=>{
     const cA = E.abCom.has(p.id), oA = E.abOq.has(p.id);
     const db = p.tipo==='problema' ? OQ[detectOq(p.txt)] : null;
@@ -1549,7 +1647,7 @@ function render(){
       <div class="carea">${cA?`<div class="clista">${coms||'<div style="padding:12px;font-size:13px;color:var(--texto-muted);">Seja o primeiro a comentar!</div>'}</div><div class="cform"><textarea class="cinput" id="ci${p.id}" placeholder="Comente com respeito..." rows="1"></textarea><button class="cenv" onclick="envCom('${p.id}')">Enviar</button></div>`:''}</div>
     </div>`;
   });
-  lista.innerHTML = rows.join('');
+  lista.innerHTML = resumoHtml+rows.join('');
 }
 
 function togOq(id){E.abOq.has(id)?E.abOq.delete(id):E.abOq.add(id);render();}
@@ -1652,6 +1750,7 @@ async function irFeed(){
   await carregarPerfil(uid);
   await carregarPosts();
   irTela('t-feed');
+  carregarResumoEventosSilencioso();
   sincronizarNotificacoesConcedidas();
   agendarOnboarding();
 }
@@ -1720,6 +1819,7 @@ const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Costureira
 let anunciosVisiveisCache=[];
 let meusAnunciosCache=[];
 let anunciosLocationStatus='precise';
+let servicoBusca='';
 let eventosPeriodo='7dias';
 let eventosCache=[];
 let minhasSugestoesEventos=[];
@@ -1770,6 +1870,11 @@ function navTab(tab,el){
         <div style="font-size:18px;font-weight:500;color:var(--texto);margin-top:8px;">${E.nome||'—'}</div>
         <div style="font-size:13px;color:var(--texto-muted);margin-top:4px;">${E.cidade||'—'}</div>
       </div>
+      <div class="profile-help-card">
+        <div class="vc-install-profile-title">Minha atividade</div>
+        <div class="vc-install-profile-copy">Acompanhe suas publicações, anúncios e sugestões de eventos em um só lugar.</div>
+        <button type="button" class="vc-install-button" onclick="abrirMinhaAtividade()">Ver o que eu publiquei</button>
+      </div>
       <div class="vc-install-profile-card">
         <div class="vc-install-profile-title">Acesso rápido pelo celular</div>
         <div class="vc-install-profile-copy">Coloque o Vizinho Certo na tela inicial para abrir pelo ícone, sem precisar procurar o site.</div>
@@ -1799,10 +1904,61 @@ function navTab(tab,el){
   }
 }
 
+async function abrirMinhaAtividade(){
+  const el=document.getElementById('servicos-tab');
+  el.style.display='';
+  el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Organizando sua atividade...</div>';
+  trackAppEvent('activity_center_opened',{source:'profile'});
+  try{
+    const [,token]=await Promise.all([carregarAnunciosVisiveis(),tokenAtualEventos()]);
+    const resp=await fetch(apiUrl('/api/eventos?periodo=30dias'),{headers:{Authorization:`Bearer ${token}`}});
+    if(resp.ok){
+      const data=await resp.json();
+      minhasSugestoesEventos=data.minhas_sugestoes||[];
+    }
+  }catch(_){}
+  renderMinhaAtividade();
+}
+
+function renderMinhaAtividade(){
+  const el=document.getElementById('servicos-tab');
+  const meusPosts=E.posts.filter(post=>post.usuario_id===E.userId&&!post.isAnuncio&&!window.VizinhoCertoEngagement?.isPlaceholderPost(post));
+  const resumo=window.VizinhoCertoEngagement?.summarizeActivity({posts:E.posts,userId:E.userId,ads:meusAnunciosCache,suggestions:minhasSugestoesEventos})||{posts:meusPosts.length,ads:meusAnunciosCache.length,suggestions:minhasSugestoesEventos.length};
+  const postsHtml=meusPosts.length?meusPosts.map(post=>`<div class="activity-item"><div class="activity-item-main"><div class="activity-item-title">${htmlSeguro(post.txt||TL[post.tipo]||'Publicação')}</div><div class="activity-item-meta">${htmlSeguro(TL[post.tipo]||'Publicação')}${post.tempo?` · ${htmlSeguro(post.tempo)}`:''}</div></div><button onclick="abrirMeuPost('${htmlSeguro(post.id)}')">Abrir</button></div>`).join(''):'<div class="activity-empty">Você ainda não publicou no feed. Conte algo útil, peça ajuda ou avise seus vizinhos.</div>';
+  const anunciosHtml=meusAnunciosCache.length?meusAnunciosCache.map(anuncio=>`<div class="activity-item"><div class="activity-item-main"><div class="activity-item-title">${htmlSeguro(anuncio.nome)}</div><div class="activity-item-meta">${htmlSeguro(anuncio.tipo)} · ${anuncio.status==='expirado'?'Expirado':`ativo até ${formatarDataCurta(anuncio.expira_em)}`}</div></div><button onclick="abrirMeusServicos()">Gerenciar</button></div>`).join(''):'<div class="activity-empty">Nenhum anúncio publicado. Quando você anunciar um serviço, poderá gerenciá-lo aqui.</div>';
+  const eventosHtml=minhasSugestoesEventos.length?minhasSugestoesEventos.map(evento=>`<div class="activity-item"><div class="activity-item-main"><div class="activity-item-title">${htmlSeguro(evento.titulo)}</div><div class="activity-item-meta">${rotuloStatusEvento(evento.status)} · ${formatarDataCurta(evento.inicio_em)}</div></div><button onclick="navTab('eventos',document.getElementById('nav-eventos'))">Ver agenda</button></div>`).join(''):'<div class="activity-empty">Você ainda não sugeriu eventos. Feiras, cursos e atividades locais podem ser enviados pela aba Eventos.</div>';
+  el.innerHTML=`<div class="activity-shell" id="minha-atividade"><div class="activity-head"><button class="activity-back" onclick="navTab('perfil',document.getElementById('nav-perfil'))" aria-label="Voltar ao perfil">←</button><div><h2>Minha atividade</h2><p>Tudo o que você movimentou na comunidade.</p></div></div><div class="activity-metrics"><div class="activity-metric"><strong>${resumo.posts}</strong><span>publicações</span></div><div class="activity-metric"><strong>${resumo.ads}</strong><span>anúncios</span></div><div class="activity-metric"><strong>${resumo.suggestions}</strong><span>eventos</span></div></div><section class="activity-section"><h3>Publicações</h3>${postsHtml}</section><section class="activity-section"><h3>Anúncios</h3>${anunciosHtml}</section><section class="activity-section"><h3>Eventos sugeridos</h3>${eventosHtml}</section></div>`;
+}
+
+function abrirMeuPost(id){
+  limparFiltroFeed();
+  navTab('feed',document.getElementById('nav-feed'));
+  setTimeout(()=>document.getElementById('pc'+id)?.scrollIntoView({behavior:'smooth',block:'center'}),100);
+}
+
+function abrirMeusServicos(){
+  navTab('servicos',document.getElementById('nav-servicos'));
+  setTimeout(()=>document.querySelector('.srv-meus')?.scrollIntoView({behavior:'smooth',block:'start'}),200);
+}
+
 async function tokenAtualEventos(){
   const {data:{session},error}=await sb.auth.getSession();
   if(error||!session?.access_token) throw new Error('Entre novamente para acessar os eventos.');
   return session.access_token;
+}
+
+async function carregarResumoEventosSilencioso(){
+  if(!E.userId) return;
+  try{
+    const token=await tokenAtualEventos();
+    const resp=await fetch(apiUrl('/api/eventos?periodo=7dias'),{headers:{Authorization:`Bearer ${token}`}});
+    if(!resp.ok) return;
+    const data=await resp.json();
+    E.resumoEventos=(data.eventos||[]).length;
+    minhasSugestoesEventos=data.minhas_sugestoes||minhasSugestoesEventos;
+    const feedEl=document.getElementById('feed');
+    if(feedEl&&feedEl.style.display!=='none') render();
+  }catch(_){}
 }
 
 async function carregarEventos(periodo=eventosPeriodo){
@@ -1815,6 +1971,7 @@ async function carregarEventos(periodo=eventosPeriodo){
     const data=await resp.json();
     if(!resp.ok) throw new Error(data.error||'Não foi possível carregar os eventos.');
     eventosCache=data.eventos||[];
+    if(eventosPeriodo==='7dias') E.resumoEventos=eventosCache.length;
     minhasSugestoesEventos=data.minhas_sugestoes||[];
     renderEventos(data.cidade||E.cidade,data.uf||E.uf);
   }catch(error){
@@ -1941,21 +2098,50 @@ async function carregarVizinhos(){
   srvEl.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div style="background:linear-gradient(135deg,#2D6A4F,#52B788);padding:1.25rem;border-radius:var(--radius);margin-bottom:1rem;"><div style="font-family:Fraunces,serif;font-size:20px;color:white;margin-bottom:4px;">Seus Vizinhos</div><div style="font-size:12px;color:rgba(255,255,255,.7);">${data.length} vizinho${data.length!==1?'s':''} no raio de ${E.raio}m</div></div>${cards}<button onclick="compartilharApp()" style="width:100%;padding:12px;background:var(--branco);color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;margin-top:6px;">📤 Convidar mais vizinhos</button></div>`;
 }
 
-async function renderServicos(){
+async function renderServicos(recarregar=true){
   const el=document.getElementById('servicos-tab');
-  el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando serviços...</div>';
-  const anuncios = await carregarAnunciosVisiveis();
-  anunciosVisiveisCache = [...new Map([...meusAnunciosCache,...anuncios].map(item=>[String(item.id),item])).values()];
-  const anunciosDoBairro = anuncios.filter(s=>!s.pode_gerenciar);
-  const fil = catAtiva==='todos' ? anunciosDoBairro : anunciosDoBairro.filter(s=>s.tipo===catAtiva);
+  if(recarregar){
+    el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando serviços...</div>';
+    const anuncios = await carregarAnunciosVisiveis();
+    anunciosVisiveisCache = [...new Map([...meusAnunciosCache,...anuncios].map(item=>[String(item.id),item])).values()];
+  }
   const cats=CATS.map(c=>`<div class="srv-cat ${c===catAtiva?'at':''}" onclick="setcat('${c}')">${c==='todos'?'Todos':c}</div>`).join('');
   const avisoLocalizacao=anunciosLocationStatus==='same_street_only'
     ? '<div style="margin-bottom:1rem;padding:12px 14px;border-radius:10px;background:#FFF4D6;color:#72530A;font-size:12px;line-height:1.5;">📍 Estamos mostrando serviços da sua rua. Atualize seu endereço no perfil para ampliar a busca pelo raio.</div>'
     : '';
-  const cards=fil.map(s=>cardServico(s)).join('');
   const meusCards=meusAnunciosCache.map(s=>cardServico(s,true)).join('');
   const meusHtml=meusAnunciosCache.length?`<section class="srv-meus"><div class="srv-meus-titulo">Meus anúncios</div><div class="srv-meus-sub">Edite ou exclua o que você publicou.</div>${meusCards}</section>`:'';
-  el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Serviços do Bairro</h2><p>Prestadores e comércios no seu raio</p></div>${avisoLocalizacao}${meusHtml}<div class="srv-cats">${cats}</div><div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div><div class="srv-grid">${fil.length===0?'<div style="text-align:center;padding:2rem;color:var(--texto-muted);font-size:14px;">Nenhum outro serviço disponível para sua localização.<br>Atualize o endereço ou seja o primeiro a anunciar.</div>':cards}</div></div>`;
+  el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Serviços do Bairro</h2><p>Encontre ajuda prática perto de você</p></div>${avisoLocalizacao}${meusHtml}<div class="srv-search"><input id="srv-search-input" type="search" value="${htmlSeguro(servicoBusca)}" placeholder="Buscar diarista, eletricista, comércio..." oninput="atualizarBuscaServicos(this.value)" aria-label="Buscar serviços"><span>🔎</span></div><div class="srv-cats">${cats}</div><div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div><div class="srv-grid" id="srv-grid"></div></div>`;
+  renderListaServicos();
+}
+
+function servicosFiltrados(){
+  return window.VizinhoCertoEngagement?.filterServices(anunciosVisiveisCache,{category:catAtiva,query:servicoBusca})||[];
+}
+
+function renderListaServicos(){
+  const grid=document.getElementById('srv-grid');
+  if(!grid) return;
+  const filtrados=servicosFiltrados();
+  if(filtrados.length){ grid.innerHTML=filtrados.map(s=>cardServico(s)).join(''); return; }
+  const temFiltro=Boolean(servicoBusca.trim()||catAtiva!=='todos');
+  grid.innerHTML=temFiltro
+    ? `<div class="feed-empty"><strong style="color:var(--texto);">Nenhum serviço encontrado</strong><br>Tente outro termo ou veja todas as categorias.<div class="feed-empty-actions"><button onclick="limparBuscaServicos()">Limpar busca</button><button onclick="abrirAnun()">Anunciar serviço</button></div></div>`
+    : `<div class="feed-empty"><strong style="color:var(--texto);">Ainda não há serviços próximos</strong><br>Confira seu endereço, convide um prestador conhecido ou seja o primeiro a anunciar.<div class="feed-empty-actions"><button onclick="abrirAlterarEndereco()">Revisar endereço</button><button onclick="abrirAnun()">Anunciar serviço</button></div></div>`;
+}
+
+function atualizarBuscaServicos(valor){
+  servicoBusca=String(valor||'').slice(0,80);
+  renderListaServicos();
+  if(servicoBusca.trim()&&!sessionStorage.getItem('vc_service_search_tracked')){
+    sessionStorage.setItem('vc_service_search_tracked','1');
+    trackAppEvent('service_search_used',{source:'services'});
+  }
+}
+
+function limparBuscaServicos(){
+  servicoBusca=''; catAtiva='todos'; renderServicos(false);
+  setTimeout(()=>document.getElementById('srv-search-input')?.focus(),0);
 }
 
 function cardServico(s,proprio=false){
@@ -1983,7 +2169,7 @@ function formatarDataCurta(valor){
   const data=new Date(valor);
   return Number.isNaN(data.getTime())?'—':data.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'2-digit'});
 }
-function setcat(cat){ catAtiva=cat; renderServicos(); }
+function setcat(cat){ catAtiva=cat; renderServicos(false); }
 
 function abrirEditarAnuncio(id){
   const anuncio=anunciosVisiveisCache.find(a=>String(a.id)===String(id));

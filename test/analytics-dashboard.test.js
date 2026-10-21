@@ -84,6 +84,9 @@ test('resume adocao sem expor identidade dos usuarios', () => {
     installed_returns: 1,
     notifications_enabled: 1,
     first_posts: 1,
+    registered_returns: 0,
+    activity_center_opened: 0,
+    service_searches: 0,
   });
   assert.equal(JSON.stringify(result.adoption).includes('sessao-a'), false);
 });
@@ -99,6 +102,20 @@ test('le eventos de adocao codificados na telemetria ja permitida', () => {
   assert.equal(result.adoption.install_accepted, 1);
   assert.equal(result.adoption.notifications_enabled, 1);
   assert.equal(result.totals.cta_clicks, 1);
+});
+
+test('mede retorno e uso das ferramentas de recorrencia por sessao', () => {
+  const events = [
+    evento('cta_click', 'sessao-a', '/app', { action: 'registered_return' }),
+    evento('cta_click', 'sessao-a', '/app', { action: 'activity_center_opened' }),
+    evento('cta_click', 'sessao-a', '/app', { action: 'service_search_used' }),
+  ];
+
+  const result = buildWindow(events, null, end);
+  assert.equal(result.adoption.registered_returns, 1);
+  assert.equal(result.adoption.activity_center_opened, 1);
+  assert.equal(result.adoption.service_searches, 1);
+  assert.equal(result.totals.cta_clicks, 0);
 });
 
 function evento(event_type, session_id, path, metadata = {}) {

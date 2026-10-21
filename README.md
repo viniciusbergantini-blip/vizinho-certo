@@ -37,6 +37,14 @@ Quando o projeto nativo for iniciado, ainda sera necessario configurar CORS/orig
 
 As landings oferecem instalacao no bloco "Adicione na tela inicial". Dentro do webapp, a mesma acao fica em destaque no topo da aba Perfil; quando aberto pelo icone instalado, o cartao confirma que o Vizinho Certo ja esta na tela inicial.
 
+## Recorrencia e utilidade para moradores
+
+- O topo do feed resume publicacoes, servicos e eventos disponiveis na regiao e destaca novidades desde a visita anterior.
+- Estados vazios explicam o que esta faltando e oferecem acoes diretas: publicar, revisar endereco, ajustar raio ou convidar vizinhos.
+- A busca de Servicos encontra nome, categoria e descricao sem diferenciar acentos.
+- `Minha atividade`, dentro do Perfil, centraliza publicacoes, anuncios e sugestoes de eventos do morador.
+- O horario da visita anterior fica apenas no armazenamento local do aparelho. O dashboard recebe somente eventos agregados de retorno e uso, sem endereco ou historico individual.
+
 ## Fluxo de anuncios
 
 1. O cadastro geocodifica o endereco antes de criar o perfil.

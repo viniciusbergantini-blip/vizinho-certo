@@ -294,6 +294,9 @@ function render(){
     metric('Retornos instalados', adoption.installed_returns||0, 'sessões abertas pela tela inicial'),
     metric('Notificações', adoption.notifications_enabled||0, 'sessões que ativaram os avisos'),
     metric('Primeiros posts', adoption.first_posts||0, 'novos usuários que publicaram'),
+    metric('Retornos cadastrados', adoption.registered_returns||0, 'sessões que voltaram após 6 horas'),
+    metric('Minha atividade', adoption.activity_center_opened||0, 'sessões que abriram a central'),
+    metric('Buscas por serviço', adoption.service_searches||0, 'sessões que usaram a busca'),
     metric('Guia aberto', adoption.onboarding_opened||0, 'sessões que viram os primeiros passos')
   ].join('');
   renderLinks(data.links || []);
