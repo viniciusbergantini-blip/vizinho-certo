@@ -5,6 +5,8 @@ const {
   validarSugestaoEvento,
 } = require('../lib/eventos');
 const handleEventosAdmin = require('../lib/eventos-admin-handler');
+const { coletarEventosSaoJoao } = require('../lib/eventos-coletor-sao-joao');
+const { verificarTokenGitHubActions } = require('../lib/github-oidc');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
 const CAMPOS_PUBLICOS = 'id, titulo, descricao, categoria, inicio_em, fim_em, local_nome, bairro, cidade, uf, endereco, gratuito, preco_texto, fonte_tipo, fonte_nome, fonte_url, status, verificado_em, criado_em';
@@ -13,6 +15,9 @@ module.exports = async (req, res) => {
   const requestUrl = new URL(req.url, 'http://localhost');
   if (requestUrl.pathname.endsWith('/eventos-admin') || requestUrl.searchParams.get('rota') === 'admin') {
     return handleEventosAdmin(req, res);
+  }
+  if (requestUrl.pathname.endsWith('/eventos-coletar') || requestUrl.searchParams.get('rota') === 'coletar-sao-joao') {
+    return coletarEventosAutomaticamente(req, res);
   }
 
   if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' });
@@ -40,6 +45,31 @@ module.exports = async (req, res) => {
   if (req.method === 'GET') return listarEventos(req, res, sb, usuario, perfil);
   return sugerirEvento(req, res, sb, usuario, perfil);
 };
+
+async function coletarEventosAutomaticamente(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
+  if (!token) return res.status(401).json({ error: 'Nao autorizado' });
+  try {
+    await verificarTokenGitHubActions(token);
+  } catch (error) {
+    console.warn('[eventos:sao-joao] Chamada automática não autorizada', { message: error.message });
+    return res.status(401).json({ error: 'Nao autorizado' });
+  }
+
+  const serviceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
+  if (!serviceKey) return res.status(500).json({ error: 'SUPABASE_SERVICE_KEY nao configurada' });
+
+  try {
+    const sb = createClient(SUPABASE_URL, serviceKey);
+    const resultado = await coletarEventosSaoJoao({ supabase: sb });
+    return res.json({ ok: true, cidade: 'São João da Boa Vista', uf: 'SP', ...resultado });
+  } catch (error) {
+    console.error('[eventos:sao-joao] Coleta automática falhou', error);
+    return res.status(502).json({ error: 'Falha ao coletar eventos oficiais', detalhe: error.message });
+  }
+}
 
 async function listarEventos(req, res, sb, usuario, perfil) {
   const url = new URL(req.url, 'http://localhost');

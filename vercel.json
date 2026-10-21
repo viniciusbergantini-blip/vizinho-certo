@@ -1,6 +1,8 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "rewrites": [
     { "source": "/api/eventos-admin", "destination": "/api/eventos?rota=admin" },
+    { "source": "/api/eventos-coletar", "destination": "/api/eventos?rota=coletar-sao-joao" },
     { "source": "/app", "destination": "/app.html" },
     { "source": "/app/(.*)", "destination": "/app.html" },
     { "source": "/dashboard", "destination": "/dashboard.html" },

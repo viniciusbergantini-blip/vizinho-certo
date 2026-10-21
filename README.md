@@ -46,8 +46,11 @@ Coordenadas e endereco dos anunciantes nao sao devolvidos ao navegador. Usuarios
 3. Moradores podem sugerir ate cinco eventos por 24 horas. Toda sugestao entra como `pendente` e nao e publicada diretamente.
 4. O dashboard administrativo permite revisar a data, o local e a fonte antes de aprovar ou rejeitar a sugestao.
 5. A tabela usa RLS e nao concede acesso direto a `anon` ou `authenticated`; leitura e escrita passam pelas APIs autenticadas do servidor.
+6. Sao Joao da Boa Vista recebe uma coleta automatica diaria das paginas e do feed oficiais da Prefeitura. Apenas registros com data futura, horario e local inequivocos sao aceitos.
+7. Eventos dessa fonte oficial entram como `aprovado`; conteudo ambiguo e ignorado. Um UUID derivado da URL e a deduplicacao por horario/local tornam a coleta idempotente, inclusive se a Vercel entregar o cron mais de uma vez.
+8. O GitHub Actions chama `/api/eventos-coletar` diariamente as 09:00 UTC (06:00 em Sao Paulo). A API valida o token OIDC de curta duracao, o repositorio, a branch e o workflow; nenhuma chave do Supabase fica armazenada no GitHub.
 
-Antes de disponibilizar o recurso, aplique `supabase/eventos.sql` no projeto Supabase correspondente e valide os advisors de seguranca e desempenho. O campo `fonte_tipo=importado` prepara uma coleta automatizada futura, mas conteudo coletado por IA tambem deve passar por verificacao e moderacao.
+Antes de disponibilizar o recurso, aplique `supabase/eventos.sql` no projeto Supabase correspondente e valide os advisors de seguranca e desempenho. Novas fontes automaticas devem comecar em moderacao; aprovacao direta fica restrita a fontes oficiais com estrutura validada.
 
 ## Publicacao
 
