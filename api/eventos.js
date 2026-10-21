@@ -4,11 +4,17 @@ const {
   eventoDentroDaJanela,
   validarSugestaoEvento,
 } = require('../lib/eventos');
+const handleEventosAdmin = require('../lib/eventos-admin-handler');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
 const CAMPOS_PUBLICOS = 'id, titulo, descricao, categoria, inicio_em, fim_em, local_nome, bairro, cidade, uf, endereco, gratuito, preco_texto, fonte_tipo, fonte_nome, fonte_url, status, verificado_em, criado_em';
 
 module.exports = async (req, res) => {
+  const requestUrl = new URL(req.url, 'http://localhost');
+  if (requestUrl.pathname.endsWith('/eventos-admin') || requestUrl.searchParams.get('rota') === 'admin') {
+    return handleEventosAdmin(req, res);
+  }
+
   if (!['GET', 'POST'].includes(req.method)) return res.status(405).json({ error: 'Method not allowed' });
 
   const serviceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;

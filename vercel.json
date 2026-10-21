@@ -1,5 +1,6 @@
 {
   "rewrites": [
+    { "source": "/api/eventos-admin", "destination": "/api/eventos?rota=admin" },
     { "source": "/app", "destination": "/app.html" },
     { "source": "/app/(.*)", "destination": "/app.html" },
     { "source": "/dashboard", "destination": "/dashboard.html" },

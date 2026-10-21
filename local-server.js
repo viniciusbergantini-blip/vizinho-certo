@@ -84,7 +84,8 @@ function serveStatic(requestPath, res) {
 
 async function runApi(req, res, pathname) {
   const apiName = pathname.replace(/^\/api\//, '').replace(/\/$/, '');
-  const apiPath = path.join(root, 'api', `${apiName}.js`);
+  const apiFileName = apiName === 'eventos-admin' ? 'eventos' : apiName;
+  const apiPath = path.join(root, 'api', `${apiFileName}.js`);
 
   if (!fs.existsSync(apiPath)) {
     res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
