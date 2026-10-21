@@ -58,21 +58,20 @@ test('extrai local e gratuidade do detalhe do calendário', () => {
 
 test('deduplica links repetidos no feed oficial', () => {
   const itens = parseFeed(`<?xml version="1.0"?><rss><channel>
-    <item><title>Feira local</title><link>https://saojoao.sp.gov.br/feira-local</link><pubDate>Wed, 21 Oct 2026 10:00:00 -0300</pubDate></item>
+    <item><title>Feira local</title><link>https://saojoao.sp.gov.br/feira-local</link><description><![CDATA[<p>Feira em 24 de outubro de 2026, às 14h, na Praça Central.</p>]]></description><pubDate>Wed, 21 Oct 2026 10:00:00 -0300</pubDate></item>
     <item><title>Feira local repetida</title><link>https://saojoao.sp.gov.br/feira-local</link><pubDate>Wed, 21 Oct 2026 10:00:00 -0300</pubDate></item>
   </channel></rss>`);
 
   assert.equal(itens.length, 1);
   assert.equal(itens[0].titulo, 'Feira local');
+  assert.match(itens[0].conteudoHtml, /Praça Central/);
 });
 
 test('extrai somente eventos futuros com data, horário e local claros da notícia oficial', () => {
   const html = `
     <article class="post-text">
       <p>A primeira reunião ocorreu em 14 de outubro de 2026, às 19h — Escola Municipal.</p>
-      <p>Próximas audiências:</p>
-      <div>22 de outubro, às 19h — Teatro Estação das Artes</div>
-      <div>27 de outubro de 2026, às 17h, na Câmara Municipal.</div>
+      <p>Próximas audiências: no dia 22, às 19h, no Teatro Estação das Artes; e no dia 27 de outubro de 2026, às 17h, na Câmara Municipal.</p>
       <p>Atividades gratuitas e abertas à população.</p>
     </article>`;
 
