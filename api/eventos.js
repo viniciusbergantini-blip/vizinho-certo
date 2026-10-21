@@ -5,7 +5,7 @@ const {
   validarSugestaoEvento,
 } = require('../lib/eventos');
 const handleEventosAdmin = require('../lib/eventos-admin-handler');
-const { coletarEventosSaoJoao } = require('../lib/eventos-coletor-sao-joao');
+const { normalizarEventosRecebidos, salvarEventos } = require('../lib/eventos-coletor-sao-joao');
 const { verificarTokenGitHubActions } = require('../lib/github-oidc');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
@@ -47,7 +47,7 @@ module.exports = async (req, res) => {
 };
 
 async function coletarEventosAutomaticamente(req, res) {
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
   if (!token) return res.status(401).json({ error: 'Nao autorizado' });
@@ -63,8 +63,17 @@ async function coletarEventosAutomaticamente(req, res) {
 
   try {
     const sb = createClient(SUPABASE_URL, serviceKey);
-    const resultado = await coletarEventosSaoJoao({ supabase: sb });
-    return res.json({ ok: true, cidade: 'São João da Boa Vista', uf: 'SP', ...resultado });
+    const eventos = normalizarEventosRecebidos(req.body?.eventos);
+    const resultado = await salvarEventos(sb, eventos);
+    return res.json({
+      ok: true,
+      cidade: 'São João da Boa Vista',
+      uf: 'SP',
+      ...resultado,
+      calendario: Number(req.body?.diagnostico?.calendario || 0),
+      noticias: Number(req.body?.diagnostico?.noticias || 0),
+      falhas: Array.isArray(req.body?.diagnostico?.falhas) ? req.body.diagnostico.falhas.slice(0, 5) : [],
+    });
   } catch (error) {
     console.error('[eventos:sao-joao] Coleta automática falhou', error);
     return res.status(502).json({ error: 'Falha ao coletar eventos oficiais', detalhe: error.message });

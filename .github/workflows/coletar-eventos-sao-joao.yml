@@ -16,8 +16,19 @@ concurrency:
 jobs:
   coletar:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
+      - name: Baixar código validado
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+
+      - name: Instalar dependências
+        run: npm ci --ignore-scripts
+
+      - name: Ler fontes oficiais
+        run: node scripts/coletar-eventos-sao-joao.js > eventos-sao-joao.json
+
       - name: Obter identidade do GitHub e executar coleta
         shell: bash
         env:
@@ -33,4 +44,7 @@ jobs:
           test "${oidc_token}" != "null"
           curl --silent --show-error --fail-with-body \
             --header "Authorization: Bearer ${oidc_token}" \
+            --header "Content-Type: application/json" \
+            --request POST \
+            --data-binary @eventos-sao-joao.json \
             "${COLETOR_URL}"

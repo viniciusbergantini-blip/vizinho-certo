@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   categoriaEvento,
+  normalizarEventosRecebidos,
   parseArtigoEventos,
   parseDetalheCalendario,
   parseFeed,
@@ -178,4 +179,35 @@ test('remove notícias duplicadas que apontam para o mesmo local e horário', as
 
   assert.equal(resultado.encontrados, 1);
   assert.equal(linhasSalvas.length, 1);
+});
+
+test('revalida a carga recebida pelo workflow e força os campos de origem', () => {
+  const eventos = normalizarEventosRecebidos([{
+    titulo: 'Feira local',
+    descricao: 'Evento divulgado pela Prefeitura.',
+    inicio_em: '2026-10-24T17:00:00.000Z',
+    fim_em: null,
+    local_nome: 'Praça Central',
+    endereco: 'Centro',
+    gratuito: true,
+    fonte_url: 'https://saojoao.sp.gov.br/noticias/feira-local#evento-2026-10-24',
+    status: 'cancelado',
+    cidade: 'Outra cidade',
+  }], new Date('2026-10-21T12:00:00.000Z'));
+
+  assert.equal(eventos.length, 1);
+  assert.equal(eventos[0].cidade, 'São João da Boa Vista');
+  assert.equal(eventos[0].uf, 'SP');
+  assert.equal(eventos[0].status, 'aprovado');
+  assert.equal(eventos[0].fonte_tipo, 'oficial');
+});
+
+test('recusa fonte externa na carga do workflow', () => {
+  assert.throws(() => normalizarEventosRecebidos([{
+    titulo: 'Evento externo',
+    inicio_em: '2026-10-24T17:00:00.000Z',
+    local_nome: 'Praça Central',
+    gratuito: true,
+    fonte_url: 'https://exemplo.invalid/evento',
+  }], new Date('2026-10-21T12:00:00.000Z')), /campos inválidos/);
 });
