@@ -15,10 +15,11 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Vizinho Certo">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' rx='60' fill='%231B4D37'/%3E%3Cpolygon points='150,50 228,110 228,210 72,210 72,110' fill='%23FEFAE0'/%3E%3Crect x='120' y='150' width='60' height='60' rx='6' fill='%232D6A4F'/%3E%3Cpolygon points='80,120 120,95 160,120 160,185 80,185' fill='%2352B788'/%3E%3Cpolygon points='140,120 180,95 220,120 220,185 140,185' fill='%2352B788'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Vizinho Certo</title>
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="manifest" href="/manifest.json">
+<script src="/app-runtime.js"></script>
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://sdk.mercadopago.com/js/v2"></script>
@@ -612,6 +613,7 @@
 const SUPABASE_URL = 'https://xurtdibicsxmouvzfxvb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1cnRkaWJpY3N4bW91dnpmeHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNjcsImV4cCI6MjA4OTg3MTM2N30.WQ36EsY2JHP5G4VvLAfRNv7j4RjArne1sjbRS_tfvUU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const apiUrl = window.VizinhoCertoRuntime.apiUrl;
 
 const VAPID_PUBLIC_KEY = 'BOto1nQHk0YOlsxXe38vEb8OJRvpvX_H-14FSURRIltLVnzt40m7pyh7dwWETdzhvWo8Xk_J6nOll8kQp1Jy8NY';
 
@@ -681,7 +683,7 @@ function aplicarLandingSignupPrefill(){
 async function trackCadastro(eventType){
   const source=getLandingSource();
   const {data:{session}}=await sb.auth.getSession();
-  fetch('/api/track', {
+  fetch(apiUrl('/api/track'), {
     method:'POST',
     headers:{
       'Content-Type':'application/json',
@@ -1170,7 +1172,7 @@ async function carregarAnunciosVisiveis(){
   const { data:{ session } } = await sb.auth.getSession();
   if(!session?.access_token) return [];
   try{
-    const resposta = await fetch('/api/anuncios-visiveis', {
+    const resposta = await fetch(apiUrl('/api/anuncios-visiveis'), {
       headers:{'Authorization':'Bearer '+session.access_token}
     });
     const resultado = await resposta.json();
@@ -1264,7 +1266,7 @@ async function postar(){
   });
   render();
   toast('Publicado! 🎉');
-  fetch('/api/notify', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'📢 Nova publicação na sua rua!', corpo: (txt||'').slice(0,80), url:'/app', lat:E.lat, lon:E.lon, raio:E.raio})}).catch(()=>{});
+  fetch(apiUrl('/api/notify'), {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'📢 Nova publicação na sua rua!', corpo: (txt||'').slice(0,80), url:'/app', lat:E.lat, lon:E.lon, raio:E.raio})}).catch(()=>{});
 }
 
 async function apoiar(id){
@@ -1296,7 +1298,7 @@ async function envCom(id){
   toast('Comentário publicado! 💬');
   // Notifica o dono do post (se não for o próprio usuário)
   if(p.usuario_id && p.usuario_id !== E.userId){
-    fetch('/api/notify', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'💬 '+E.apelido+' comentou no seu post', corpo: txt.slice(0,80), url:'/app', usuario_ids:[p.usuario_id]})}).catch(()=>{});
+    fetch(apiUrl('/api/notify'), {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'💬 '+E.apelido+' comentou no seu post', corpo: txt.slice(0,80), url:'/app', usuario_ids:[p.usuario_id]})}).catch(()=>{});
   }
 }
 
@@ -1466,7 +1468,7 @@ async function geocodificarComNumero(num){
 }
 async function geocodificar(rua,numero,cidade,uf,cep){
   try{
-    const r=await fetch('/api/geocode',{
+    const r=await fetch(apiUrl('/api/geocode'),{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({rua,numero,cidade,uf,cep})
@@ -1569,7 +1571,7 @@ async function abrirIA(id){
   document.getElementById('iatit').textContent='Gerando pedido formal...';
   document.getElementById('iatx').innerHTML='<div class="ial"><div class="iad"></div><div class="iad"></div><div class="iad"></div></div>';
   try{
-    const resp=await fetch('/api/gerar-pedido',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({texto:p.txt,bairro:E.bairro||'meu bairro',apoios:p.ap})});
+    const resp=await fetch(apiUrl('/api/gerar-pedido'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({texto:p.txt,bairro:E.bairro||'meu bairro',apoios:p.ap})});
     const data=await resp.json();
     if(data.texto){ document.getElementById('iatit').textContent='Pedido pronto para enviar!'; document.getElementById('iatx').textContent=data.texto; }
     else { document.getElementById('iatit').textContent='Erro'; document.getElementById('iatx').textContent=JSON.stringify(data); }
@@ -1655,7 +1657,7 @@ async function carregarEventos(periodo=eventosPeriodo){
   el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando eventos locais...</div>';
   try{
     const token=await tokenAtualEventos();
-    const resp=await fetch(`/api/eventos?periodo=${encodeURIComponent(eventosPeriodo)}`,{headers:{Authorization:`Bearer ${token}`}});
+    const resp=await fetch(apiUrl(`/api/eventos?periodo=${encodeURIComponent(eventosPeriodo)}`),{headers:{Authorization:`Bearer ${token}`}});
     const data=await resp.json();
     if(!resp.ok) throw new Error(data.error||'Não foi possível carregar os eventos.');
     eventosCache=data.eventos||[];
@@ -1747,7 +1749,7 @@ async function enviarSugestaoEvento(){
   btn.disabled=true; btn.textContent='Enviando...';
   try{
     const token=await tokenAtualEventos();
-    const resp=await fetch('/api/eventos',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(payload)});
+    const resp=await fetch(apiUrl('/api/eventos'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(payload)});
     const resposta=await resp.json();
     if(!resp.ok) throw new Error(resposta.error||'Não foi possível enviar a sugestão.');
     fecharSugestaoEvento();
@@ -1859,7 +1861,7 @@ async function salvarEditarAnuncio(){
   btn.disabled=true; btn.textContent='Salvando...';
   try{
     const { data:{ session } } = await sb.auth.getSession();
-    const resp=await fetch('/api/anuncio-update',{
+    const resp=await fetch(apiUrl('/api/anuncio-update'),{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+(session?.access_token||'')},
       body:JSON.stringify({id,tipo,nome,descricao,telefone})
@@ -1891,7 +1893,7 @@ async function excluirAnuncio(id,fecharModal=false){
   if(btn){ btn.disabled=true; btn.textContent='Excluindo...'; }
   try{
     const { data:{ session } } = await sb.auth.getSession();
-    const resp=await fetch('/api/anuncio-delete',{
+    const resp=await fetch(apiUrl('/api/anuncio-delete'),{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+(session?.access_token||'')},
       body:JSON.stringify({id})
@@ -1963,7 +1965,7 @@ async function anunFinalizar(){
   try{
     const { data: { session } } = await sb.auth.getSession();
     if(!session?.access_token) throw new Error('Entre na sua conta novamente.');
-    const resp=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({
+    const resp=await fetch(apiUrl('/api/checkout'),{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({
       nome:anunState.nome, tipo:anunState.tipo, dias:anunState.dias,
       icon:anunState.icon, desc:anunState.desc, tel:anunState.tel
     })});
@@ -1997,7 +1999,7 @@ async function enviarAlerta(){
       tipo:'aviso', texto:txt,
       bairro:E.bairro, cidade:E.cidade, cep:E.cep, lat:E.lat, lon:E.lon, apoios:0
     });
-    fetch('/api/notify', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'🆘 ALERTA DE EMERGÊNCIA!', corpo: E.nome+' acionou o botão de pânico nas proximidades!', url:'/app', lat:E.lat, lon:E.lon, raio:E.raio})}).catch(()=>{});
+    fetch(apiUrl('/api/notify'), {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'🆘 ALERTA DE EMERGÊNCIA!', corpo: E.nome+' acionou o botão de pânico nas proximidades!', url:'/app', lat:E.lat, lon:E.lon, raio:E.raio})}).catch(()=>{});
   }
   setTimeout(()=>{
     const vc=Math.floor(3+(E.raio/100));
@@ -2014,7 +2016,7 @@ async function confirmarPublicacaoAnuncio(sessionId){
   if(!sessionId) return { published:false, error:'Sessao de pagamento nao encontrada.' };
   for(let tentativa=0; tentativa<4; tentativa++){
     try{
-      const resp=await fetch('/api/checkout-status',{
+      const resp=await fetch(apiUrl('/api/checkout-status'),{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({session_id:sessionId})

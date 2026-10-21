@@ -20,6 +20,17 @@ Nunca versionar `.env.local`, chaves `service_role`, segredos Stripe, Groq ou VA
 - `npm run backfill:locations`: somente diagnostica perfis sem coordenadas.
 - `npm run backfill:locations:apply`: valida CEP, municipio e UF na BrasilAPI, geocodifica sequencialmente os perfis validos e atualiza anuncios sem coordenadas. Nominatim e usado somente como fallback.
 
+## Preparacao para Android e iOS
+
+O webapp continua sendo a unica aplicacao publicada. Ainda nao existe projeto nativo, pacote de loja ou dependencia do Capacitor.
+
+- `app-runtime.js` centraliza a origem das APIs sem alterar as URLs usadas no navegador.
+- Em um futuro container Capacitor, as chamadas passam automaticamente a usar `https://www.vizinhocerto.com.br`.
+- Ambientes de homologacao podem definir `window.__VIZINHO_CERTO_CONFIG__.apiOrigin` antes de carregar `app-runtime.js`.
+- O manifesto inclui os PNGs de 192 px, 512 px e o icone Apple exigidos pelas etapas de empacotamento.
+
+Quando o projeto nativo for iniciado, ainda sera necessario configurar CORS/origens permitidas, deep links, permissoes e notificacoes para cada plataforma, gerar os projetos Android/iOS e cumprir os formularios das lojas.
+
 ## Fluxo de anuncios
 
 1. O cadastro geocodifica o endereco antes de criar o perfil.

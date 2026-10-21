@@ -22,8 +22,8 @@ self.addEventListener('push', e => {
 
   const options = {
     body: data.body || 'Nova atividade na sua vizinhança!',
-    icon: '/icon.svg',
-    badge: '/icon.svg',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
     vibrate: [200, 100, 200],
     data: { url: data.url || '/app' },
     actions: [
