@@ -36,7 +36,11 @@
       .vc-install-button{width:100%;margin-top:12px;padding:11px 14px;border:0;border-radius:10px;background:#52B788;color:#123D2C;font:700 13px "DM Sans",sans-serif;cursor:pointer}
       .vc-install-button:hover{filter:brightness(1.04)}
       .vc-install-button[hidden]{display:none!important}
+      .vc-install-button:disabled{cursor:default;filter:none;background:#D8F3DC;color:#1B4D37;border-color:#85C1A3}
       .vc-install-profile{background:#fff;color:#2D6A4F;border:1.5px solid #2D6A4F;font-size:14px;font-weight:500}
+      .vc-install-profile-card{margin-bottom:16px;padding:16px;border:1px solid #B7DEC8;border-radius:14px;background:#EDF8F2}
+      .vc-install-profile-title{color:#1B4D37;font:700 16px "Fraunces",serif}
+      .vc-install-profile-copy{margin-top:4px;color:#5C5C5C;font:400 12px/1.5 "DM Sans",sans-serif}
       .vc-install-overlay{position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-end;justify-content:center;padding:18px;background:rgba(10,28,20,.64)}
       .vc-install-overlay[hidden]{display:none}
       .vc-install-dialog{box-sizing:border-box;width:100%;max-width:430px;max-height:calc(100vh - 36px);overflow:auto;border-radius:20px;background:#FEFAE0;color:#1B1B1B;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,.28)}
@@ -192,21 +196,43 @@
     button.addEventListener('click', () => start(button.dataset.vcInstall || 'auto'));
   }
 
+  function getButtonPresentation(target = 'auto', environment = detectEnvironment(), promptAvailable = Boolean(deferredPrompt)) {
+    if (environment.standalone) {
+      return target === 'auto'
+        ? { disabled: true, hidden: false, label: '✓ Vizinho Certo já está na tela inicial' }
+        : { disabled: false, hidden: true, label: '' };
+    }
+
+    if (target === 'auto') {
+      return {
+        disabled: false,
+        hidden: false,
+        label: environment.ios
+          ? '📲 Colocar na tela inicial do iPhone'
+          : promptAvailable
+            ? '📲 Instalar Vizinho Certo agora'
+            : '📲 Colocar o Vizinho Certo na tela inicial'
+      };
+    }
+
+    if (target === 'android' && promptAvailable && environment.android) {
+      return { disabled: false, hidden: false, label: 'Instalar agora no Android' };
+    }
+
+    return { disabled: false, hidden: false, label: '' };
+  }
+
   function refresh() {
     if (!document) return;
     const environment = detectEnvironment();
     document.querySelectorAll('[data-vc-install]').forEach(button => {
       wireButton(button);
-      button.hidden = environment.standalone;
-      if (button.dataset.vcInstall === 'auto') {
-        button.textContent = environment.ios
-          ? '📲 Colocar na tela inicial do iPhone'
-          : deferredPrompt
-            ? '📲 Instalar Vizinho Certo agora'
-            : '📲 Colocar o Vizinho Certo na tela inicial';
-      } else if (button.dataset.vcInstall === 'android' && deferredPrompt && environment.android) {
-        button.textContent = 'Instalar agora no Android';
-      }
+      const presentation = getButtonPresentation(button.dataset.vcInstall || 'auto', environment);
+      button.hidden = presentation.hidden;
+      button.disabled = presentation.disabled;
+      if (presentation.disabled) button.setAttribute('aria-disabled', 'true');
+      else button.removeAttribute('aria-disabled');
+      if (presentation.label) button.textContent = presentation.label;
     });
   }
 
@@ -243,6 +269,7 @@
   return {
     closeDialog,
     detectEnvironment,
+    getButtonPresentation,
     init,
     refresh,
     showInstructions,

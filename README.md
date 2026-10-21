@@ -32,7 +32,7 @@ O webapp continua sendo a unica aplicacao publicada. Ainda nao existe projeto na
 
 Quando o projeto nativo for iniciado, ainda sera necessario configurar CORS/origens permitidas, deep links, permissoes e notificacoes para cada plataforma, gerar os projetos Android/iOS e cumprir os formularios das lojas.
 
-As landings oferecem instalacao no bloco "Adicione na tela inicial". Dentro do webapp, a mesma acao fica disponivel na aba Perfil e desaparece automaticamente quando o app ja esta em modo instalado.
+As landings oferecem instalacao no bloco "Adicione na tela inicial". Dentro do webapp, a mesma acao fica em destaque no topo da aba Perfil; quando aberto pelo icone instalado, o cartao confirma que o Vizinho Certo ja esta na tela inicial.
 
 ## Fluxo de anuncios
 

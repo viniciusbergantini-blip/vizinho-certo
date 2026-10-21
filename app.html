@@ -1634,6 +1634,11 @@ function navTab(tab,el){
         <div style="font-size:18px;font-weight:500;color:var(--texto);margin-top:8px;">${E.nome||'—'}</div>
         <div style="font-size:13px;color:var(--texto-muted);margin-top:4px;">${E.cidade||'—'}</div>
       </div>
+      <div class="vc-install-profile-card">
+        <div class="vc-install-profile-title">Acesso rápido pelo celular</div>
+        <div class="vc-install-profile-copy">Coloque o Vizinho Certo na tela inicial para abrir pelo ícone, sem precisar procurar o site.</div>
+        <button type="button" class="vc-install-button vc-install-profile" data-vc-install="auto">📲 Colocar o Vizinho Certo na tela inicial</button>
+      </div>
       <div style="background:var(--branco);border-radius:12px;border:1px solid var(--borda);overflow:hidden;">
         <div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Raio atual</span><span style="font-weight:500;">${E.raio}m</span></div>
         <div style="padding:14px 16px;border-bottom:1px solid var(--borda);display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Bairro</span><span style="font-weight:500;">${E.bairro||'—'}</span></div>
@@ -1641,7 +1646,6 @@ function navTab(tab,el){
       </div>
       <button onclick="alterarRaio()" style="width:100%;margin-top:1rem;padding:12px;background:#2D6A4F;color:white;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">🎯 Alterar raio de vizinhança</button>
       <button onclick="abrirAlterarEndereco()" style="width:100%;margin-top:10px;padding:12px;background:var(--branco);color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">📍 Alterar endereço</button>
-      <button type="button" class="vc-install-button vc-install-profile" data-vc-install="auto">📲 Colocar o Vizinho Certo na tela inicial</button>
       <button style="width:100%;margin-top:10px;padding:12px;background:transparent;border:1.5px solid #E24B4A;border-radius:10px;color:#A32D2D;font-size:14px;cursor:pointer;font-family:DM Sans,sans-serif;" onclick="sair()">Sair da conta</button>
     </div>`;
     window.VizinhoCertoInstall?.refresh();
