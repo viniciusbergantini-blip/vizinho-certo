@@ -48,7 +48,7 @@ A instalacao fica dentro do webapp, em destaque no topo da aba Perfil; quando ab
 ## Conversao das landings
 
 - As landings usam um CTA direto para o cadastro e nunca enviam nome, email ou CEP pela URL.
-- A prova social vem de `/api/public-stats`, com contagens arredondadas e somente grupos de pelo menos 10 moradores.
+- A prova social vem da leitura pública agregada em `/api/track?view=public-stats`, com contagens arredondadas e somente grupos de pelo menos 10 moradores.
 - O cadastro foi dividido em conta e regiao; apelido e escolha inicial de raio deixaram de ser barreiras obrigatorias.
 - O dashboard acompanha landing, CTA, abertura do cadastro, interacao, endereco, criacao da conta e perfil concluido.
 - Trafego reconhecido pelo servidor como automacao e separado como `suspected_bot` nao entra nas metricas futuras de conversao.

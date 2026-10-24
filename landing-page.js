@@ -11,7 +11,7 @@
     if (!target) return;
 
     try {
-      const response = await fetch(`/api/public-stats?city=${encodeURIComponent(city)}`);
+      const response = await fetch(`/api/track?view=public-stats&city=${encodeURIComponent(city)}`);
       const data = await response.json();
       if (!response.ok) return;
       const local = roundedProof(data.registered_city);

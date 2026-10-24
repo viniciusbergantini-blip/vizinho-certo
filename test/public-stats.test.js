@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { normalizeCityKey, roundPublicCount } = require('../api/public-stats')._private;
+const { normalizeCityKey, roundPublicCount } = require('../api/track')._private;
 
 test('publica somente contagens arredondadas com pelo menos dez moradores', () => {
   assert.equal(roundPublicCount(263), 260);
