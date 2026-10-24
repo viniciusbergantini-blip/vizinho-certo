@@ -60,6 +60,12 @@
   .btnp{width:100%;padding:13px;background:var(--verde);color:var(--creme);border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:background .2s;}
   .btnp:hover{background:#1B4D37;}
   .btnp:disabled{background:#aaa;cursor:not-allowed;}
+  .signup-progress{display:flex;align-items:center;gap:8px;margin:0 0 16px;}
+  .signup-progress span{height:5px;flex:1;border-radius:999px;background:#DED8C8;transition:background .2s;}
+  .signup-progress span.on{background:var(--verde-claro);}
+  .signup-step-label{font-size:11px;color:var(--texto-muted);margin-bottom:8px;font-weight:500;}
+  .signup-back{width:100%;margin-top:8px;padding:10px;background:transparent;border:0;color:var(--verde);font:500 13px 'DM Sans',sans-serif;cursor:pointer;}
+  .signup-privacy{display:flex;gap:8px;align-items:flex-start;background:#F0FBF4;border:1px solid #BEE8CC;border-radius:9px;padding:10px 11px;margin:8px 0 13px;color:#285B42;font-size:12px;line-height:1.45;}
   .disclaimer{font-size:11px;color:rgba(254,250,224,0.45);margin-top:16px;}
   #t-raio{background:var(--creme);}
   .rh{background:var(--verde);padding:2rem 1.5rem 3rem;position:relative;overflow:hidden;}
@@ -400,15 +406,24 @@
     <div class="tagline">Sua rua. Seus vizinhos. Do seu jeito.</div>
     <div class="card" id="card-cadastro">
       <h2>Criar conta</h2>
-      <p>Crie sua conta gratuita para se conectar com seus vizinhos.</p>
-      <div class="ig"><label>Seu nome completo</label><input type="text" id="inp-nome" placeholder="Ex: Maria Silva"/></div>
-      <div class="ig"><label>Como quer ser chamado(a)</label><input type="text" id="inp-apelido" placeholder="Ex: Mari, Dona Lúcia"/><div style="font-size:11px;color:var(--texto-muted);margin-top:4px;">Este é o nome que seus vizinhos vão ver.</div></div>
-      <div class="ig"><label>E-mail</label><input type="email" id="inp-email" placeholder="Ex: maria@email.com"/></div>
-      <div class="ig"><label>Senha</label><input type="password" id="inp-senha" placeholder="Mínimo 6 caracteres"/></div>
-      <div class="ig"><label>CEP</label><input type="tel" id="inp-cep" placeholder="Ex: 87010-000" maxlength="9" oninput="formataCEP(this)"/></div>
-      <div class="ig" id="cep-resultado" style="display:none;"><label>Rua encontrada</label><input type="text" id="inp-cep-addr" readonly style="background:#F0FBF4;color:#2D6A4F;font-weight:500;"/></div>
-      <div class="ig" id="num-wrap" style="display:none;"><label>Número da sua casa</label><input type="text" id="inp-num" placeholder="Ex: 142 ou 332B" onblur="geocodificarComNumero(this.value)"/></div>
-      <button class="btnp" id="btn-cadastrar" onclick="irRaio()">Criar conta →</button>
+      <p>Entre gratuitamente e veja o que está perto de você.</p>
+      <div class="signup-progress"><span id="signup-progress-1" class="on"></span><span id="signup-progress-2"></span></div>
+      <div id="signup-step-account">
+        <div class="signup-step-label">Etapa 1 de 2 · Sua conta</div>
+        <div class="ig"><label>Seu nome</label><input type="text" id="inp-nome" autocomplete="name" placeholder="Ex: Maria Silva" oninput="registrarInteracaoCadastro()"/></div>
+        <div class="ig"><label>E-mail</label><input type="email" id="inp-email" autocomplete="email" placeholder="Ex: maria@email.com" oninput="registrarInteracaoCadastro()"/></div>
+        <div class="ig"><label>Senha</label><input type="password" id="inp-senha" autocomplete="new-password" placeholder="Mínimo 6 caracteres" oninput="registrarInteracaoCadastro()"/></div>
+        <button class="btnp" onclick="avancarCadastroEndereco()">Continuar →</button>
+      </div>
+      <div id="signup-step-address" style="display:none;">
+        <div class="signup-step-label">Etapa 2 de 2 · Sua região</div>
+        <div class="ig"><label>CEP</label><input type="tel" id="inp-cep" inputmode="numeric" autocomplete="postal-code" placeholder="Ex: 13870-000" maxlength="9" oninput="registrarInteracaoCadastro();formataCEP(this)"/></div>
+        <div class="ig" id="cep-resultado" style="display:none;"><label>Rua encontrada</label><input type="text" id="inp-cep-addr" readonly style="background:#F0FBF4;color:#2D6A4F;font-weight:500;"/></div>
+        <div class="ig" id="num-wrap" style="display:none;"><label>Número da sua casa</label><input type="text" id="inp-num" autocomplete="address-line2" placeholder="Ex: 142 ou 332B" oninput="registrarInteracaoCadastro()" onblur="geocodificarComNumero(this.value)"/></div>
+        <div class="signup-privacy"><span>🔒</span><span>Seu endereço exato nunca aparece. Ele serve apenas para calcular a distância aproximada.</span></div>
+        <button class="btnp" id="btn-cadastrar" onclick="irRaio()">Entrar na vizinhança →</button>
+        <button class="signup-back" onclick="voltarCadastroConta()">← Voltar</button>
+      </div>
       <div style="text-align:center;margin-top:12px;"><span style="font-size:13px;color:var(--texto-muted);">Já tem conta? </span><span style="font-size:13px;color:#2D6A4F;font-weight:500;cursor:pointer;" onclick="mostrarLogin()">Entrar</span></div>
     </div>
     <div class="card" id="card-login" style="display:none;">
@@ -741,12 +756,10 @@ function aplicarLandingSignupPrefill(){
   mostrarCadastro();
 
   const nomeEl = document.getElementById('inp-nome');
-  const apelidoEl = document.getElementById('inp-apelido');
   const emailEl = document.getElementById('inp-email');
   const cepEl = document.getElementById('inp-cep');
 
   if(prefill.nome && nomeEl && !nomeEl.value) nomeEl.value = prefill.nome;
-  if(prefill.nome && apelidoEl && !apelidoEl.value) apelidoEl.value = prefill.nome.split(/\s+/)[0] || prefill.nome;
   if(prefill.email && emailEl && !emailEl.value) emailEl.value = prefill.email;
   if(prefill.cep && cepEl && !cepEl.value) {
     cepEl.value = prefill.cep;
@@ -777,8 +790,8 @@ async function trackAppEvent(eventType, extraMetadata={}){
   }).catch(()=>{});
 }
 
-function trackCadastro(eventType){
-  return trackAppEvent(eventType, {source:'signup'});
+function trackCadastro(eventType, extraMetadata={}){
+  return trackAppEvent(eventType, {source:'signup',...extraMetadata});
 }
 
 window.addEventListener('vizinhocerto:install', event => {
@@ -1001,7 +1014,7 @@ window.addEventListener('DOMContentLoaded', async () => {
 
   try {
     const { data: { session } } = await sb.auth.getSession();
-    if(!session || !session.user){ irTela('t-bv'); aplicarLandingSignupPrefill(); return; }
+    if(!session || !session.user){ irTela('t-bv'); mostrarCadastro(); aplicarLandingSignupPrefill(); return; }
     if(modoRecuperacaoSenha){ irTela('t-nova-senha'); return; }
     E.userId = session.user.id;
     iniciarVisita(E.userId);
@@ -1052,7 +1065,42 @@ async function reenviarEmail(){
 }
 function mostrarLoginDireto(){ mostrarLogin(); irTela('t-bv'); }
 function mostrarLogin(){ document.getElementById('card-cadastro').style.display='none'; document.getElementById('card-login').style.display=''; }
-function mostrarCadastro(){ document.getElementById('card-login').style.display='none'; document.getElementById('card-cadastro').style.display=''; }
+function mostrarCadastro(){
+  document.getElementById('card-login').style.display='none';
+  document.getElementById('card-cadastro').style.display='';
+  voltarCadastroConta({track:false});
+  if(!sessionStorage.getItem('vc_signup_viewed')){
+    sessionStorage.setItem('vc_signup_viewed','1');
+    trackCadastro('signup_form_viewed');
+  }
+}
+
+function registrarInteracaoCadastro(){
+  if(sessionStorage.getItem('vc_signup_engaged')) return;
+  sessionStorage.setItem('vc_signup_engaged','1');
+  trackCadastro('signup_form_engaged');
+}
+
+function avancarCadastroEndereco(){
+  const nome=document.getElementById('inp-nome').value.trim();
+  const email=document.getElementById('inp-email').value.trim();
+  const senha=document.getElementById('inp-senha').value;
+  if(!nome){ toast('Digite seu nome!'); return; }
+  if(!email||!email.includes('@')){ toast('Digite um email válido!'); return; }
+  if(!senha||senha.length<6){ toast('Senha deve ter pelo menos 6 caracteres!'); return; }
+  document.getElementById('signup-step-account').style.display='none';
+  document.getElementById('signup-step-address').style.display='';
+  document.getElementById('signup-progress-2').classList.add('on');
+  trackCadastro('signup_account_completed');
+  setTimeout(()=>document.getElementById('inp-cep')?.focus(),50);
+}
+
+function voltarCadastroConta({track=true}={}){
+  document.getElementById('signup-step-account').style.display='';
+  document.getElementById('signup-step-address').style.display='none';
+  document.getElementById('signup-progress-2').classList.remove('on');
+  if(track) trackCadastro('signup_account_back');
+}
 
 async function recuperarSenha(){
   const email = document.getElementById('login-email').value.trim();
@@ -1082,13 +1130,12 @@ let cadastroTemp = {};
 
 async function irRaio(){
   const nome    = document.getElementById('inp-nome').value.trim();
-  const apelido = document.getElementById('inp-apelido').value.trim();
+  const apelido = nome.split(/\s+/)[0] || nome;
   const email   = document.getElementById('inp-email').value.trim();
   const senha   = document.getElementById('inp-senha').value;
   const cep     = document.getElementById('inp-cep').value.replace(/[^0-9]/g,'');
   const num     = document.getElementById('inp-num').value.trim();
   if(!nome)                        { toast('Digite seu nome completo!'); return; }
-  if(!apelido)                     { toast('Digite como quer ser chamado(a)!'); return; }
   if(!email||!email.includes('@')) { toast('Digite um email válido!'); return; }
   if(!senha||senha.length<6)       { toast('Senha deve ter pelo menos 6 caracteres!'); return; }
   if(cep.length!==8)               { toast('Digite um CEP válido!'); return; }
@@ -1096,26 +1143,47 @@ async function irRaio(){
   if(!num)                         { toast('Digite o número da sua casa!'); return; }
   const btn = document.getElementById('btn-cadastrar');
   btn.disabled = true; btn.textContent = 'Localizando endereço...';
+  trackCadastro('signup_submit');
+  let faseCadastro = 'location';
   try {
+    if(E.userId && cadastroTemp.email === email){
+      faseCadastro = 'profile';
+      btn.textContent = 'Concluindo perfil...';
+      await irFeed();
+      btn.disabled=false; btn.textContent='Entrar na vizinhança →';
+      return;
+    }
     const coordenadas = await geocodificar(E.rua, num, E.cidade, E.uf, cep);
     if(!coordenadas){
+      trackCadastro('signup_location_failed',{status:'not_found'});
       toast('Não conseguimos localizar esse endereço. Confira o CEP e o número.');
       btn.disabled=false; btn.textContent='Criar conta →';
       return;
     }
     E.lat=coordenadas.lat; E.lon=coordenadas.lon;
+    trackCadastro('signup_location_success');
     btn.textContent = 'Criando conta...';
+    faseCadastro = 'auth';
     trackCadastro('signup_started');
     const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
-    if(authErr){ toast('Erro: ' + authErr.message); btn.disabled=false; btn.textContent='Criar conta →'; return; }
+    if(authErr){
+      trackCadastro('signup_auth_failed',{status:'auth_error'});
+      toast('Não foi possível criar a conta. Confira o email ou tente entrar se já possui cadastro.');
+      btn.disabled=false; btn.textContent='Entrar na vizinhança →'; return;
+    }
+    trackCadastro('signup_auth_success');
     E.userId = authData.user.id;
     E.nome = apelido; E.apelido = apelido;
+    E.raio = 500;
     cadastroTemp = { nome, apelido, email, cep, numero: num, rua: E.rua, bairro: E.bairro, cidade: E.cidade, uf: E.uf, lat: E.lat, lon: E.lon };
-    btn.disabled=false; btn.textContent='Criar conta →';
-    irTela('t-raio');
+    faseCadastro = 'profile';
+    await irFeed();
+    btn.disabled=false; btn.textContent='Entrar na vizinhança →';
   } catch(e) {
+    const eventoFalha = faseCadastro === 'profile' ? 'profile_failed' : faseCadastro === 'auth' ? 'signup_auth_failed' : 'signup_location_failed';
+    trackCadastro(eventoFalha,{status:'unexpected_error'});
     toast('Erro inesperado: ' + e.message);
-    btn.disabled=false; btn.textContent='Criar conta →';
+    btn.disabled=false; btn.textContent='Entrar na vizinhança →';
   }
 }
 
@@ -1734,13 +1802,19 @@ async function irFeed(){
   if(!uid){ irTela('t-bv'); return; }
   E.userId = uid;
   const d = cadastroTemp;
-  await sb.from('usuarios').upsert({
+  const { error: perfilError } = await sb.from('usuarios').upsert({
     id: uid, nome: d.nome||E.nome||'', apelido: d.apelido||E.apelido||'',
     email: d.email||session?.user?.email||'', cep: d.cep||E.cep||'',
     numero: d.numero||'', rua: d.rua||E.rua||'', bairro: d.bairro||E.bairro||'',
     cidade: d.cidade||E.cidade||'', uf: d.uf||E.uf||'', raio: E.raio,
     lat: d.lat||E.lat||null, lon: d.lon||E.lon||null
   }, { onConflict: 'id' });
+  if(perfilError){
+    trackCadastro('profile_failed',{status:'database_error'});
+    toast('Sua conta foi criada, mas não conseguimos concluir o perfil. Tente novamente.');
+    return false;
+  }
+  trackCadastro('profile_completed');
   trackCadastro('signup_completed');
   cadastroTemp = {};
   sessionStorage.removeItem('vc_cadastro');
@@ -1753,6 +1827,7 @@ async function irFeed(){
   carregarResumoEventosSilencioso();
   sincronizarNotificacoesConcedidas();
   agendarOnboarding();
+  return true;
 }
 
 function irTela(id){

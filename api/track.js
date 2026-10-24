@@ -16,6 +16,7 @@ const METADATA_KEYS = new Set([
   'referrer_host',
   'cta_text',
   'cta_href',
+  'cta_position',
   'platform',
   'source',
   'status',
@@ -42,6 +43,8 @@ module.exports = async (req, res) => {
   if (landingCity) metadata.landing_city = landingCity;
   metadata.link_url = normalizarLink(metadata.link_url || path);
   metadata.geo = geolocalizacaoAproximada(req.headers || {});
+  metadata.device = classificarDispositivo(req.headers || {});
+  metadata.traffic_quality = classificarTrafego(req.headers || {});
   const persisted = prepararEventoPersistido(eventType, metadata);
 
   const userId = await usuarioAutenticado(sb, req.headers?.authorization);
@@ -106,6 +109,18 @@ function lerHeader(headers, name, max) {
   }
 }
 
+function classificarDispositivo(headers) {
+  const userAgent = lerHeader(headers, 'user-agent', 300) || '';
+  return /mobile|android|iphone|ipad/i.test(userAgent) ? 'mobile' : 'desktop';
+}
+
+function classificarTrafego(headers) {
+  const userAgent = lerHeader(headers, 'user-agent', 300) || '';
+  return /bot|crawler|spider|headless|preview|facebookexternalhit|whatsapp|slurp|bingpreview/i.test(userAgent)
+    ? 'suspected_bot'
+    : 'human';
+}
+
 function normalizarLink(value) {
   const raw = String(value || '').trim().replace(/[\r\n]/g, '').slice(0, 300);
   if (!raw) return '/';
@@ -132,6 +147,8 @@ async function usuarioAutenticado(sb, authorization) {
 
 module.exports._private = {
   geolocalizacaoAproximada,
+  classificarDispositivo,
+  classificarTrafego,
   normalizarLink,
   prepararEventoPersistido,
   sanitizarMetadata,

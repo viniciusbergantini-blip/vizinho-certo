@@ -34,6 +34,7 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
 
     if (url.pathname.startsWith('/api/')) {
+      req.query = Object.fromEntries(url.searchParams.entries());
       await runApi(req, res, url.pathname);
       return;
     }

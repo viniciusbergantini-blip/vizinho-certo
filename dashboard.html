@@ -107,6 +107,10 @@
 
     <div id="summary" class="summary"></div>
     <section class="section">
+      <div class="section-head"><div class="section-title">Funil de cadastro</div><div class="section-note">Mostra onde o visitante avançou ou desistiu, sempre de forma agregada.</div></div>
+      <div id="funnel-summary" class="summary adoption-summary"></div>
+    </section>
+    <section class="section">
       <div class="section-head"><div class="section-title">Adoção do aplicativo</div><div class="section-note">Ações agregadas por sessão, sem expor identidade ou endereço.</div></div>
       <div id="adoption-summary" class="summary adoption-summary"></div>
     </section>
@@ -284,7 +288,20 @@ function render(){
     metric('Cadastros', totals.signups, 'concluídos no período'),
     metric('Conversões', totals.conversions, `${totals.conversion_rate}% dos acessos`),
     metric('Não cadastrou', `${totals.abandonment_rate}%`, `${totals.not_registered} visitantes`),
-    metric('Diretos', totals.direct_signups, 'cadastros sem acesso atribuído')
+    metric('Diretos', totals.direct_signups, 'cadastros sem acesso atribuído'),
+    metric('Bots suspeitos', totals.suspected_bots||0, 'retirados das métricas futuras')
+  ].join('');
+  const funnel=data.funnel||{};
+  document.getElementById('funnel-summary').innerHTML = [
+    metric('Visitou a landing', funnel.landing_views||0, 'sessões válidas'),
+    metric('Clicou para entrar', funnel.cta_clicks||0, `${funnel.landing_to_cta_rate||0}% dos visitantes`),
+    metric('Viu o cadastro', funnel.signup_form_viewed||0, `${funnel.cta_to_signup_view_rate||0}% dos cliques`),
+    metric('Começou a preencher', funnel.signup_form_engaged||0, 'interagiu com os campos'),
+    metric('Concluiu conta', funnel.signup_account_completed||0, 'avançou para o endereço'),
+    metric('Enviou cadastro', funnel.signup_submits||0, 'tentou criar a conta'),
+    metric('Localização válida', funnel.location_success||0, `${funnel.location_failed||0} falhas`),
+    metric('Conta criada', funnel.auth_success||0, `${funnel.auth_failed||0} falhas`),
+    metric('Perfil concluído', funnel.profile_completed||0, `${funnel.signup_view_to_profile_rate||0}% de quem abriu`)
   ].join('');
   const adoption=data.adoption||{};
   document.getElementById('adoption-summary').innerHTML = [
@@ -315,12 +332,13 @@ function renderLinks(links){
       <td class="location">${item.locations.slice(0, 3).map(location => `${escapeHtml(location.label)} (${location.total})`).join('<br>')}</td>
       <td>${item.visitors}</td>
       <td>${item.cta_clicks}</td>
+      <td>${item.signup_views||0}</td>
       <td>${item.conversions}</td>
       <td class="positive">${item.conversion_rate}%</td>
     </tr>`).join('');
   document.getElementById('links-table').innerHTML = `
     <table>
-      <thead><tr><th>Link acessado</th><th>Campanha</th><th>Localizações</th><th>Visitantes</th><th>Cliques</th><th>Conversões</th><th>Taxa</th></tr></thead>
+      <thead><tr><th>Link acessado</th><th>Campanha</th><th>Localizações</th><th>Visitantes</th><th>Cliques</th><th>Abriu cadastro</th><th>Conversões</th><th>Taxa</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }

@@ -118,6 +118,37 @@ test('mede retorno e uso das ferramentas de recorrencia por sessao', () => {
   assert.equal(result.totals.cta_clicks, 0);
 });
 
+test('mostra as etapas do novo funil e atribui a abertura do cadastro ao link', () => {
+  const events = [
+    eventoEm('landing_view', 'sessao-funil', '/saojoao?utm_source=fb', '2026-10-18T15:00:00.000Z'),
+    eventoEm('cta_click', 'sessao-funil', '/saojoao?utm_source=fb', '2026-10-18T15:01:00.000Z'),
+    evento('cta_click', 'sessao-funil', '/app', { action: 'signup_form_viewed' }),
+    evento('cta_click', 'sessao-funil', '/app', { action: 'signup_form_engaged' }),
+    evento('cta_click', 'sessao-funil', '/app', { action: 'signup_account_completed' }),
+    evento('cta_click', 'sessao-funil', '/app', { action: 'signup_submit' }),
+    evento('cta_click', 'sessao-funil', '/app', { action: 'signup_location_success' }),
+    evento('cta_click', 'sessao-funil', '/app', { action: 'signup_auth_success' }),
+    evento('cta_click', 'sessao-funil', '/app', { action: 'profile_completed' }),
+  ];
+
+  const result = buildWindow(events, null, end);
+  assert.equal(result.funnel.signup_form_viewed, 1);
+  assert.equal(result.funnel.profile_completed, 1);
+  assert.equal(result.funnel.signup_view_to_profile_rate, 100);
+  assert.equal(result.links[0].signup_views, 1);
+});
+
+test('retira bots identificados das metricas de conversao', () => {
+  const events = [
+    evento('landing_view', 'humano', '/saojoao', { traffic_quality: 'human' }),
+    evento('landing_view', 'bot', '/saojoao', { traffic_quality: 'suspected_bot' }),
+  ];
+
+  const result = buildWindow(events, null, end);
+  assert.equal(result.totals.visitors, 1);
+  assert.equal(result.totals.suspected_bots, 1);
+});
+
 function evento(event_type, session_id, path, metadata = {}) {
   return {
     event_type,

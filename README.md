@@ -35,7 +35,7 @@ O webapp continua sendo a unica aplicacao publicada. Ainda nao existe projeto na
 
 Quando o projeto nativo for iniciado, ainda sera necessario configurar CORS/origens permitidas, deep links, permissoes e notificacoes para cada plataforma, gerar os projetos Android/iOS e cumprir os formularios das lojas.
 
-As landings oferecem instalacao no bloco "Adicione na tela inicial". Dentro do webapp, a mesma acao fica em destaque no topo da aba Perfil; quando aberto pelo icone instalado, o cartao confirma que o Vizinho Certo ja esta na tela inicial.
+A instalacao fica dentro do webapp, em destaque no topo da aba Perfil; quando aberto pelo icone instalado, o cartao confirma que o Vizinho Certo ja esta na tela inicial. A landing concentra apenas a proposta de valor e a entrada no cadastro.
 
 ## Recorrencia e utilidade para moradores
 
@@ -44,6 +44,14 @@ As landings oferecem instalacao no bloco "Adicione na tela inicial". Dentro do w
 - A busca de Servicos encontra nome, categoria e descricao sem diferenciar acentos.
 - `Minha atividade`, dentro do Perfil, centraliza publicacoes, anuncios e sugestoes de eventos do morador.
 - O horario da visita anterior fica apenas no armazenamento local do aparelho. O dashboard recebe somente eventos agregados de retorno e uso, sem endereco ou historico individual.
+
+## Conversao das landings
+
+- As landings usam um CTA direto para o cadastro e nunca enviam nome, email ou CEP pela URL.
+- A prova social vem de `/api/public-stats`, com contagens arredondadas e somente grupos de pelo menos 10 moradores.
+- O cadastro foi dividido em conta e regiao; apelido e escolha inicial de raio deixaram de ser barreiras obrigatorias.
+- O dashboard acompanha landing, CTA, abertura do cadastro, interacao, endereco, criacao da conta e perfil concluido.
+- Trafego reconhecido pelo servidor como automacao e separado como `suspected_bot` nao entra nas metricas futuras de conversao.
 
 ## Fluxo de anuncios
 

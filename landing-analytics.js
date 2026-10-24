@@ -68,23 +68,13 @@
     if (source.landing_city) localStorage.setItem('vc_landing_source_city', source.landing_city);
     track('landing_view', source);
 
-    document.querySelectorAll('a[href="/app"], a[href="/app.html"]').forEach(link => {
+    document.querySelectorAll('[data-landing-cta], a[href="/app"], a[href="/app.html"]').forEach(link => {
       link.addEventListener('click', () => {
         localStorage.setItem('vc_landing_source', JSON.stringify(source));
         track('cta_click', source, {
           cta_text: (link.textContent || '').trim().slice(0, 120),
-          cta_href: link.getAttribute('href')
-        });
-      });
-    });
-
-    document.querySelectorAll('form[action="/app"], form[action="/app.html"]').forEach(form => {
-      form.addEventListener('submit', () => {
-        localStorage.setItem('vc_landing_source', JSON.stringify(source));
-        const submitter = document.querySelector(`[form="${form.id}"][type="submit"]`);
-        track('cta_click', source, {
-          cta_text: (submitter && submitter.textContent || 'submit').trim().slice(0, 120),
-          cta_href: form.getAttribute('action')
+          cta_href: link.getAttribute('href'),
+          cta_position: String(link.dataset.position || 'navigation').slice(0, 40)
         });
       });
     });

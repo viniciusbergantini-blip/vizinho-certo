@@ -53,3 +53,10 @@ test('armazena acao de adocao sem exigir um novo tipo na tabela', () => {
     metadata: {},
   });
 });
+
+test('classifica dispositivo e automacao sem armazenar o user agent', () => {
+  assert.equal(_private.classificarDispositivo({ 'user-agent': 'Mozilla/5.0 (iPhone; Mobile)' }), 'mobile');
+  assert.equal(_private.classificarDispositivo({ 'user-agent': 'Mozilla/5.0 (Windows NT 10.0)' }), 'desktop');
+  assert.equal(_private.classificarTrafego({ 'user-agent': 'Googlebot/2.1' }), 'suspected_bot');
+  assert.equal(_private.classificarTrafego({ 'user-agent': 'Mozilla/5.0 Safari/605.1.15' }), 'human');
+});
