@@ -6,9 +6,14 @@
     { "source": "/app", "destination": "/app.html" },
     { "source": "/app/(.*)", "destination": "/app.html" },
     { "source": "/dashboard", "destination": "/dashboard.html" },
+    { "source": "/dashboard/(.*)", "destination": "/dashboard.html" },
     { "source": "/maringa", "destination": "/maringa.html" },
+    { "source": "/maringa/(.*)", "destination": "/maringa.html" },
     { "source": "/londrina", "destination": "/londrina.html" },
+    { "source": "/londrina/(.*)", "destination": "/londrina.html" },
     { "source": "/indaiatuba", "destination": "/indaiatuba.html" },
-    { "source": "/saojoao", "destination": "/saojoao.html" }
+    { "source": "/indaiatuba/(.*)", "destination": "/indaiatuba.html" },
+    { "source": "/saojoao", "destination": "/saojoao.html" },
+    { "source": "/saojoao/(.*)", "destination": "/saojoao.html" }
   ]
 }

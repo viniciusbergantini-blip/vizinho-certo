@@ -59,10 +59,10 @@ function serveStatic(requestPath, res) {
   if (filePath === '/') filePath = '/index.html';
   if (filePath === '/app' || filePath.startsWith('/app/')) filePath = '/app.html';
   if (filePath === '/dashboard' || filePath.startsWith('/dashboard/')) filePath = '/dashboard.html';
-  if (filePath === '/indaiatuba') filePath = '/indaiatuba.html';
-  if (filePath === '/maringa') filePath = '/maringa.html';
-  if (filePath === '/londrina') filePath = '/londrina.html';
-  if (filePath === '/saojoao') filePath = '/saojoao.html';
+  if (filePath === '/indaiatuba' || filePath.startsWith('/indaiatuba/')) filePath = '/indaiatuba.html';
+  if (filePath === '/maringa' || filePath.startsWith('/maringa/')) filePath = '/maringa.html';
+  if (filePath === '/londrina' || filePath.startsWith('/londrina/')) filePath = '/londrina.html';
+  if (filePath === '/saojoao' || filePath.startsWith('/saojoao/')) filePath = '/saojoao.html';
 
   const resolved = path.resolve(root, `.${decodeURIComponent(filePath)}`);
   if (!resolved.startsWith(root)) {
