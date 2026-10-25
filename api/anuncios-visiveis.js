@@ -1,6 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const { avaliarVisibilidadeAnuncio, coordenadasValidas } = require('../lib/localizacao');
-const { metricasPorAnuncio } = require('../lib/anuncio-metrics');
+const { metricasPorAnuncio, ordenarAnunciosPorPrioridade } = require('../lib/anuncio-metrics');
 const { enforceRateLimit, noStore, serverError } = require('../lib/api-security');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
@@ -97,7 +97,7 @@ module.exports = async (req, res) => {
   });
 
   return res.json({
-    anuncios: visiveis,
+    anuncios: ordenarAnunciosPorPrioridade(visiveis),
     meus_anuncios: meusAnuncios,
     location_status: coordenadasValidas(visitante) ? 'precise' : 'same_street_only',
   });
