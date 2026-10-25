@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   categoriaEvento,
+  USER_AGENT,
   normalizarEventosRecebidos,
   parseArtigoEventos,
   parseDetalheCalendario,
@@ -10,6 +11,12 @@ const {
   salvarEventos,
   uuidDeterministico,
 } = require('../lib/eventos-coletor-sao-joao');
+
+test('identifica o coletor em formato compatível com a fonte oficial', () => {
+  assert.match(USER_AGENT, /^Mozilla\/5\.0/);
+  assert.match(USER_AGENT, /VizinhoCertoEventos\/1\.0/);
+  assert.match(USER_AGENT, /vizinhocerto\.com\.br/);
+});
 
 test('gera o mesmo UUID para a mesma fonte e UUIDs diferentes para fontes distintas', () => {
   const primeiro = uuidDeterministico('https://www.saojoao.sp.gov.br/eventos/feira');
@@ -91,6 +98,7 @@ test('extrai somente eventos futuros com data, horário e local claros da notíc
 test('classifica categorias locais comuns', () => {
   assert.equal(categoriaEvento('Concerto da Orquestra'), 'Show');
   assert.equal(categoriaEvento('Audiência Pública do Plano Diretor'), 'Comunidade');
+  assert.equal(categoriaEvento('Audiência Pública', 'Será realizada na terça-feira'), 'Comunidade');
   assert.equal(categoriaEvento('Maratona estudantil'), 'Esporte');
 });
 
