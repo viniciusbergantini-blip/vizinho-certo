@@ -4,7 +4,6 @@ const path = require('node:path');
 const test = require('node:test');
 
 const security = require('../lib/api-security');
-const feed = require('../api/feed')._private;
 const posts = require('../api/posts')._private;
 
 function responseMock() {
@@ -40,14 +39,14 @@ test('aceita somente fotos do bucket oficial e da pasta do usuario', () => {
   assert.equal(posts.safeOwnedPhotoUrl(own, uid), own);
   assert.equal(posts.safeOwnedPhotoUrl('https://evil.example/foto.jpg', uid), null);
   assert.equal(posts.safeOwnedPhotoUrl('https://xurtdibicsxmouvzfxvb.supabase.co/storage/v1/object/public/fotos/posts/outro/foto.jpg', uid), null);
-  assert.equal(feed.safePhotoUrl(own), own);
+  assert.equal(posts.safePhotoUrl(own), own);
 });
 
 test('feed por API nao devolve rotas antigas de notificacao e escapa texto', () => {
   const app = fs.readFileSync(path.join(__dirname, '..', 'app.html'), 'utf8');
   assert.doesNotMatch(app, /fetch\(apiUrl\('\/api\/notify'/);
   assert.match(app, /htmlSeguro\(p\.txt\)/);
-  assert.match(app, /apiUrl\('\/api\/feed'\)/);
+  assert.match(app, /apiUrl\('\/api\/posts\?view=feed'\)/);
   assert.match(app, /if\(!authData\.session\)/);
   assert.match(app, /sessionStorage\.setItem\('vc_cadastro'/);
 });

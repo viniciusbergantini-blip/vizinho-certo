@@ -15,14 +15,28 @@ const {
 const POST_TYPES = new Set(['problema', 'aviso', 'ajuda', 'info']);
 
 module.exports = async (req, res) => {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   noStore(res);
-  if (!enforceTrustedOrigin(req, res) || !enforceBodyLimit(req, res)) return;
 
   try {
     const sb = serviceClient();
     const auth = await authenticate(req, res, sb);
     if (!auth) return;
+
+    if (req.method === 'GET') {
+      const view = cleanText(req.query?.view, 20);
+      if (view === 'feed') {
+        if (!enforceRateLimit(req, res, 'feed', { limit: 120, windowMs: 60_000 }, auth.user.id)) return;
+        return getFeed(res, sb, auth.user.id);
+      }
+      if (view === 'vizinhos') {
+        if (!enforceRateLimit(req, res, 'neighbors', { limit: 60, windowMs: 60_000 }, auth.user.id)) return;
+        return getNeighbors(res, sb, auth.user.id);
+      }
+      return res.status(400).json({ error: 'Visualizacao invalida' });
+    }
+
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+    if (!enforceTrustedOrigin(req, res) || !enforceBodyLimit(req, res)) return;
     if (!enforceRateLimit(req, res, 'posts', { limit: 60, windowMs: 60_000 }, auth.user.id)) return;
 
     const action = cleanText(req.body?.action, 30);
@@ -36,6 +50,109 @@ module.exports = async (req, res) => {
     return serverError(res, 'Posts API error:', error);
   }
 };
+
+async function getFeed(res, sb, userId) {
+  const { data: profile, error: profileError } = await sb
+    .from('usuarios')
+    .select('id, cidade, lat, lon, raio')
+    .eq('id', userId)
+    .maybeSingle();
+  if (profileError) throw profileError;
+  if (!profile || !coordenadasValidas(profile)) return res.json({ posts: [] });
+
+  const radius = Math.min(Math.max(Number(profile.raio) || 150, 50), 500);
+  const { data: rows, error } = await sb
+    .from('posts')
+    .select('id, usuario_id, apelido_autor, tipo, texto, foto_url, lat, lon, apoios, criado_em')
+    .eq('cidade', profile.cidade)
+    .order('criado_em', { ascending: false })
+    .limit(500);
+  if (error) throw error;
+
+  const visible = (rows || []).map(post => ({
+    ...post,
+    distancia_metros: distanciaMetros(profile.lat, profile.lon, post.lat, post.lon),
+  })).filter(post => post.distancia_metros !== null && post.distancia_metros <= radius);
+
+  const postIds = visible.map(post => post.id);
+  const authorIds = [...new Set(visible.map(post => post.usuario_id).filter(Boolean))];
+  const [commentsResult, profilesResult] = await Promise.all([
+    postIds.length
+      ? sb.from('comentarios').select('id, post_id, usuario_id, apelido_autor, texto, criado_em').in('post_id', postIds).order('criado_em', { ascending: true })
+      : Promise.resolve({ data: [], error: null }),
+    authorIds.length
+      ? sb.from('usuarios').select('id, foto_url').in('id', authorIds)
+      : Promise.resolve({ data: [], error: null }),
+  ]);
+  if (commentsResult.error) throw commentsResult.error;
+  if (profilesResult.error) throw profilesResult.error;
+
+  const commentAuthorIds = [...new Set((commentsResult.data || []).map(item => item.usuario_id).filter(Boolean))];
+  let commentProfiles = [];
+  if (commentAuthorIds.length) {
+    const result = await sb.from('usuarios').select('id, foto_url').in('id', commentAuthorIds);
+    if (result.error) throw result.error;
+    commentProfiles = result.data || [];
+  }
+
+  const photos = new Map([...(profilesResult.data || []), ...commentProfiles]
+    .map(profileRow => [profileRow.id, safePhotoUrl(profileRow.foto_url)]));
+  const commentsByPost = new Map();
+  for (const comment of commentsResult.data || []) {
+    const list = commentsByPost.get(String(comment.post_id)) || [];
+    list.push({
+      id: comment.id,
+      usuario_id: comment.usuario_id,
+      apelido_autor: comment.apelido_autor,
+      texto: comment.texto,
+      criado_em: comment.criado_em,
+      foto_autor_url: photos.get(comment.usuario_id) || null,
+    });
+    commentsByPost.set(String(comment.post_id), list);
+  }
+
+  return res.json({
+    posts: visible.map(({ lat, lon, ...post }) => ({
+      ...post,
+      foto_url: safePhotoUrl(post.foto_url),
+      foto_autor_url: photos.get(post.usuario_id) || null,
+      comentarios: commentsByPost.get(String(post.id)) || [],
+    })),
+  });
+}
+
+async function getNeighbors(res, sb, userId) {
+  const { data: profile, error: profileError } = await sb
+    .from('usuarios')
+    .select('id, cidade, uf, lat, lon, raio')
+    .eq('id', userId)
+    .maybeSingle();
+  if (profileError) throw profileError;
+  if (!profile || !coordenadasValidas(profile)) return res.json({ vizinhos: [] });
+
+  const radius = Math.min(Math.max(Number(profile.raio) || 150, 50), 500);
+  let query = sb
+    .from('usuarios')
+    .select('id, apelido, nome, bairro, cidade, foto_url, lat, lon')
+    .neq('id', userId)
+    .limit(1000);
+  if (profile.cidade) query = query.eq('cidade', profile.cidade);
+  if (profile.uf) query = query.eq('uf', profile.uf);
+  const { data, error } = await query;
+  if (error) throw error;
+
+  const neighbors = (data || []).map(user => ({
+    id: user.id,
+    apelido: user.apelido || user.nome || 'Vizinho',
+    bairro: user.bairro || user.cidade || '',
+    foto_url: safePhotoUrl(user.foto_url),
+    distancia_metros: distanciaMetros(profile.lat, profile.lon, user.lat, user.lon),
+  })).filter(user => user.distancia_metros !== null && user.distancia_metros <= radius)
+    .sort((a, b) => a.distancia_metros - b.distancia_metros)
+    .slice(0, 100);
+
+  return res.json({ vizinhos: neighbors });
+}
 
 async function getProfile(sb, userId) {
   const { data, error } = await sb
@@ -228,6 +345,17 @@ function safeOwnedPhotoUrl(value, userId) {
   }
 }
 
+function safePhotoUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    if (url.protocol !== 'https:' || url.hostname !== 'xurtdibicsxmouvzfxvb.supabase.co') return null;
+    if (!url.pathname.startsWith('/storage/v1/object/public/fotos/')) return null;
+    return url.toString().slice(0, 1000);
+  } catch {
+    return null;
+  }
+}
+
 async function reachedPersistentLimit(sb, table, userId, limit, windowMs) {
   const since = new Date(Date.now() - windowMs).toISOString();
   const { count, error } = await sb.from(table)
@@ -238,4 +366,4 @@ async function reachedPersistentLimit(sb, table, userId, limit, windowMs) {
   return Number(count || 0) >= limit;
 }
 
-module.exports._private = { POST_TYPES, postVisibleToProfile, reachedPersistentLimit, safeOwnedPhotoUrl };
+module.exports._private = { POST_TYPES, postVisibleToProfile, reachedPersistentLimit, safeOwnedPhotoUrl, safePhotoUrl };

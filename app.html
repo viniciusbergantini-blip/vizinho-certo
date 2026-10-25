@@ -1555,7 +1555,7 @@ async function carregarPosts(){
   if(!session?.access_token){ E.posts=anunciosFeed.length?anunciosFeed:postsBoasVindas(); render(); return; }
   let postsNoRaio=[];
   try{
-    const resposta=await fetch(apiUrl('/api/feed'),{headers:{Authorization:`Bearer ${session.access_token}`}});
+    const resposta=await fetch(apiUrl('/api/posts?view=feed'),{headers:{Authorization:`Bearer ${session.access_token}`}});
     const resultado=await resposta.json();
     if(!resposta.ok) throw new Error(resultado.error||'Erro ao carregar publicações');
     postsNoRaio=resultado.posts||[];
@@ -2415,7 +2415,7 @@ async function carregarVizinhos(){
   let data=[],error=null;
   try{
     if(!session?.access_token) throw new Error('Sua sessão expirou.');
-    const resposta=await fetch(apiUrl('/api/vizinhos'),{headers:{Authorization:`Bearer ${session.access_token}`}});
+    const resposta=await fetch(apiUrl('/api/posts?view=vizinhos'),{headers:{Authorization:`Bearer ${session.access_token}`}});
     const resultado=await resposta.json();
     if(!resposta.ok) throw new Error(resultado.error||'Erro ao buscar vizinhos');
     data=resultado.vizinhos||[];
