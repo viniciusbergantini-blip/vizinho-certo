@@ -14,15 +14,25 @@ alter table public.push_tokens enable row level security;
 alter table public.anuncios enable row level security;
 alter table public.analytics_events enable row level security;
 
--- Remove políticas antigas para não deixar permissões amplas sobreviverem à migração.
+-- Remove políticas antigas das tabelas protegidas e somente as regras conhecidas do bucket fotos.
+-- A lista explícita evita apagar políticas de outros buckets que venham a ser criados no futuro.
 do $$
 declare policy_row record;
 begin
   for policy_row in
     select schemaname, tablename, policyname
     from pg_policies
-    where schemaname in ('public', 'storage')
-      and tablename in ('usuarios', 'posts', 'comentarios', 'push_tokens', 'anuncios', 'analytics_events', 'objects')
+    where (
+      schemaname = 'public'
+      and tablename in ('usuarios', 'posts', 'comentarios', 'push_tokens', 'anuncios', 'analytics_events')
+    ) or (
+      schemaname = 'storage'
+      and tablename = 'objects'
+      and policyname in (
+        'storage_insert', 'storage_perfis_insert', 'storage_perfis_update', 'storage_select',
+        'fotos_select_own', 'fotos_insert_own', 'fotos_update_own', 'fotos_delete_own'
+      )
+    )
   loop
     execute format('drop policy if exists %I on %I.%I', policy_row.policyname, policy_row.schemaname, policy_row.tablename);
   end loop;
