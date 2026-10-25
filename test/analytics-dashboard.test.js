@@ -168,6 +168,18 @@ test('conta existente recuperada nao vira abandono e preserva atribuicao do link
   assert.equal(result.accesses[0].existing_account, true);
 });
 
+test('falha de autenticacao legada nao e confundida com abandono voluntario', () => {
+  const events = [
+    eventoEm('landing_view', 'sessao-legada', '/saojoao', '2026-10-18T15:00:00.000Z'),
+    evento('cta_click', 'sessao-legada', '/app', { action: 'signup_auth_failed', status: 'auth_error' }),
+  ];
+
+  const result = buildWindow(events, null, end);
+  assert.equal(result.totals.technical_auth_failures, 1);
+  assert.equal(result.totals.not_registered, 0);
+  assert.equal(result.totals.abandonment_rate, 0);
+});
+
 function evento(event_type, session_id, path, metadata = {}) {
   return {
     event_type,

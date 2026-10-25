@@ -335,6 +335,7 @@ function render(){
     metric('Cadastros', totals.signups, 'concluídos no período'),
     metric('Conversões', totals.conversions, `${totals.conversion_rate}% dos acessos`),
     metric('Contas existentes', totals.existing_account_recovered||0, `${totals.password_recovery_requested||0} pediram nova senha`),
+    metric('Falhas técnicas', totals.technical_auth_failures||0, 'tentativas não contam como abandono'),
     metric('Não cadastrou', `${totals.abandonment_rate}%`, `${totals.not_registered} visitantes`),
     metric('Diretos', totals.direct_signups, 'cadastros sem acesso atribuído'),
     metric('Bots suspeitos', totals.suspected_bots||0, 'retirados das métricas futuras')
