@@ -68,7 +68,31 @@
   .positive{color:var(--verde);font-weight:700;}
   .negative{color:var(--laranja);font-weight:700;}
   .empty{padding:40px;text-align:center;color:var(--muted);}
-  @media(max-width:900px){.summary,.adoption-summary{grid-template-columns:repeat(2,1fr);} .top{flex-direction:column;} .status{text-align:left;} .actions{justify-content:flex-start;} .section-head{align-items:flex-start;flex-direction:column;} .panel{overflow-x:auto;} table{min-width:780px;}}
+  .funnel-panel{padding:22px;background:linear-gradient(145deg,#fff 0%,#fff 58%,#F3FAF4 100%);overflow:visible;}
+  .funnel-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;}
+  .funnel-kpi{border:1px solid rgba(45,106,79,.16);background:rgba(216,243,220,.42);border-radius:8px;padding:13px 14px;min-width:0;}
+  .funnel-kpi-label{display:block;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;}
+  .funnel-kpi-value{display:block;color:var(--verde-escuro);font-size:22px;font-weight:700;line-height:1.1;}
+  .funnel-kpi-note{display:block;color:var(--muted);font-size:11px;line-height:1.35;margin-top:4px;}
+  .funnel-visual{display:flex;flex-direction:column;gap:3px;}
+  .funnel-row{display:grid;grid-template-columns:minmax(145px,1fr) minmax(260px,2.35fr) minmax(118px,.8fr);gap:14px;align-items:center;min-height:58px;}
+  .funnel-stage{display:flex;align-items:flex-start;gap:9px;min-width:0;}
+  .funnel-stage-index{display:grid;place-items:center;flex:0 0 24px;height:24px;border-radius:50%;background:var(--creme-escuro);color:var(--verde-escuro);font-size:11px;font-weight:700;}
+  .funnel-stage-label{font-size:13px;font-weight:700;line-height:1.25;padding-top:4px;}
+  .funnel-track{height:48px;display:flex;align-items:stretch;justify-content:center;position:relative;}
+  .funnel-track::after{content:"";position:absolute;left:0;right:0;top:50%;border-top:1px dashed rgba(27,77,55,.12);z-index:0;}
+  .funnel-shape{position:relative;z-index:1;width:var(--funnel-width);min-width:2px;background:var(--funnel-color);clip-path:polygon(4px 0,calc(100% - 4px) 0,100% 100%,0 100%);box-shadow:inset 0 0 0 1px rgba(27,77,55,.08);transition:width .35s ease;}
+  .funnel-row:first-child .funnel-shape{border-radius:8px 8px 0 0;}
+  .funnel-row:last-child .funnel-shape{border-radius:0 0 8px 8px;}
+  .funnel-values{text-align:right;min-width:0;}
+  .funnel-count{display:block;color:var(--verde-escuro);font-family:Fraunces,serif;font-size:22px;font-weight:700;line-height:1;}
+  .funnel-rate{display:block;color:var(--muted);font-size:11px;line-height:1.3;margin-top:5px;}
+  .funnel-rate strong{color:var(--texto);}
+  .funnel-loss{color:#9A3412;}
+  .funnel-empty{padding:42px 18px;text-align:center;color:var(--muted);line-height:1.5;}
+  @media(max-width:900px){.summary,.adoption-summary{grid-template-columns:repeat(2,1fr);} .top{flex-direction:column;} .status{text-align:left;} .actions{justify-content:flex-start;} .section-head{align-items:flex-start;flex-direction:column;} .panel{overflow-x:auto;} table{min-width:780px;} .funnel-panel{overflow:hidden;} .funnel-row{grid-template-columns:minmax(126px,1fr) minmax(180px,1.65fr) minmax(100px,.75fr);gap:9px;} }
+  @media(max-width:620px){.shell{padding-left:12px;padding-right:12px;} .funnel-panel{padding:16px 12px;} .funnel-kpis{grid-template-columns:1fr 1fr;} .funnel-kpi:last-child{grid-column:1/-1;} .funnel-row{grid-template-columns:minmax(112px,1fr) minmax(92px,1fr) 82px;gap:7px;min-height:64px;} .funnel-stage{gap:6px;} .funnel-stage-index{flex-basis:20px;height:20px;font-size:10px;} .funnel-stage-label{font-size:11px;padding-top:3px;} .funnel-track{height:42px;} .funnel-count{font-size:18px;} .funnel-rate{font-size:10px;} }
+  @media(prefers-reduced-motion:reduce){.funnel-shape{transition:none;}}
 </style>
 </head>
 <body>
@@ -108,7 +132,7 @@
     <div id="summary" class="summary"></div>
     <section class="section">
       <div class="section-head"><div class="section-title">Funil de cadastro</div><div class="section-note">Mostra onde o visitante avançou ou desistiu, sempre de forma agregada.</div></div>
-      <div id="funnel-summary" class="summary adoption-summary"></div>
+      <div id="funnel-summary" class="panel funnel-panel" aria-live="polite"></div>
     </section>
     <section class="section">
       <div class="section-head"><div class="section-title">Adoção do aplicativo</div><div class="section-note">Ações agregadas por sessão, sem expor identidade ou endereço.</div></div>
@@ -292,17 +316,7 @@ function render(){
     metric('Bots suspeitos', totals.suspected_bots||0, 'retirados das métricas futuras')
   ].join('');
   const funnel=data.funnel||{};
-  document.getElementById('funnel-summary').innerHTML = [
-    metric('Visitou a landing', funnel.landing_views||0, 'sessões válidas'),
-    metric('Clicou para entrar', funnel.cta_clicks||0, `${funnel.landing_to_cta_rate||0}% dos visitantes`),
-    metric('Viu o cadastro', funnel.signup_form_viewed||0, `${funnel.cta_to_signup_view_rate||0}% dos cliques`),
-    metric('Começou a preencher', funnel.signup_form_engaged||0, 'interagiu com os campos'),
-    metric('Concluiu conta', funnel.signup_account_completed||0, 'avançou para o endereço'),
-    metric('Enviou cadastro', funnel.signup_submits||0, 'tentou criar a conta'),
-    metric('Localização válida', funnel.location_success||0, `${funnel.location_failed||0} falhas`),
-    metric('Conta criada', funnel.auth_success||0, `${funnel.auth_failed||0} falhas`),
-    metric('Perfil concluído', funnel.profile_completed||0, `${funnel.signup_view_to_profile_rate||0}% de quem abriu`)
-  ].join('');
+  renderFunnel(funnel);
   const adoption=data.adoption||{};
   document.getElementById('adoption-summary').innerHTML = [
     metric('Guia concluído', adoption.onboarding_completed||0, `${adoption.onboarding_completion_rate||0}% de ${adoption.onboarding_opened||0} aberturas`),
@@ -362,6 +376,88 @@ function renderAccesses(accesses){
       <thead><tr><th>Horário</th><th>Visitante anônimo</th><th>Link acessado</th><th>Localização</th><th>Campanha</th><th>Converteu</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
+}
+
+function renderFunnel(funnel){
+  const stages=[
+    {key:'landing_views',label:'Visitou a landing'},
+    {key:'cta_clicks',label:'Clicou para entrar'},
+    {key:'signup_form_viewed',label:'Viu o cadastro'},
+    {key:'signup_form_engaged',label:'Começou a preencher'},
+    {key:'signup_account_completed',label:'Concluiu a conta'},
+    {key:'signup_submits',label:'Enviou o cadastro'},
+    {key:'location_success',label:'Validou a localização',failureKey:'location_failed'},
+    {key:'auth_success',label:'Criou a conta',failureKey:'auth_failed'},
+    {key:'profile_completed',label:'Concluiu o perfil',failureKey:'profile_failed'}
+  ].map(stage=>({...stage,value:safeCount(funnel[stage.key]),failures:safeCount(funnel[stage.failureKey])}));
+  const root=document.getElementById('funnel-summary');
+  const base=Math.max(...stages.map(stage=>stage.value),0);
+
+  if(base===0){
+    root.innerHTML='<div class="funnel-empty"><strong>Nenhuma jornada registrada neste período.</strong><br>Escolha outra janela para visualizar as proporções do cadastro.</div>';
+    return;
+  }
+
+  const first=stages[0].value;
+  const last=stages.at(-1).value;
+  const transitions=stages.slice(1).map((stage,index)=>{
+    const previous=stages[index];
+    return {from:previous.label,to:stage.label,lost:Math.max(previous.value-stage.value,0)};
+  });
+  const biggestLoss=transitions.reduce((biggest,item)=>item.lost>biggest.lost?item:biggest,{lost:0,from:'',to:''});
+  const reachedForm=stages.find(stage=>stage.key==='signup_form_viewed').value;
+  const lossNote=biggestLoss.lost>0
+    ? `${biggestLoss.from} → ${biggestLoss.to}`
+    : 'Nenhuma queda entre etapas';
+
+  const rows=stages.map((stage,index)=>{
+    const previous=index>0?stages[index-1]:null;
+    const stepRate=previous?percent(stage.value,previous.value):100;
+    const stepRateLabel=formatPercent(stepRate);
+    const lost=previous?Math.max(previous.value-stage.value,0):0;
+    const gained=previous?Math.max(stage.value-previous.value,0):0;
+    const width=base?Math.min(100,(stage.value/base)*100):0;
+    const failureNote=stage.failures?` · <span class="funnel-loss">${formatNumber(stage.failures)} falha${stage.failures===1?'':'s'}</span>`:'';
+    const detail=!previous
+      ? 'base do período'
+      : gained>0
+        ? `<strong>${stepRateLabel}%</strong> · +${formatNumber(gained)} fora da etapa anterior${failureNote}`
+        : `<strong>${stepRateLabel}%</strong> avançou${lost?` · <span class="funnel-loss">−${formatNumber(lost)}</span>`:''}${failureNote}`;
+    const hue=145-index*2.2;
+    const lightness=35+index*3.2;
+    const aria=`Etapa ${index+1}: ${stage.label}, ${formatNumber(stage.value)} sessões, ${index?`${stepRateLabel}% da etapa anterior`:'base do período'}`;
+    return `<div class="funnel-row" role="listitem" aria-label="${aria}">
+      <div class="funnel-stage"><span class="funnel-stage-index">${index+1}</span><span class="funnel-stage-label">${stage.label}</span></div>
+      <div class="funnel-track" aria-hidden="true"><div class="funnel-shape" style="--funnel-width:${width.toFixed(2)}%;--funnel-color:hsl(${hue} 38% ${lightness}%);"></div></div>
+      <div class="funnel-values"><span class="funnel-count">${formatNumber(stage.value)}</span><span class="funnel-rate">${detail}</span></div>
+    </div>`;
+  }).join('');
+
+  root.innerHTML=`
+    <div class="funnel-kpis">
+      <div class="funnel-kpi"><span class="funnel-kpi-label">Conversão fim a fim</span><span class="funnel-kpi-value">${formatPercent(percent(last,first))}%</span><span class="funnel-kpi-note">${formatNumber(last)} de ${formatNumber(first)} visitas</span></div>
+      <div class="funnel-kpi"><span class="funnel-kpi-label">Chegaram ao cadastro</span><span class="funnel-kpi-value">${formatPercent(percent(reachedForm,first))}%</span><span class="funnel-kpi-note">${formatNumber(reachedForm)} sessões abriram o formulário</span></div>
+      <div class="funnel-kpi"><span class="funnel-kpi-label">Maior queda</span><span class="funnel-kpi-value">${formatNumber(biggestLoss.lost)}</span><span class="funnel-kpi-note">${lossNote}</span></div>
+    </div>
+    <div class="funnel-visual" role="list" aria-label="Etapas do funil de cadastro">${rows}</div>`;
+}
+
+function safeCount(value){
+  const number=Number(value);
+  return Number.isFinite(number)&&number>0?Math.round(number):0;
+}
+
+function percent(value,total){
+  if(!total) return 0;
+  return Math.round((value/total)*1000)/10;
+}
+
+function formatNumber(value){
+  return Number(value||0).toLocaleString('pt-BR');
+}
+
+function formatPercent(value){
+  return Number(value||0).toLocaleString('pt-BR',{maximumFractionDigits:1});
 }
 
 async function loadPendingEvents(session=currentSession){
