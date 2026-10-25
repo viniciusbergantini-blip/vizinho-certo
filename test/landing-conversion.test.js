@@ -16,6 +16,15 @@ test('landings usam CTA direto e nao colocam dados pessoais na URL', () => {
   }
 });
 
+test('landing geral comunica valor, reduz inseguranca e mostra demonstracao honesta', () => {
+  const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.match(html, /Ver minha vizinhança grátis/);
+  assert.match(html, /Não pedimos telefone/);
+  assert.match(html, /Eventos locais/);
+  assert.match(html, /Exemplo ilustrativo/);
+  assert.match(html, /conteúdo disponível depende das publicações de cada região/);
+});
+
 test('landing compacta deixa instalacao para dentro do aplicativo', () => {
   const html = fs.readFileSync(path.join(root, 'saojoao.html'), 'utf8');
   assert.doesNotMatch(html, /Adicionar à Tela de Início/i);
