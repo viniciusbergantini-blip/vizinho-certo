@@ -29,3 +29,12 @@ test('cadastro do app tem duas etapas e nao exige apelido', () => {
   assert.doesNotMatch(html, /id="inp-apelido"/);
   assert.match(html, /E\.raio = 500/);
 });
+
+test('cadastro explica valor e privacidade com controles acessiveis', () => {
+  const html = fs.readFileSync(path.join(root, 'app.html'), 'utf8');
+  assert.match(html, /Avisos, ajuda, serviços e eventos locais/);
+  assert.match(html, /Criar conta e ver minha vizinhança/);
+  assert.match(html, /Sua região, não seu endereço público/);
+  assert.match(html, /aria-label="Mostrar senha"/);
+  assert.match(html, /role="alert" aria-live="polite"/);
+});

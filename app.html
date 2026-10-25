@@ -43,30 +43,65 @@
   .loading-dots{display:flex;gap:8px;justify-content:center;margin-top:24px;}
   .ld{width:10px;height:10px;border-radius:50%;background:var(--verde-claro);animation:pp 1.2s infinite;}
   .ld:nth-child(2){animation-delay:.2s}.ld:nth-child(3){animation-delay:.4s}
-  #t-bv{background:var(--verde);align-items:center;justify-content:center;padding:2rem;text-align:center;position:relative;overflow:hidden;}
-  #t-bv::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:rgba(82,183,136,0.15);top:-100px;right:-150px;}
-  #t-bv::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(231,111,81,0.12);bottom:-50px;left:-80px;}
-  .bv-inner{position:relative;z-index:1;width:100%;max-width:380px;}
-  .logo{font-family:'Fraunces',serif;font-size:44px;color:var(--creme);line-height:1.1;margin-bottom:8px;}
-  .logo span{color:var(--verde-claro);}
-  .tagline{font-size:15px;color:rgba(254,250,224,0.7);margin-bottom:40px;}
+  #t-bv{background:linear-gradient(155deg,#194D38 0%,#2D6A4F 58%,#3D8060 100%);align-items:center;justify-content:flex-start;padding:0;text-align:left;position:relative;overflow-x:hidden;overflow-y:auto;}
+  #t-bv::before{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:rgba(82,183,136,.13);top:-220px;right:-210px;}
+  #t-bv::after{content:'';position:absolute;width:300px;height:300px;border-radius:50%;background:rgba(231,111,81,.08);bottom:-150px;left:-150px;}
+  .bv-inner{position:relative;z-index:1;width:100%;max-width:420px;min-height:100vh;padding:24px 20px 34px;display:flex;flex-direction:column;justify-content:center;}
+  .auth-brand{display:flex;align-items:center;gap:10px;margin-bottom:24px;}
+  .auth-brand img{width:42px;height:42px;border-radius:13px;background:var(--creme);box-shadow:0 8px 24px rgba(7,36,24,.18);}
+  .logo{font-family:'Fraunces',serif;font-size:25px;color:var(--creme);line-height:1;margin:0;letter-spacing:-.4px;}
+  .logo span{color:#75D6A1;}
+  .tagline{font-size:11px;color:rgba(254,250,224,.7);margin-top:4px;letter-spacing:.2px;}
+  .auth-intro{margin-bottom:20px;}
+  .auth-eyebrow{display:inline-flex;align-items:center;gap:6px;margin-bottom:9px;color:#BDEED2;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;}
+  .auth-intro h1{max-width:330px;font-family:'Fraunces',serif;font-size:32px;line-height:1.06;letter-spacing:-.6px;color:var(--creme);}
+  .auth-intro>p{max-width:350px;margin-top:9px;color:rgba(254,250,224,.78);font-size:14px;line-height:1.5;}
+  .auth-benefits{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px;}
+  .auth-benefits span{padding:6px 9px;border:1px solid rgba(254,250,224,.16);border-radius:999px;background:rgba(255,255,255,.08);color:rgba(254,250,224,.92);font-size:11px;font-weight:600;backdrop-filter:blur(8px);}
   .card{background:var(--creme);border-radius:var(--radius);padding:1.75rem;}
+  #t-bv .card{background:#FFFDF4;border:1px solid rgba(255,255,255,.55);border-radius:22px;padding:20px;box-shadow:0 22px 55px rgba(5,34,22,.24);}
+  .auth-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:15px;}
+  .auth-card-kicker{display:block;margin-bottom:3px;color:var(--verde);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;}
+  .auth-time{flex:none;padding:5px 8px;border-radius:999px;background:#E7F7ED;color:#285B42;font-size:10px;font-weight:700;}
   .card h2{font-family:'Fraunces',serif;font-size:21px;color:var(--verde);margin-bottom:6px;}
   .card p{font-size:14px;color:var(--texto-muted);margin-bottom:18px;line-height:1.6;}
+  #t-bv .card h2{margin:0;font-size:24px;line-height:1.1;letter-spacing:-.25px;}
+  .auth-card-copy{margin:6px 0 0!important;font-size:13px!important;line-height:1.45!important;}
   .ig{margin-bottom:12px;}
   .ig label{font-size:11px;font-weight:500;color:var(--texto-muted);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;}
   .ig input{width:100%;padding:11px 14px;border:1.5px solid var(--borda);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;background:var(--branco);color:var(--texto);outline:none;transition:border-color .2s;}
   .ig input:focus{border-color:var(--verde-claro);}
+  #t-bv .ig{margin-bottom:13px;}
+  #t-bv .ig label{margin-bottom:6px;color:#3E5248;font-size:12px;font-weight:700;text-transform:none;letter-spacing:0;}
+  #t-bv .ig input{min-height:48px;padding:12px 13px;border:1.5px solid #DDD7C7;border-radius:12px;background:#FFF;color:var(--texto);font-size:15px;box-shadow:0 1px 0 rgba(17,65,45,.02);}
+  #t-bv .ig input::placeholder{color:#9A968D;}
+  #t-bv .ig input:focus{border-color:var(--verde-claro);box-shadow:0 0 0 3px rgba(82,183,136,.14);}
+  #t-bv .ig input[aria-invalid="true"]{border-color:#C95D4C;box-shadow:0 0 0 3px rgba(201,93,76,.1);}
+  .password-field{position:relative;}
+  .password-field input{padding-right:72px!important;}
+  .password-toggle{position:absolute;right:9px;top:50%;transform:translateY(-50%);padding:7px 5px;border:0;background:transparent;color:var(--verde);font:700 11px 'DM Sans',sans-serif;cursor:pointer;}
+  .field-hint{margin-top:5px;color:#807C72;font-size:10px;line-height:1.35;}
+  .signup-error{display:none;margin:-2px 0 12px;padding:9px 10px;border-radius:9px;background:#FFF0EC;color:#8A3329;font-size:11px;line-height:1.4;}
+  .signup-error.show{display:block;}
   .btnp{width:100%;padding:13px;background:var(--verde);color:var(--creme);border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:background .2s;}
   .btnp:hover{background:#1B4D37;}
   .btnp:disabled{background:#aaa;cursor:not-allowed;}
-  .signup-progress{display:flex;align-items:center;gap:8px;margin:0 0 16px;}
-  .signup-progress span{height:5px;flex:1;border-radius:999px;background:#DED8C8;transition:background .2s;}
+  #t-bv .btnp{min-height:48px;border-radius:12px;font-weight:700;box-shadow:0 8px 18px rgba(45,106,79,.18);}
+  .signup-progress-labels{display:flex;justify-content:space-between;margin:0 1px 7px;color:#8B877D;font-size:10px;font-weight:700;}
+  .signup-progress-labels span.on{color:var(--verde);}
+  .signup-progress{display:flex;align-items:center;gap:7px;margin:0 0 16px;}
+  .signup-progress span{height:4px;flex:1;border-radius:999px;background:#DED8C8;transition:background .2s;}
   .signup-progress span.on{background:var(--verde-claro);}
-  .signup-step-label{font-size:11px;color:var(--texto-muted);margin-bottom:8px;font-weight:500;}
-  .signup-back{width:100%;margin-top:8px;padding:10px;background:transparent;border:0;color:var(--verde);font:500 13px 'DM Sans',sans-serif;cursor:pointer;}
-  .signup-privacy{display:flex;gap:8px;align-items:flex-start;background:#F0FBF4;border:1px solid #BEE8CC;border-radius:9px;padding:10px 11px;margin:8px 0 13px;color:#285B42;font-size:12px;line-height:1.45;}
-  .disclaimer{font-size:11px;color:rgba(254,250,224,0.45);margin-top:16px;}
+  .signup-step-label{font-size:13px;color:#314D40;margin-bottom:13px;font-weight:700;}
+  .signup-back{width:100%;margin-top:6px;padding:10px;background:transparent;border:0;color:var(--verde);font:600 13px 'DM Sans',sans-serif;cursor:pointer;}
+  .signup-privacy{display:flex;gap:9px;align-items:flex-start;background:#EDF8F2;border:1px solid #B7DEC8;border-radius:11px;padding:11px 12px;margin:2px 0 14px;color:#285B42;font-size:11px;line-height:1.45;}
+  .signup-privacy strong{display:block;margin-bottom:2px;font-size:12px;}
+  .auth-switch{text-align:center;margin-top:14px;color:#716D64;font-size:12px;}
+  .auth-switch button{padding:3px;border:0;background:transparent;color:var(--verde);font:700 12px 'DM Sans',sans-serif;cursor:pointer;}
+  .auth-assurance{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:14px;color:rgba(254,250,224,.76);font-size:11px;line-height:1.35;text-align:center;}
+  .auth-assurance span:first-child{font-size:14px;}
+  .login-help{display:flex;justify-content:space-between;align-items:center;margin-top:13px;font-size:12px;}
+  .login-help button{border:0;background:transparent;color:var(--verde);font:700 12px 'DM Sans',sans-serif;cursor:pointer;}
   #t-raio{background:var(--creme);}
   .rh{background:var(--verde);padding:2rem 1.5rem 3rem;position:relative;overflow:hidden;}
   .rh::after{content:'';position:absolute;bottom:-20px;left:0;right:0;height:40px;background:var(--creme);border-radius:40px 40px 0 0;}
@@ -384,7 +419,8 @@
   .activity-item button{padding:7px 9px;border:1px solid var(--verde);border-radius:8px;background:white;color:var(--verde);font:600 11px 'DM Sans',sans-serif;cursor:pointer;}
   .activity-empty{padding:13px;border:1px dashed var(--borda);border-radius:10px;color:var(--texto-muted);font-size:12px;line-height:1.5;background:rgba(255,255,255,.45);}
   html,body{height:100%;overflow-x:hidden;}
-  @media(max-width:479px){.tela{width:100%;min-height:100vh;}.bv-inner{padding:0 1rem;}.card{border-radius:var(--radius);margin:0;}input,textarea,select{font-size:16px!important;}}
+  @media(max-width:479px){.tela{width:100%;min-height:100vh;}.bv-inner{padding:20px 16px 30px;justify-content:flex-start;}.auth-brand{margin-bottom:20px;}.auth-intro{margin-bottom:18px;}.auth-intro h1{font-size:29px;}#t-bv .card{padding:18px;border-radius:20px;}.card{margin:0;}input,textarea,select{font-size:16px!important;}}
+  @media(max-height:720px) and (max-width:479px){.auth-brand{margin-bottom:14px;}.auth-intro{margin-bottom:14px;}.auth-intro h1{font-size:27px;}.auth-intro>p{margin-top:6px;}.auth-benefits{margin-top:10px;}#t-bv .card{padding:16px;}.auth-card-head{margin-bottom:12px;}}
   @media(min-width:480px){.tela{max-width:420px;margin:0 auto}body{background:#E8E0CC}.fab{right:calc(50% - 210px + 24px)}.panico-fab{left:calc(50% - 210px + 16px)!important;right:auto!important}}
 </style>
 </head>
@@ -402,43 +438,52 @@
 
 <div class="tela" id="t-bv">
   <div class="bv-inner">
-    <div class="logo">Vizinho<br><span>Certo</span></div>
-    <div class="tagline">Sua rua. Seus vizinhos. Do seu jeito.</div>
-    <div class="card" id="card-cadastro">
-      <h2>Criar conta</h2>
-      <p>Entre gratuitamente e veja o que está perto de você.</p>
+    <div class="auth-brand">
+      <img src="/icon.svg" alt="" width="42" height="42">
+      <div><div class="logo">Vizinho<span>Certo</span></div><div class="tagline">Sua rua. Seus vizinhos. Do seu jeito.</div></div>
+    </div>
+    <div class="auth-intro">
+      <div class="auth-eyebrow">● Sua cidade, mais perto de você</div>
+      <h1>Entre na sua vizinhança.</h1>
+      <p>Avisos, ajuda, serviços e eventos locais em um só lugar.</p>
+      <div class="auth-benefits" aria-label="Recursos do Vizinho Certo"><span>📣 Avisos</span><span>🛠️ Serviços</span><span>📅 Eventos</span></div>
+    </div>
+    <div class="card auth-card" id="card-cadastro">
+      <div class="auth-card-head">
+        <div><span class="auth-card-kicker">Cadastro gratuito</span><h2>Crie sua conta</h2><p class="auth-card-copy">Comece com seus dados de acesso.</p></div>
+        <span class="auth-time">≈ 1 min</span>
+      </div>
+      <div class="signup-progress-labels"><span id="signup-label-1" class="on">1 · Conta</span><span id="signup-label-2">2 · Região</span></div>
       <div class="signup-progress"><span id="signup-progress-1" class="on"></span><span id="signup-progress-2"></span></div>
       <div id="signup-step-account">
-        <div class="signup-step-label">Etapa 1 de 2 · Sua conta</div>
-        <div class="ig"><label>Seu nome</label><input type="text" id="inp-nome" autocomplete="name" placeholder="Ex: Maria Silva" oninput="registrarInteracaoCadastro()"/></div>
-        <div class="ig"><label>E-mail</label><input type="email" id="inp-email" autocomplete="email" placeholder="Ex: maria@email.com" oninput="registrarInteracaoCadastro()"/></div>
-        <div class="ig"><label>Senha</label><input type="password" id="inp-senha" autocomplete="new-password" placeholder="Mínimo 6 caracteres" oninput="registrarInteracaoCadastro()"/></div>
-        <button class="btnp" onclick="avancarCadastroEndereco()">Continuar →</button>
+        <div class="signup-step-label">Seus dados</div>
+        <div class="ig"><label for="inp-nome">Nome</label><input type="text" id="inp-nome" autocomplete="name" placeholder="Como podemos chamar você?" oninput="registrarInteracaoCadastro();limparErroCadastro(this)"/></div>
+        <div class="ig"><label for="inp-email">E-mail</label><input type="email" id="inp-email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="voce@email.com" oninput="registrarInteracaoCadastro();limparErroCadastro(this)"/></div>
+        <div class="ig"><label for="inp-senha">Senha</label><div class="password-field"><input type="password" id="inp-senha" autocomplete="new-password" placeholder="Crie uma senha" oninput="registrarInteracaoCadastro();limparErroCadastro(this)"/><button type="button" class="password-toggle" onclick="alternarSenha('inp-senha',this)" aria-label="Mostrar senha">Mostrar</button></div><div class="field-hint">Use pelo menos 6 caracteres.</div></div>
+        <div class="signup-error" id="signup-error" role="alert" aria-live="polite"></div>
+        <button class="btnp" onclick="avancarCadastroEndereco()">Continuar para minha região →</button>
       </div>
       <div id="signup-step-address" style="display:none;">
-        <div class="signup-step-label">Etapa 2 de 2 · Sua região</div>
-        <div class="ig"><label>CEP</label><input type="tel" id="inp-cep" inputmode="numeric" autocomplete="postal-code" placeholder="Ex: 13870-000" maxlength="9" oninput="registrarInteracaoCadastro();formataCEP(this)"/></div>
-        <div class="ig" id="cep-resultado" style="display:none;"><label>Rua encontrada</label><input type="text" id="inp-cep-addr" readonly style="background:#F0FBF4;color:#2D6A4F;font-weight:500;"/></div>
-        <div class="ig" id="num-wrap" style="display:none;"><label>Número da sua casa</label><input type="text" id="inp-num" autocomplete="address-line2" placeholder="Ex: 142 ou 332B" oninput="registrarInteracaoCadastro()" onblur="geocodificarComNumero(this.value)"/></div>
-        <div class="signup-privacy"><span>🔒</span><span>Seu endereço exato nunca aparece. Ele serve apenas para calcular a distância aproximada.</span></div>
-        <button class="btnp" id="btn-cadastrar" onclick="irRaio()">Entrar na vizinhança →</button>
+        <div class="signup-step-label">Onde fica sua vizinhança?</div>
+        <div class="signup-privacy"><span>🔒</span><span><strong>Sua região, não seu endereço público</strong>Usamos esses dados somente para mostrar o que acontece perto de você. Outros usuários nunca veem seu endereço.</span></div>
+        <div class="ig"><label for="inp-cep">CEP</label><input type="tel" id="inp-cep" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" maxlength="9" oninput="registrarInteracaoCadastro();limparErroCadastro(this);formataCEP(this)"/></div>
+        <div class="ig" id="cep-resultado" style="display:none;"><label for="inp-cep-addr">Rua encontrada</label><input type="text" id="inp-cep-addr" readonly style="background:#F0FBF4;color:#2D6A4F;font-weight:600;"/></div>
+        <div class="ig" id="num-wrap" style="display:none;"><label for="inp-num">Número da residência</label><input type="text" id="inp-num" autocomplete="address-line2" placeholder="Ex: 142 ou 332B" oninput="registrarInteracaoCadastro();limparErroCadastro(this)" onblur="geocodificarComNumero(this.value)"/></div>
+        <div class="signup-error" id="signup-location-error" role="alert" aria-live="polite"></div>
+        <button class="btnp" id="btn-cadastrar" onclick="irRaio()">Criar conta e ver minha vizinhança →</button>
         <button class="signup-back" onclick="voltarCadastroConta()">← Voltar</button>
       </div>
-      <div style="text-align:center;margin-top:12px;"><span style="font-size:13px;color:var(--texto-muted);">Já tem conta? </span><span style="font-size:13px;color:#2D6A4F;font-weight:500;cursor:pointer;" onclick="mostrarLogin()">Entrar</span></div>
+      <div class="auth-switch">Já tem conta? <button type="button" onclick="mostrarLogin()">Entrar</button></div>
     </div>
-    <div class="card" id="card-login" style="display:none;">
-      <h2>Entrar</h2>
-      <p>Bem-vindo de volta!</p>
-      <div class="ig"><label>E-mail</label><input type="email" id="login-email" placeholder="seu@email.com"/></div>
-      <div class="ig"><label>Senha</label><input type="password" id="login-senha" placeholder="Sua senha"/></div>
+    <div class="card auth-card" id="card-login" style="display:none;">
+      <div class="auth-card-head"><div><span class="auth-card-kicker">Que bom ver você</span><h2>Entre na sua conta</h2><p class="auth-card-copy">Veja as novidades perto de você.</p></div></div>
+      <div class="ig"><label for="login-email">E-mail</label><input type="email" id="login-email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="voce@email.com"/></div>
+      <div class="ig"><label for="login-senha">Senha</label><div class="password-field"><input type="password" id="login-senha" autocomplete="current-password" placeholder="Sua senha"/><button type="button" class="password-toggle" onclick="alternarSenha('login-senha',this)" aria-label="Mostrar senha">Mostrar</button></div></div>
       <button class="btnp" id="btn-login" onclick="fazerLogin()">Entrar →</button>
-      <div style="text-align:center;margin-top:12px;"><span style="font-size:13px;color:var(--texto-muted);">Esqueceu a senha? </span><span style="font-size:13px;color:#2D6A4F;font-weight:500;cursor:pointer;" onclick="recuperarSenha()">Recuperar</span></div>
-      <div style="text-align:center;margin-top:8px;"><span style="font-size:13px;color:var(--texto-muted);">Não tem conta? </span><span style="font-size:13px;color:#2D6A4F;font-weight:500;cursor:pointer;" onclick="mostrarCadastro()">Criar conta</span></div>
+      <div class="login-help"><span>Esqueceu a senha?</span><button type="button" onclick="recuperarSenha()">Recuperar acesso</button></div>
+      <div class="auth-switch">Ainda não tem conta? <button type="button" onclick="mostrarCadastro()">Criar gratuitamente</button></div>
     </div>
-    <div class="disclaimer" style="background:rgba(82,183,136,0.15);border:1px solid rgba(82,183,136,0.3);border-radius:10px;padding:10px 14px;margin-top:16px;position:relative;z-index:1;display:flex;align-items:center;gap:8px;max-width:380px;">
-      <span style="font-size:18px;">🔒</span>
-      <span style="font-size:13px;color:rgba(254,250,224,0.9);line-height:1.5;"><strong style="color:white;">Seu endereço exato nunca é mostrado</strong> a outros usuários. Só calculamos a distância entre vizinhos.</span>
-    </div>
+    <div class="auth-assurance"><span>✓</span><span>Grátis para moradores · seus dados ficam protegidos</span></div>
   </div>
 </div>
 
@@ -1064,11 +1109,17 @@ async function reenviarEmail(){
   toast('Email reenviado! 📬');
 }
 function mostrarLoginDireto(){ mostrarLogin(); irTela('t-bv'); }
-function mostrarLogin(){ document.getElementById('card-cadastro').style.display='none'; document.getElementById('card-login').style.display=''; }
+function mostrarLogin(){
+  document.getElementById('card-cadastro').style.display='none';
+  document.getElementById('card-login').style.display='';
+  limparErrosCadastro();
+  setTimeout(()=>document.getElementById('login-email')?.focus(),50);
+}
 function mostrarCadastro(){
   document.getElementById('card-login').style.display='none';
   document.getElementById('card-cadastro').style.display='';
   voltarCadastroConta({track:false});
+  limparErrosCadastro();
   if(!sessionStorage.getItem('vc_signup_viewed')){
     sessionStorage.setItem('vc_signup_viewed','1');
     trackCadastro('signup_form_viewed');
@@ -1081,16 +1132,45 @@ function registrarInteracaoCadastro(){
   trackCadastro('signup_form_engaged');
 }
 
+function alternarSenha(inputId,button){
+  const input=document.getElementById(inputId);
+  if(!input) return;
+  const mostrar=input.type==='password';
+  input.type=mostrar?'text':'password';
+  button.textContent=mostrar?'Ocultar':'Mostrar';
+  button.setAttribute('aria-label',mostrar?'Ocultar senha':'Mostrar senha');
+  input.focus();
+}
+
+function limparErrosCadastro(){
+  document.querySelectorAll('#t-bv .signup-error').forEach(el=>{el.textContent='';el.classList.remove('show');});
+  document.querySelectorAll('#t-bv input[aria-invalid="true"]').forEach(el=>el.removeAttribute('aria-invalid'));
+}
+
+function limparErroCadastro(input){
+  input?.removeAttribute('aria-invalid');
+  document.querySelectorAll('#t-bv .signup-error').forEach(el=>{el.textContent='';el.classList.remove('show');});
+}
+
+function mostrarErroCadastro(mensagem,campoId,erroId='signup-error'){
+  const erro=document.getElementById(erroId);
+  const campo=document.getElementById(campoId);
+  if(erro){erro.textContent=mensagem;erro.classList.add('show');}
+  if(campo){campo.setAttribute('aria-invalid','true');campo.focus();}
+}
+
 function avancarCadastroEndereco(){
   const nome=document.getElementById('inp-nome').value.trim();
   const email=document.getElementById('inp-email').value.trim();
   const senha=document.getElementById('inp-senha').value;
-  if(!nome){ toast('Digite seu nome!'); return; }
-  if(!email||!email.includes('@')){ toast('Digite um email válido!'); return; }
-  if(!senha||senha.length<6){ toast('Senha deve ter pelo menos 6 caracteres!'); return; }
+  limparErrosCadastro();
+  if(!nome){ mostrarErroCadastro('Digite seu nome para continuar.','inp-nome'); return; }
+  if(!email||!email.includes('@')){ mostrarErroCadastro('Digite um e-mail válido.','inp-email'); return; }
+  if(!senha||senha.length<6){ mostrarErroCadastro('Sua senha precisa ter pelo menos 6 caracteres.','inp-senha'); return; }
   document.getElementById('signup-step-account').style.display='none';
   document.getElementById('signup-step-address').style.display='';
   document.getElementById('signup-progress-2').classList.add('on');
+  document.getElementById('signup-label-2').classList.add('on');
   trackCadastro('signup_account_completed');
   setTimeout(()=>document.getElementById('inp-cep')?.focus(),50);
 }
@@ -1099,6 +1179,8 @@ function voltarCadastroConta({track=true}={}){
   document.getElementById('signup-step-account').style.display='';
   document.getElementById('signup-step-address').style.display='none';
   document.getElementById('signup-progress-2').classList.remove('on');
+  document.getElementById('signup-label-2').classList.remove('on');
+  limparErrosCadastro();
   if(track) trackCadastro('signup_account_back');
 }
 
@@ -1135,12 +1217,13 @@ async function irRaio(){
   const senha   = document.getElementById('inp-senha').value;
   const cep     = document.getElementById('inp-cep').value.replace(/[^0-9]/g,'');
   const num     = document.getElementById('inp-num').value.trim();
-  if(!nome)                        { toast('Digite seu nome completo!'); return; }
-  if(!email||!email.includes('@')) { toast('Digite um email válido!'); return; }
-  if(!senha||senha.length<6)       { toast('Senha deve ter pelo menos 6 caracteres!'); return; }
-  if(cep.length!==8)               { toast('Digite um CEP válido!'); return; }
-  if(!E.bairro)                    { toast('Aguarde o CEP ser validado...'); return; }
-  if(!num)                         { toast('Digite o número da sua casa!'); return; }
+  limparErrosCadastro();
+  if(!nome){ voltarCadastroConta({track:false}); mostrarErroCadastro('Digite seu nome para continuar.','inp-nome'); return; }
+  if(!email||!email.includes('@')){ voltarCadastroConta({track:false}); mostrarErroCadastro('Digite um e-mail válido.','inp-email'); return; }
+  if(!senha||senha.length<6){ voltarCadastroConta({track:false}); mostrarErroCadastro('Sua senha precisa ter pelo menos 6 caracteres.','inp-senha'); return; }
+  if(cep.length!==8){ mostrarErroCadastro('Digite um CEP válido com 8 números.','inp-cep','signup-location-error'); return; }
+  if(!E.bairro){ mostrarErroCadastro('Aguarde a confirmação do CEP antes de continuar.','inp-cep','signup-location-error'); return; }
+  if(!num){ mostrarErroCadastro('Digite o número da residência para calcular sua região.','inp-num','signup-location-error'); return; }
   const btn = document.getElementById('btn-cadastrar');
   btn.disabled = true; btn.textContent = 'Localizando endereço...';
   trackCadastro('signup_submit');
@@ -1150,14 +1233,14 @@ async function irRaio(){
       faseCadastro = 'profile';
       btn.textContent = 'Concluindo perfil...';
       await irFeed();
-      btn.disabled=false; btn.textContent='Entrar na vizinhança →';
+      btn.disabled=false; btn.textContent='Criar conta e ver minha vizinhança →';
       return;
     }
     const coordenadas = await geocodificar(E.rua, num, E.cidade, E.uf, cep);
     if(!coordenadas){
       trackCadastro('signup_location_failed',{status:'not_found'});
-      toast('Não conseguimos localizar esse endereço. Confira o CEP e o número.');
-      btn.disabled=false; btn.textContent='Criar conta →';
+      mostrarErroCadastro('Não conseguimos localizar esse endereço. Confira o CEP e o número.','inp-num','signup-location-error');
+      btn.disabled=false; btn.textContent='Criar conta e ver minha vizinhança →';
       return;
     }
     E.lat=coordenadas.lat; E.lon=coordenadas.lon;
@@ -1169,7 +1252,7 @@ async function irRaio(){
     if(authErr){
       trackCadastro('signup_auth_failed',{status:'auth_error'});
       toast('Não foi possível criar a conta. Confira o email ou tente entrar se já possui cadastro.');
-      btn.disabled=false; btn.textContent='Entrar na vizinhança →'; return;
+      btn.disabled=false; btn.textContent='Criar conta e ver minha vizinhança →'; return;
     }
     trackCadastro('signup_auth_success');
     E.userId = authData.user.id;
@@ -1178,12 +1261,12 @@ async function irRaio(){
     cadastroTemp = { nome, apelido, email, cep, numero: num, rua: E.rua, bairro: E.bairro, cidade: E.cidade, uf: E.uf, lat: E.lat, lon: E.lon };
     faseCadastro = 'profile';
     await irFeed();
-    btn.disabled=false; btn.textContent='Entrar na vizinhança →';
+    btn.disabled=false; btn.textContent='Criar conta e ver minha vizinhança →';
   } catch(e) {
     const eventoFalha = faseCadastro === 'profile' ? 'profile_failed' : faseCadastro === 'auth' ? 'signup_auth_failed' : 'signup_location_failed';
     trackCadastro(eventoFalha,{status:'unexpected_error'});
     toast('Erro inesperado: ' + e.message);
-    btn.disabled=false; btn.textContent='Entrar na vizinhança →';
+    btn.disabled=false; btn.textContent='Criar conta e ver minha vizinhança →';
   }
 }
 
@@ -1736,7 +1819,10 @@ function formataCEP(el){
   let v=el.value.replace(/\D/g,'');
   if(v.length>5) v=v.slice(0,5)+'-'+v.slice(5,8);
   el.value=v;
-  if(v.replace('-','').length===8) buscaCEP(v.replace('-',''));
+  if(v.replace('-','').length===8){ buscaCEP(v.replace('-','')); return; }
+  document.getElementById('cep-resultado').style.display='none';
+  document.getElementById('num-wrap').style.display='none';
+  E.rua=''; E.bairro=''; E.cidade=''; E.uf=''; E.cep='';
 }
 async function buscaCEP(cep){
   const addrEl=document.getElementById('inp-cep-addr');
@@ -1747,12 +1833,17 @@ async function buscaCEP(cep){
   try{
     const r=await fetch('https://viacep.com.br/ws/'+cep+'/json/');
     const d=await r.json();
-    if(d.erro){resEl.style.display='none';addrEl.value='';toast('CEP não encontrado.');E.bairro='';return;}
+    if(d.erro){
+      resEl.style.display='none'; addrEl.value=''; numWrap.style.display='none'; E.bairro='';
+      mostrarErroCadastro('CEP não encontrado. Confira os números e tente novamente.','inp-cep','signup-location-error');
+      return;
+    }
     const logr=d.logradouro||'';
     const bairro=d.bairro||d.localidade||'';
     addrEl.value=(logr?logr+', ':'')+bairro+(d.localidade?' — '+d.localidade+'/'+d.uf:'');
     if(numWrap) numWrap.style.display='';
     E.rua=logr; E.bairro=bairro||d.localidade; E.cidade=d.localidade; E.uf=d.uf; E.cep=cep;
+    limparErroCadastro(document.getElementById('inp-cep'));
     geocodificar(logr,'',d.localidade,d.uf,cep).then(c=>{if(c){E.lat=c.lat;E.lon=c.lon;}});
   } catch(e){
     addrEl.value='CEP '+cep.slice(0,5)+'-'+cep.slice(5)+' encontrado';
