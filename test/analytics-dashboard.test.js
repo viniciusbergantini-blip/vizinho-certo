@@ -149,6 +149,25 @@ test('retira bots identificados das metricas de conversao', () => {
   assert.equal(result.totals.suspected_bots, 1);
 });
 
+test('conta existente recuperada nao vira abandono e preserva atribuicao do link', () => {
+  const events = [
+    eventoEm('landing_view', 'sessao-existente', '/saojoao?utm_source=instagram', '2026-10-18T15:00:00.000Z'),
+    evento('cta_click', 'sessao-existente', '/app', { action: 'signup_submit' }),
+    evento('cta_click', 'sessao-existente', '/app', { action: 'existing_account_recovered', status: 'user_already_exists' }),
+    evento('cta_click', 'sessao-existente', '/app', { action: 'password_recovery_requested', status: 'request_accepted' }),
+  ];
+
+  const result = buildWindow(events, null, end);
+  assert.equal(result.totals.visitors, 1);
+  assert.equal(result.totals.conversions, 0);
+  assert.equal(result.totals.existing_account_recovered, 1);
+  assert.equal(result.totals.password_recovery_requested, 1);
+  assert.equal(result.totals.not_registered, 0);
+  assert.equal(result.totals.abandonment_rate, 0);
+  assert.equal(result.links[0].existing_accounts, 1);
+  assert.equal(result.accesses[0].existing_account, true);
+});
+
 function evento(event_type, session_id, path, metadata = {}) {
   return {
     event_type,

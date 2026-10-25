@@ -48,6 +48,15 @@ test('cadastro explica valor e privacidade com controles acessiveis', () => {
   assert.match(html, /role="alert" aria-live="polite"/);
 });
 
+test('conta existente vai para o login com email mantido e recuperacao de senha', () => {
+  const html = fs.readFileSync(path.join(root, 'app.html'), 'utf8');
+  assert.match(html, /Este e-mail já possui uma conta\./);
+  assert.match(html, /mostrarLogin\(email,\{contaExistente:true\}\)/);
+  assert.match(html, /Esqueci minha senha/);
+  assert.match(html, /trackCadastro\('existing_account_recovered',\{status:technicalCode\}\)/);
+  assert.match(html, /document\.getElementById\('inp-senha'\)\.value=''/);
+});
+
 test('cadastro direto de anuncios explica valor e preserva a atribuicao', () => {
   const html = fs.readFileSync(path.join(root, 'app.html'), 'utf8');
   const vercel = fs.readFileSync(path.join(root, 'vercel.json'), 'utf8');

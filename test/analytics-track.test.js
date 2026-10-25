@@ -26,6 +26,8 @@ test('mantem apenas metadados de campanha permitidos', () => {
     utm_source: 'instagram',
     email: 'privado@example.com',
     cep: '00000-000',
+    senha: 'nao-pode-ser-armazenada',
+    password: 'tambem-nao-pode',
     landing_city: '<script>',
     link_url: '/campanha',
     platform: 'ios',
@@ -51,6 +53,10 @@ test('armazena acao de adocao sem exigir um novo tipo na tabela', () => {
   assert.deepEqual(_private.prepararEventoPersistido('cta_click', { action: 'forjada' }), {
     eventType: 'cta_click',
     metadata: {},
+  });
+  assert.deepEqual(_private.prepararEventoPersistido('existing_account_recovered', { status: 'user_already_exists' }), {
+    eventType: 'cta_click',
+    metadata: { status: 'user_already_exists', action: 'existing_account_recovered' },
   });
 });
 

@@ -107,6 +107,9 @@
   .auth-assurance span:first-child{font-size:14px;}
   .login-help{display:flex;justify-content:space-between;align-items:center;margin-top:13px;font-size:12px;}
   .login-help button{border:0;background:transparent;color:var(--verde);font:700 12px 'DM Sans',sans-serif;cursor:pointer;}
+  .login-account-notice{display:flex;gap:9px;align-items:flex-start;margin:0 0 14px;padding:11px 12px;border:1px solid #B7DEC8;border-radius:11px;background:#EDF8F2;color:#285B42;font-size:11px;line-height:1.45;}
+  .login-account-notice[hidden]{display:none;}
+  .login-account-notice strong{display:block;margin-bottom:2px;font-size:12px;}
   #t-bv.campaign-signup .bv-inner{justify-content:flex-start;padding-top:18px;}
   #t-bv.campaign-signup .auth-brand{margin-bottom:10px;}
   #t-bv.campaign-signup .auth-brand img{width:36px;height:36px;border-radius:11px;}
@@ -504,10 +507,11 @@
     </div>
     <div class="card auth-card" id="card-login" style="display:none;">
       <div class="auth-card-head"><div><span class="auth-card-kicker">Que bom ver você</span><h2>Entre na sua conta</h2><p class="auth-card-copy">Veja as novidades perto de você.</p></div></div>
+      <div class="login-account-notice" id="login-account-notice" role="status" aria-live="polite" hidden><span>✓</span><span><strong>Este e-mail já possui uma conta.</strong>Entre com sua senha ou use “Esqueci minha senha”.</span></div>
       <div class="ig"><label for="login-email">E-mail</label><input type="email" id="login-email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="voce@email.com"/></div>
       <div class="ig"><label for="login-senha">Senha</label><div class="password-field"><input type="password" id="login-senha" autocomplete="current-password" placeholder="Sua senha"/><button type="button" class="password-toggle" onclick="alternarSenha('login-senha',this)" aria-label="Mostrar senha">Mostrar</button></div></div>
       <button class="btnp" id="btn-login" onclick="fazerLogin()">Entrar →</button>
-      <div class="login-help"><span>Esqueceu a senha?</span><button type="button" onclick="recuperarSenha()">Recuperar acesso</button></div>
+      <div class="login-help"><span>Não lembra a senha?</span><button type="button" onclick="recuperarSenha()">Esqueci minha senha</button></div>
       <div class="auth-switch">Ainda não tem conta? <button type="button" onclick="mostrarCadastro()">Criar gratuitamente</button></div>
     </div>
     <div class="auth-assurance"><span>✓</span><span>Grátis para moradores · seus dados ficam protegidos</span></div>
@@ -1198,15 +1202,21 @@ async function reenviarEmail(){
   toast('Email reenviado! 📬');
 }
 function mostrarLoginDireto(){ mostrarLogin(); irTela('t-bv'); }
-function mostrarLogin(){
+function mostrarLogin(email='', {contaExistente=false}={}){
   document.getElementById('card-cadastro').style.display='none';
   document.getElementById('card-login').style.display='';
+  const campoEmail=document.getElementById('login-email');
+  const aviso=document.getElementById('login-account-notice');
+  if(email) campoEmail.value=email;
+  aviso.hidden=!contaExistente;
+  document.getElementById('login-senha').value='';
   limparErrosCadastro();
-  setTimeout(()=>document.getElementById('login-email')?.focus(),50);
+  setTimeout(()=>(email?document.getElementById('login-senha'):campoEmail)?.focus(),50);
 }
 function mostrarCadastro(){
   document.getElementById('card-login').style.display='none';
   document.getElementById('card-cadastro').style.display='';
+  document.getElementById('login-account-notice').hidden=true;
   voltarCadastroConta({track:false});
   limparErrosCadastro();
   if(!sessionStorage.getItem('vc_signup_viewed')){
@@ -1278,7 +1288,32 @@ async function recuperarSenha(){
   if(!email || !email.includes('@')){ toast('Digite seu email primeiro!'); return; }
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: 'https://www.vizinhocerto.com.br' });
   if(error){ toast('Erro: ' + error.message); return; }
+  trackCadastro('password_recovery_requested',{status:'request_accepted'});
   toast('Email de recuperação enviado! Verifique sua caixa. 📬');
+}
+
+function codigoErroAuth(error){
+  const code=String(error?.code||'').trim().toLowerCase();
+  if(/^[a-z0-9_:-]{1,80}$/.test(code)) return code;
+  return 'auth_error';
+}
+
+function erroDeContaExistente(error){
+  const code=codigoErroAuth(error);
+  if(code==='user_already_exists'||code==='email_exists') return true;
+  if(code!=='auth_error') return false;
+  const detail=String(error?.message||'').toLowerCase();
+  return detail.includes('already')||detail.includes('registered');
+}
+
+function recuperarContaExistente(email,error){
+  const technicalCode=codigoErroAuth(error)==='auth_error'?'legacy_existing_account':codigoErroAuth(error);
+  trackCadastro('existing_account_recovered',{status:technicalCode});
+  document.getElementById('inp-senha').value='';
+  cadastroTemp={};
+  sessionStorage.removeItem('vc_cadastro');
+  mostrarLogin(email,{contaExistente:true});
+  toast('Este e-mail já possui uma conta. Entre para continuar.');
 }
 
 async function salvarNovaSenha(){
@@ -1339,12 +1374,16 @@ async function irRaio(){
     trackCadastro('signup_started');
     const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
     if(authErr){
-      trackCadastro('signup_auth_failed',{status:'auth_error'});
+      if(erroDeContaExistente(authErr)){
+        recuperarContaExistente(email,authErr);
+        btn.disabled=false; btn.textContent='Criar conta e ver minha vizinhança →';
+        return;
+      }
+      const codigo=codigoErroAuth(authErr);
+      trackCadastro('signup_auth_failed',{status:codigo});
       voltarCadastroConta({track:false});
       const detalhe=String(authErr.message||'').toLowerCase();
-      const mensagem=detalhe.includes('already')||detalhe.includes('registered')
-        ? 'Este e-mail já tem uma conta. Use a opção “Entrar” logo abaixo.'
-        : detalhe.includes('rate')||detalhe.includes('too many')
+      const mensagem=detalhe.includes('rate')||detalhe.includes('too many')
           ? 'Muitas tentativas seguidas. Aguarde alguns minutos e tente novamente.'
           : 'Não conseguimos criar a conta agora. Confira o e-mail e tente novamente.';
       mostrarErroCadastro(mensagem,'inp-email');

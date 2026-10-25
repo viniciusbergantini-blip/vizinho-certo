@@ -82,7 +82,7 @@
   .negative{color:var(--laranja);font-weight:700;}
   .empty{padding:40px;text-align:center;color:var(--muted);}
   .funnel-panel{padding:22px;background:linear-gradient(145deg,#fff 0%,#fff 58%,#F3FAF4 100%);overflow:visible;}
-  .funnel-kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:22px;}
+  .funnel-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px;}
   .funnel-kpi{border:1px solid rgba(45,106,79,.16);background:rgba(216,243,220,.42);border-radius:8px;padding:13px 14px;min-width:0;}
   .funnel-kpi-label{display:block;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;}
   .funnel-kpi-value{display:block;color:var(--verde-escuro);font-size:22px;font-weight:700;line-height:1.1;}
@@ -104,7 +104,7 @@
   .funnel-loss{color:#9A3412;}
   .funnel-empty{padding:42px 18px;text-align:center;color:var(--muted);line-height:1.5;}
   @media(max-width:900px){.summary,.adoption-summary,.operations-summary{grid-template-columns:repeat(2,1fr);} .top{flex-direction:column;} .status{text-align:left;} .actions{justify-content:flex-start;} .section-head{align-items:flex-start;flex-direction:column;} .panel{overflow-x:auto;} table{min-width:780px;} .funnel-panel{overflow:hidden;} .funnel-row{grid-template-columns:minmax(126px,1fr) minmax(180px,1.65fr) minmax(100px,.75fr);gap:9px;} .health-panel{grid-template-columns:1fr;} }
-  @media(max-width:620px){.shell{padding-left:12px;padding-right:12px;} .funnel-panel{padding:16px 12px;} .funnel-kpis{grid-template-columns:1fr 1fr;} .funnel-kpi:last-child{grid-column:1/-1;} .funnel-row{grid-template-columns:minmax(112px,1fr) minmax(92px,1fr) 82px;gap:7px;min-height:64px;} .funnel-stage{gap:6px;} .funnel-stage-index{flex-basis:20px;height:20px;font-size:10px;} .funnel-stage-label{font-size:11px;padding-top:3px;} .funnel-track{height:42px;} .funnel-count{font-size:18px;} .funnel-rate{font-size:10px;} .health-details{grid-template-columns:1fr;} }
+  @media(max-width:620px){.shell{padding-left:12px;padding-right:12px;} .funnel-panel{padding:16px 12px;} .funnel-kpis{grid-template-columns:1fr 1fr;} .funnel-row{grid-template-columns:minmax(112px,1fr) minmax(92px,1fr) 82px;gap:7px;min-height:64px;} .funnel-stage{gap:6px;} .funnel-stage-index{flex-basis:20px;height:20px;font-size:10px;} .funnel-stage-label{font-size:11px;padding-top:3px;} .funnel-track{height:42px;} .funnel-count{font-size:18px;} .funnel-rate{font-size:10px;} .health-details{grid-template-columns:1fr;} }
   @media(prefers-reduced-motion:reduce){.funnel-shape{transition:none;}}
 </style>
 </head>
@@ -334,6 +334,7 @@ function render(){
     metric('Cliques CTA', totals.cta_clicks, 'links para cadastro'),
     metric('Cadastros', totals.signups, 'concluídos no período'),
     metric('Conversões', totals.conversions, `${totals.conversion_rate}% dos acessos`),
+    metric('Contas existentes', totals.existing_account_recovered||0, `${totals.password_recovery_requested||0} pediram nova senha`),
     metric('Não cadastrou', `${totals.abandonment_rate}%`, `${totals.not_registered} visitantes`),
     metric('Diretos', totals.direct_signups, 'cadastros sem acesso atribuído'),
     metric('Bots suspeitos', totals.suspected_bots||0, 'retirados das métricas futuras')
@@ -431,11 +432,12 @@ function renderLinks(links){
       <td>${item.cta_clicks}</td>
       <td>${item.signup_views||0}</td>
       <td>${item.conversions}</td>
+      <td>${item.existing_accounts||0}</td>
       <td class="positive">${item.conversion_rate}%</td>
     </tr>`).join('');
   document.getElementById('links-table').innerHTML = `
     <table>
-      <thead><tr><th>Link acessado</th><th>Campanha</th><th>Localizações</th><th>Visitantes</th><th>Cliques</th><th>Abriu cadastro</th><th>Conversões</th><th>Taxa</th></tr></thead>
+      <thead><tr><th>Link acessado</th><th>Campanha</th><th>Localizações</th><th>Visitantes</th><th>Cliques</th><th>Abriu cadastro</th><th>Conversões</th><th>Conta existente</th><th>Taxa</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
@@ -452,7 +454,7 @@ function renderAccesses(accesses){
       <td class="link">${escapeHtml(item.link)}</td>
       <td class="location">${escapeHtml(item.location)}</td>
       <td>${escapeHtml(item.campaign)}</td>
-      <td><span class="badge${item.converted ? '' : ' no'}">${item.converted ? 'Sim' : 'Não'}</span></td>
+      <td><span class="badge${item.converted||item.existing_account ? '' : ' no'}">${item.converted ? 'Novo cadastro' : item.existing_account ? 'Conta existente' : 'Não'}</span></td>
     </tr>`).join('');
   document.getElementById('accesses-table').innerHTML = `
     <table>
@@ -462,6 +464,8 @@ function renderAccesses(accesses){
 }
 
 function renderFunnel(funnel){
+  const recovered=safeCount(funnel.existing_account_recovered);
+  const passwordRecovery=safeCount(funnel.password_recovery_requested);
   const stages=[
     {key:'landing_views',label:'Visitou a landing'},
     {key:'cta_clicks',label:'Clicou para entrar'},
@@ -521,6 +525,7 @@ function renderFunnel(funnel){
       <div class="funnel-kpi"><span class="funnel-kpi-label">Conversão fim a fim</span><span class="funnel-kpi-value">${formatPercent(percent(last,first))}%</span><span class="funnel-kpi-note">${formatNumber(last)} de ${formatNumber(first)} visitas</span></div>
       <div class="funnel-kpi"><span class="funnel-kpi-label">Chegaram ao cadastro</span><span class="funnel-kpi-value">${formatPercent(percent(reachedForm,first))}%</span><span class="funnel-kpi-note">${formatNumber(reachedForm)} sessões abriram o formulário</span></div>
       <div class="funnel-kpi"><span class="funnel-kpi-label">Maior queda</span><span class="funnel-kpi-value">${formatNumber(biggestLoss.lost)}</span><span class="funnel-kpi-note">${lossNote}</span></div>
+      <div class="funnel-kpi"><span class="funnel-kpi-label">Contas existentes recuperadas</span><span class="funnel-kpi-value">${formatNumber(recovered)}</span><span class="funnel-kpi-note">Não contam como abandono · ${formatNumber(passwordRecovery)} solicitaram nova senha</span></div>
     </div>
     <div class="funnel-visual" role="list" aria-label="Etapas do funil de cadastro">${rows}</div>`;
 }
