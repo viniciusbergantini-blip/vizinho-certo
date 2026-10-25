@@ -32,10 +32,11 @@ module.exports = async (req, res) => {
 
     const nome = cleanText(req.body?.nome, 120);
     const tipo = cleanText(req.body?.tipo, 60);
-    const dias = Number(req.body?.dias);
+    const planoId = cleanText(req.body?.plano_id, 30).toLowerCase();
+    const diasLegados = Number(req.body?.dias);
     const desc = cleanText(req.body?.desc, 500, { multiline: true });
     const tel = String(req.body?.tel || '').replace(/\D/g, '').slice(0, 15);
-    const plano = obterPlano(dias);
+    const plano = obterPlano(planoId || diasLegados);
     if (!nome || !tipo || !plano) return res.status(400).json({ error: 'Dados incompletos' });
     if (!TIPOS_ANUNCIO.has(tipo)) return res.status(400).json({ error: 'Categoria invalida' });
 
@@ -43,7 +44,7 @@ module.exports = async (req, res) => {
 
     const { data: perfil, error: perfilError } = await sb
       .from('usuarios')
-      .select('id, lat, lon')
+      .select('id, lat, lon, cidade, uf')
       .eq('id', auth.user.id)
       .maybeSingle();
     if (perfilError) throw perfilError;
@@ -64,7 +65,7 @@ module.exports = async (req, res) => {
           currency: 'brl',
           product_data: {
             name: `Vizinho Certo - ${nome}`,
-            description: `Plano ${dias} dias - ${tipo}`,
+            description: `${plano.nome} · ${plano.dias} dias · ${tipo}`,
           },
           unit_amount: plano.centavos,
         },
@@ -76,7 +77,9 @@ module.exports = async (req, res) => {
       metadata: {
         nome,
         tipo,
-        dias: String(dias),
+        plano_id: plano.id,
+        alcance_tipo: plano.alcance_tipo,
+        dias: String(plano.dias),
         preco: String(plano.centavos),
         icon: ICONES_ANUNCIO.get(tipo) || '🏪',
         desc,

@@ -272,6 +272,9 @@
   .srv-meus-titulo{font-family:"Fraunces",serif;font-size:18px;color:var(--verde);margin-bottom:2px;}
   .srv-meus-sub{font-size:12px;color:var(--texto-muted);margin-bottom:12px;}
   .srv-owner-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+  .srv-owner-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
+  .srv-owner-metric{padding:9px 6px;border-radius:9px;background:var(--verde-bg);text-align:center;color:var(--texto-muted);font-size:10px;}
+  .srv-owner-metric strong{display:block;color:var(--verde);font-size:17px;line-height:1.1;margin-bottom:3px;}
   .srv-owner-edit,.srv-owner-delete{padding:10px;border-radius:var(--radius-sm);font:500 13px "DM Sans",sans-serif;cursor:pointer;}
   .srv-owner-edit{background:var(--verde);border:1.5px solid var(--verde);color:white;}
   .srv-owner-delete{background:white;border:1.5px solid #E24B4A;color:#A32D2D;}
@@ -342,11 +345,14 @@
   .plano-card:hover{border-color:var(--verde-claro);}
   .plano-card.sel{border:2px solid #2D6A4F;background:var(--verde-bg);}
   .plano-card.popular{border-color:#E9C46A;}
+  .plano-card.cidade{border-color:#2D6A4F;background:linear-gradient(135deg,#FFFFFF,#F0FAF3);}
   .plano-popular-badge{font-size:10px;font-weight:500;background:#E9C46A;color:#7D5A00;padding:2px 8px;border-radius:20px;margin-bottom:4px;display:inline-block;}
+  .plano-cidade-badge{font-size:10px;font-weight:600;background:#2D6A4F;color:white;padding:2px 8px;border-radius:20px;margin-bottom:4px;display:inline-block;}
   .plano-info{flex:1;}
   .plano-nome{font-size:14px;font-weight:500;color:var(--texto);}
   .plano-desc{font-size:12px;color:var(--texto-muted);margin-top:2px;}
   .plano-preco{font-size:18px;font-weight:500;color:#2D6A4F;white-space:nowrap;}
+  .plano-preco-antigo{display:block;font-size:11px;font-weight:400;color:var(--texto-muted);text-decoration:line-through;text-align:right;}
   .plano-radio{width:18px;height:18px;border-radius:50%;border:2px solid var(--borda);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;}
   .plano-card.sel .plano-radio{border-color:#2D6A4F;background:#2D6A4F;}
   .plano-card.sel .plano-radio::after{content:'';width:6px;height:6px;border-radius:50%;background:white;}
@@ -658,11 +664,12 @@
     </div>
     <div class="anun-step" id="as3">
       <div class="anun-titulo">Escolha o plano</div>
-      <div class="anun-sub">Seu anúncio aparece no feed e na aba Serviços para vizinhos no raio escolhido.</div>
+      <div class="anun-sub">Escolha entre alcance local ou toda a sua cidade. Todos os planos aparecem no feed e na aba Serviços.</div>
       <div class="planos-grid">
-        <div class="plano-card" onclick="selPlano(10,990,this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-nome">Plano Rua · 10 dias</div><div class="plano-desc">Raio 1,5km · Feed + aba Serviços</div></div><div class="plano-preco">R$ 9,90</div></div>
-        <div class="plano-card popular" onclick="selPlano(20,1990,this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-popular-badge">★ Mais escolhido</div><div class="plano-nome">Plano Bairro · 20 dias</div><div class="plano-desc">Raio 3km · Feed + Serviços + badge ✓</div></div><div class="plano-preco">R$ 19,90</div></div>
-        <div class="plano-card" onclick="selPlano(30,2790,this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-nome">Plano Cidade · 30 dias</div><div class="plano-desc">Raio 5km · Tudo + topo da busca 🔥</div></div><div class="plano-preco">R$ 27,90</div></div>
+        <div class="plano-card" onclick="selPlano('rua',10,990,'Plano Rua','Raio 1,5km · Feed + Serviços',this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-nome">Plano Rua · 10 dias</div><div class="plano-desc">Raio 1,5km · Feed + aba Serviços</div></div><div class="plano-preco">R$ 9,90</div></div>
+        <div class="plano-card popular" onclick="selPlano('bairro',20,1990,'Plano Bairro','Raio 3km · Feed + Serviços + destaque',this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-popular-badge">★ Mais escolhido</div><div class="plano-nome">Plano Bairro · 20 dias</div><div class="plano-desc">Raio 3km · Feed + Serviços + destaque</div></div><div class="plano-preco">R$ 19,90</div></div>
+        <div class="plano-card" onclick="selPlano('regiao',30,2790,'Plano Região','Raio 5km · Feed + Serviços + destaque',this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-nome">Plano Região · 30 dias</div><div class="plano-desc">Raio 5km · Feed + Serviços + destaque</div></div><div class="plano-preco">R$ 27,90</div></div>
+        <div class="plano-card cidade" onclick="selPlano('cidade',30,3990,'Plano Cidade','Cidade inteira · destaque + topo da busca',this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-cidade-badge">🏙️ Para negócios da cidade</div><div class="plano-nome">Plano Cidade · 30 dias</div><div class="plano-desc">Ideal para restaurantes, lojas, clínicas e entregas · cidade inteira</div></div><div class="plano-preco"><span class="plano-preco-antigo">R$ 49,90</span>R$ 39,90</div></div>
       </div>
       <div class="anun-nav"><button class="anun-back" onclick="anunStep(2)">← Voltar</button><button class="anun-next" id="anun-n3" onclick="anunStep(4)" disabled>Ver resumo →</button></div>
     </div>
@@ -1700,7 +1707,7 @@ function anunciosComoPosts(anuncios){
     txt:`${a.icon||'🏪'} ${a.descricao||'Anúncio disponível para vizinhos no raio.'}`,
     ap:0, apd:false, av:(a.nome||'A').charAt(0).toUpperCase(), cor:'#2D6A4F',
     foto_url:null, usuario_id:a.usuario_id, tempo:formatarTempo(a.criado_em), criado_em:a.criado_em||null, coms:[],
-    isAnuncio:true, telefone:a.telefone, categoria:a.tipo, destaque:a.destaque
+    isAnuncio:true, anuncio_id:a.id, telefone:a.telefone, categoria:a.tipo, destaque:a.destaque, alcance_tipo:a.alcance_tipo
   }));
 }
 
@@ -1941,13 +1948,14 @@ function render(){
     const avatarHtml = fotoAutor ? `<img src="${htmlSeguro(fotoAutor)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">` : `<div class="pav" style="background:${p.cor}20;color:${p.cor}">${htmlSeguro(p.av)}</div>`;
     if(p.isAnuncio){
       const tel=(p.telefone||'').replace(/[^0-9]/g,'');
-      return `<div class="pc" id="pc${postId}">
+      const anuncioId=htmlSeguro(String(p.anuncio_id||''));
+      return `<div class="pc" id="pc${postId}" data-ad-id="${anuncioId}" data-ad-surface="feed">
         <div class="pm" style="border:1.5px solid var(--verde-claro);background:#FBFFF8;">
           <div class="ph">${avatarHtml}<div><div class="pnome">${htmlSeguro(p.nome)}</div><div class="pdist">${p.dist ? 'a '+htmlSeguro(p.dist)+' de você' : ''}${p.tempo ? ' · '+htmlSeguro(p.tempo) : ''}</div></div><span class="ptag t-in">Patrocinado</span></div>
           <div class="ptxt">${htmlSeguro(p.txt)}</div>
           <div class="srv-tags" style="margin-top:10px;"><span class="srv-tag">${htmlSeguro(p.categoria||'Serviço')}</span>${p.destaque?'<span class="srv-tag">✓ Destaque</span>':''}</div>
           <div class="srv-acoes" style="margin-top:12px;">
-            ${tel?`<button class="srv-btn-wa" onclick="window.open('https://wa.me/55${tel}','_blank')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligar('${tel}')">📞 Ligar</button>`:''}
+            ${tel?`<button class="srv-btn-wa" onclick="abrirWhatsAppAnuncio('${anuncioId}','${tel}','feed')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligarAnuncio('${anuncioId}','${tel}','feed')">📞 Ligar</button>`:''}
           </div>
         </div>
       </div>`;
@@ -1979,6 +1987,7 @@ function render(){
     </div>`;
   });
   lista.innerHTML = resumoHtml+rows.join('');
+  observarAnuncios(lista);
 }
 
 function togOq(id){E.abOq.has(id)?E.abOq.delete(id):E.abOq.add(id);render();}
@@ -2111,6 +2120,37 @@ function irTela(id){
   window.scrollTo(0,0);
 }
 function ligar(n){toast('Abrindo discador... 📞');setTimeout(()=>window.open('tel:'+n),500);}
+
+let anuncioObserver=null;
+function observarAnuncios(raiz){
+  if(!('IntersectionObserver' in window)||!raiz) return;
+  if(!anuncioObserver){
+    anuncioObserver=new IntersectionObserver(entradas=>{
+      entradas.forEach(entrada=>{
+        if(!entrada.isIntersecting||entrada.intersectionRatio<.5) return;
+        const id=entrada.target.dataset.adId;
+        const surface=entrada.target.dataset.adSurface;
+        anuncioObserver.unobserve(entrada.target);
+        if(!id||!surface) return;
+        const chave=`vc_ad_seen_${id}_${surface}`;
+        try{
+          if(sessionStorage.getItem(chave)) return;
+          sessionStorage.setItem(chave,'1');
+        }catch(e){}
+        trackAppEvent('ad_impression',{source:'ads',ad_id:id,surface});
+      });
+    },{threshold:.5});
+  }
+  raiz.querySelectorAll('[data-ad-id][data-ad-surface]').forEach(el=>anuncioObserver.observe(el));
+}
+function abrirWhatsAppAnuncio(id,telefone,surface){
+  trackAppEvent('ad_whatsapp_click',{source:'ads',ad_id:id,surface});
+  window.open(`https://wa.me/55${telefone}`,'_blank');
+}
+function ligarAnuncio(id,telefone,surface){
+  trackAppEvent('ad_phone_click',{source:'ads',ad_id:id,surface});
+  ligar(telefone);
+}
 
 const EXTENSOES_IMAGEM=Object.freeze({'image/jpeg':'jpg','image/png':'png','image/webp':'webp'});
 let fotoFile = null, fotoUrl = null;
@@ -2499,7 +2539,7 @@ function renderListaServicos(){
   const grid=document.getElementById('srv-grid');
   if(!grid) return;
   const filtrados=servicosFiltrados();
-  if(filtrados.length){ grid.innerHTML=filtrados.map(s=>cardServico(s)).join(''); return; }
+  if(filtrados.length){ grid.innerHTML=filtrados.map(s=>cardServico(s)).join(''); observarAnuncios(grid); return; }
   const temFiltro=Boolean(servicoBusca.trim()||catAtiva!=='todos');
   grid.innerHTML=temFiltro
     ? `<div class="feed-empty"><strong style="color:var(--texto);">Nenhum serviço encontrado</strong><br>Tente outro termo ou veja todas as categorias.<div class="feed-empty-actions"><button onclick="limparBuscaServicos()">Limpar busca</button><button onclick="abrirAnun()">Anunciar serviço</button></div></div>`
@@ -2528,12 +2568,15 @@ function cardServico(s,proprio=false){
   const icone=htmlSeguro(s.icon||'🏪');
   const telefone=String(s.telefone||'').replace(/[^0-9]/g,'');
   const status=s.status==='expirado'?'Expirado':`Ativo até ${formatarDataCurta(s.expira_em)}`;
-  return `<div class="srv-card ${s.destaque?'destaque':''}">
+  const metricas=s.metricas||{alcance:0,whatsapp:0,ligacoes:0};
+  const alcance=s.alcance_tipo==='cidade'?'Toda a cidade':(s.distancia_fmt?`a ${htmlSeguro(s.distancia_fmt)}`:'');
+  const tracking=proprio?'':` data-ad-id="${htmlSeguro(id)}" data-ad-surface="services"`;
+  return `<div class="srv-card ${s.destaque?'destaque':''}"${tracking}>
     ${s.destaque?'<div class="srv-destaque-label">★ PARCEIRO DESTAQUE</div>':''}
     <div class="srv-body"><div class="srv-top"><div class="srv-logo" style="background:#E8F5E9">${icone}</div><div class="srv-info"><div class="srv-nome">${nome}</div><div class="srv-tipo">${tipo}</div></div></div>
     <div class="srv-desc">${descricao}</div>
-    <div class="srv-tags"><span class="srv-tag">${tipo}</span>${proprio?`<span class="srv-tag">${status}</span>`:(s.distancia_fmt?`<span class="srv-tag">a ${htmlSeguro(s.distancia_fmt)}</span>`:'')}${s.destaque?'<span class="srv-tag">✓ Verificado</span>':''}</div>
-    ${proprio?`<div class="srv-owner-actions"><button class="srv-owner-edit" onclick="abrirEditarAnuncio('${id}')">✏️ Editar</button><button class="srv-owner-delete" data-delete-id="${id}" onclick="excluirAnuncio('${id}')">🗑️ Excluir</button></div>`:`<div class="srv-acoes"><button class="srv-btn-wa" onclick="window.open('https://wa.me/55${telefone}','_blank')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligar('${telefone}')">📞 Ligar</button></div>`}
+    <div class="srv-tags"><span class="srv-tag">${tipo}</span>${proprio?`<span class="srv-tag">${status}</span>`:(alcance?`<span class="srv-tag">${alcance}</span>`:'')}${s.destaque?'<span class="srv-tag">✓ Verificado</span>':''}</div>
+    ${proprio?`<div class="srv-owner-metrics"><div class="srv-owner-metric"><strong>${Number(metricas.alcance)||0}</strong><span>alcance</span></div><div class="srv-owner-metric"><strong>${Number(metricas.whatsapp)||0}</strong><span>WhatsApp</span></div><div class="srv-owner-metric"><strong>${Number(metricas.ligacoes)||0}</strong><span>ligações</span></div></div><div class="srv-owner-actions"><button class="srv-owner-edit" onclick="abrirEditarAnuncio('${id}')">✏️ Editar</button><button class="srv-owner-delete" data-delete-id="${id}" onclick="excluirAnuncio('${id}')">🗑️ Excluir</button></div>`:`<div class="srv-acoes">${telefone?`<button class="srv-btn-wa" onclick="abrirWhatsAppAnuncio('${htmlSeguro(id)}','${telefone}','services')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligarAnuncio('${htmlSeguro(id)}','${telefone}','services')">📞 Ligar</button>`:''}</div>`}
     </div></div>`;
 }
 
@@ -2638,7 +2681,7 @@ async function excluirAnuncio(id,fecharModal=false){
   }
 }
 
-const anunState={tipo:'',icon:'',nome:'',desc:'',tel:'',dias:0,preco:0,pgto:'pix'};
+const anunState={tipo:'',icon:'',nome:'',desc:'',tel:'',plano_id:'',plano_nome:'',beneficios:'',dias:0,preco:0,pgto:'pix'};
 function abrirAnun(){document.getElementById('manun').classList.add('ab');anunStep(1);}
 function fecharAnun(){document.getElementById('manun').classList.remove('ab');}
 function anunStep(n){
@@ -2662,20 +2705,19 @@ function anunValidaDados(){
   if(!t){toast('Digite seu telefone!');return;}
   anunState.nome=n;anunState.desc=d;anunState.tel=t;anunStep(3);
 }
-function selPlano(dias,centavos,el){
-  anunState.dias=dias;anunState.preco=centavos;
+function selPlano(id,dias,centavos,nome,beneficios,el){
+  anunState.plano_id=id;anunState.plano_nome=nome;anunState.beneficios=beneficios;anunState.dias=dias;anunState.preco=centavos;
   document.querySelectorAll('.plano-card').forEach(c=>c.classList.remove('sel'));
   el.classList.add('sel');
   document.getElementById('anun-n3').disabled=false;
 }
 function renderResumo(){
   const preco=(anunState.preco/100).toFixed(2).replace('.',',');
-  const beneficios={10:'Raio 1,5km · Feed + Serviços',20:'Raio 3km · Feed + Serviços + badge ✓',30:'Raio 5km · Tudo + topo da busca'};
   document.getElementById('anun-resumo').innerHTML=
-    `<div class="resumo-row"><span>Anunciante</span><span>${anunState.icon} ${anunState.nome}</span></div>
-    <div class="resumo-row"><span>Categoria</span><span>${anunState.tipo}</span></div>
-    <div class="resumo-row"><span>Plano</span><span>${anunState.dias} dias</span></div>
-    <div class="resumo-row"><span>Inclui</span><span style="font-size:11px;text-align:right;max-width:160px;">${beneficios[anunState.dias]}</span></div>
+    `<div class="resumo-row"><span>Anunciante</span><span>${htmlSeguro(anunState.icon)} ${htmlSeguro(anunState.nome)}</span></div>
+    <div class="resumo-row"><span>Categoria</span><span>${htmlSeguro(anunState.tipo)}</span></div>
+    <div class="resumo-row"><span>Plano</span><span>${htmlSeguro(anunState.plano_nome)} · ${anunState.dias} dias</span></div>
+    <div class="resumo-row"><span>Inclui</span><span style="font-size:11px;text-align:right;max-width:160px;">${htmlSeguro(anunState.beneficios)}</span></div>
     <div class="resumo-row"><span>Total</span><span>R$ ${preco}</span></div>`;
 }
 function renderPgto(){
@@ -2690,7 +2732,7 @@ async function anunFinalizar(){
     const { data: { session } } = await sb.auth.getSession();
     if(!session?.access_token) throw new Error('Entre na sua conta novamente.');
     const resp=await fetch(apiUrl('/api/checkout'),{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({
-      nome:anunState.nome, tipo:anunState.tipo, dias:anunState.dias,
+      nome:anunState.nome, tipo:anunState.tipo, plano_id:anunState.plano_id, dias:anunState.dias,
       icon:anunState.icon, desc:anunState.desc, tel:anunState.tel
     })});
     const data=await resp.json();

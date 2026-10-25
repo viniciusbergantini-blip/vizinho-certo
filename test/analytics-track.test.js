@@ -45,6 +45,19 @@ test('mantem apenas metadados de campanha permitidos', () => {
   });
 });
 
+test('aceita identificador e superfície válidos de anúncio', () => {
+  assert.deepEqual(_private.sanitizarMetadata({
+    source: 'ads',
+    ad_id: '123e4567-e89b-42d3-a456-426614174000',
+    surface: 'services',
+  }), {
+    source: 'ads',
+    ad_id: '123e4567-e89b-42d3-a456-426614174000',
+    surface: 'services',
+  });
+  assert.deepEqual(_private.sanitizarMetadata({ ad_id: 'invalido', surface: 'admin' }), {});
+});
+
 test('armazena acao de adocao sem exigir um novo tipo na tabela', () => {
   assert.deepEqual(_private.prepararEventoPersistido('install_accepted', { source: 'app' }), {
     eventType: 'cta_click',

@@ -34,6 +34,8 @@ const METADATA_KEYS = new Set([
   'source',
   'status',
   'action',
+  'ad_id',
+  'surface',
 ]);
 
 module.exports = async (req, res) => {
@@ -133,6 +135,16 @@ function sanitizarMetadata(value) {
   const result = {};
   for (const [key, raw] of Object.entries(value)) {
     if (!METADATA_KEYS.has(key)) continue;
+    if (key === 'ad_id') {
+      const id = String(raw || '').trim().toLowerCase();
+      if (/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test(id)) result[key] = id;
+      continue;
+    }
+    if (key === 'surface') {
+      const surface = String(raw || '').trim().toLowerCase();
+      if (['feed', 'services'].includes(surface)) result[key] = surface;
+      continue;
+    }
     if (key === 'landing_city') {
       const slug = sanitizarSlug(raw);
       if (slug) result[key] = slug;

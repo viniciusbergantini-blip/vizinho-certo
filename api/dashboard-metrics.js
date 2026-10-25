@@ -105,7 +105,7 @@ async function fetchAnalyticsEvents(sb) {
 async function fetchPaidAdsOverview(sb, now) {
   const { data: anuncios, error } = await sb
     .from('anuncios')
-    .select('id, nome, tipo, dias, stripe_session_id, ativo, criado_em, expira_em')
+    .select('id, nome, tipo, plano_id, dias, alcance_tipo, cidade_alvo, uf_alvo, stripe_session_id, ativo, criado_em, expira_em')
     .not('stripe_session_id', 'is', null)
     .order('criado_em', { ascending: false })
     .limit(500);

@@ -40,6 +40,19 @@ test('sinaliza pagamento confirmado sem publicação', () => {
   assert.equal(overview.anuncios[0].conciliacao, 'pagamento_sem_publicacao');
 });
 
+test('reconhece o valor do novo plano cidade pelo identificador estável', () => {
+  const overview = buildPaidAdsOverview({
+    stripeDisponivel: true,
+    sessoes: [{
+      id: 'cs_city', payment_status: 'paid', amount_total: 3990, currency: 'brl', created: 1792920000,
+      metadata: { usuario_id: 'u3', nome: 'Restaurante', tipo: 'Restaurante', plano_id: 'cidade', alcance_tipo: 'cidade', dias: '30' },
+    }],
+  });
+  assert.equal(overview.anuncios[0].plano_id, 'cidade');
+  assert.equal(overview.anuncios[0].alcance_tipo, 'cidade');
+  assert.equal(overview.anuncios[0].valor_esperado_centavos, 3990);
+});
+
 test('marca a automação em dia e detecta atraso superior a 36 horas', () => {
   const emDia = buildEventsAutomationOverview({
     agora: new Date('2026-10-25T15:00:00.000Z'),

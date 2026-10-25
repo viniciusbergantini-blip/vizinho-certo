@@ -57,7 +57,7 @@ module.exports = async (req, res) => {
       .eq('id', id)
       .eq('usuario_id', userData.user.id)
       .eq('ativo', true)
-      .select('id, usuario_id, nome, tipo, descricao, telefone, icon, raio_km, dias, destaque, ativo, expira_em, criado_em')
+    .select('id, usuario_id, nome, tipo, descricao, telefone, icon, plano_id, raio_km, alcance_tipo, cidade_alvo, uf_alvo, dias, destaque, ativo, expira_em, criado_em')
       .single();
 
     if (error || !data) {

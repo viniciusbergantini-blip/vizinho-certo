@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const {
   avaliarVisibilidadeAnuncio,
   distanciaMetros,
+  mesmaCidade,
   mesmaRua,
 } = require('../lib/localizacao');
 
@@ -48,4 +49,20 @@ test('nao usa fallback quando o CEP e diferente', () => {
 
 test('calcula distancia zero sem confundir coordenada zero com valor ausente', () => {
   assert.equal(distanciaMetros(0, 0, 0, 0), 0);
+});
+
+test('mostra anúncio municipal em toda a mesma cidade e UF', () => {
+  const resultado = avaliarVisibilidadeAnuncio({
+    anuncio: { usuario_id: 'a', alcance_tipo: 'cidade', cidade_alvo: 'São João da Boa Vista', uf_alvo: 'SP' },
+    anunciante: { id: 'a' },
+    visitante: { id: 'b', cidade: 'sao joao da boa vista', uf: 'sp', lat: -22.0, lon: -47.0 },
+  });
+  assert.deepEqual(resultado, { visivel: true, proximidade: 'cidade', distancia_metros: null });
+  assert.equal(mesmaCidade({ cidade: 'Maringá', uf: 'PR' }, { cidade: 'maringa', uf: 'PR' }), true);
+});
+
+test('não mostra anúncio municipal em outra cidade ou UF', () => {
+  const base = { usuario_id: 'a', alcance_tipo: 'cidade', cidade_alvo: 'São João da Boa Vista', uf_alvo: 'SP' };
+  assert.equal(avaliarVisibilidadeAnuncio({ anuncio: base, anunciante: {}, visitante: { id: 'b', cidade: 'Maringá', uf: 'PR' } }).visivel, false);
+  assert.equal(avaliarVisibilidadeAnuncio({ anuncio: base, anunciante: {}, visitante: { id: 'b', cidade: 'São João da Boa Vista', uf: 'MG' } }).visivel, false);
 });
