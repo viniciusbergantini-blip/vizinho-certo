@@ -16,8 +16,8 @@
     { "source": "/londrina/(.*)", "destination": "/londrina.html" },
     { "source": "/indaiatuba", "destination": "/indaiatuba.html" },
     { "source": "/indaiatuba/(.*)", "destination": "/indaiatuba.html" },
-    { "source": "/saojoao", "destination": "/saojoao.html" },
-    { "source": "/saojoao/(.*)", "destination": "/saojoao.html" },
-    { "source": "/saojoao(.*)", "destination": "/saojoao.html" }
+    { "source": "/saojoao", "destination": "/app.html" },
+    { "source": "/saojoao/(.*)", "destination": "/app.html" },
+    { "source": "/saojoao(.*)", "destination": "/app.html" }
   ]
 }

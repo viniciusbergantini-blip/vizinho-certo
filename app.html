@@ -810,8 +810,8 @@ function contextoCadastroDireto(){
   let path=window.location.pathname||'';
   try{ path=decodeURIComponent(path); }catch(e){}
   path=path.replace(/[\u200B-\u200D\u2060\uFEFF]/g,'').replace(/\/+$/,'').toLowerCase();
-  if(path!=='/cadastro-saojoao') return null;
-  return {slug:'saojoao',cidade:'São João da Boa Vista',path:'/cadastro-saojoao'};
+  if(path!=='/saojoao'&&path!=='/cadastro-saojoao') return null;
+  return {slug:'saojoao',cidade:'São João da Boa Vista',path:path==='/saojoao'?'/saojoao':'/cadastro-saojoao'};
 }
 
 function prepararCadastroDireto(){

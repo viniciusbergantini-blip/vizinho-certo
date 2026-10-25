@@ -51,3 +51,13 @@ test('cadastro direto de anuncios explica valor e preserva a atribuicao', () => 
   assert.match(vercel, /\/cadastro-saojoao/);
   assert.match(fs.readFileSync(path.join(root, 'local-server.js'), 'utf8'), /startsWith\('\/cadastro-saojoao'\)/);
 });
+
+test('link principal de Sao Joao abre o cadastro direto sem criar outra URL obrigatoria', () => {
+  const html = fs.readFileSync(path.join(root, 'app.html'), 'utf8');
+  const vercel = fs.readFileSync(path.join(root, 'vercel.json'), 'utf8');
+  const localServer = fs.readFileSync(path.join(root, 'local-server.js'), 'utf8');
+  assert.match(html, /path!=='\/saojoao'&&path!=='\/cadastro-saojoao'/);
+  assert.match(vercel, /"source": "\/saojoao", "destination": "\/app\.html"/);
+  assert.match(vercel, /"source": "\/saojoao\(\.\*\)", "destination": "\/app\.html"/);
+  assert.match(localServer, /startsWith\('\/saojoao'\)\) filePath = '\/app\.html'/);
+});
