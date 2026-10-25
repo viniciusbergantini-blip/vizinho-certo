@@ -5,7 +5,11 @@ const {
   validarSugestaoEvento,
 } = require('../lib/eventos');
 const handleEventosAdmin = require('../lib/eventos-admin-handler');
-const { normalizarEventosRecebidos, salvarEventos } = require('../lib/eventos-coletor-sao-joao');
+const {
+  coletarEventosSaoJoao,
+  normalizarEventosRecebidos,
+  salvarEventos,
+} = require('../lib/eventos-coletor-sao-joao');
 const { verificarTokenGitHubActions } = require('../lib/github-oidc');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
@@ -63,9 +67,12 @@ async function coletarEventosAutomaticamente(req, res) {
 
   const sb = createClient(SUPABASE_URL, serviceKey);
   try {
-    const eventos = normalizarEventosRecebidos(req.body?.eventos);
-    const resultado = await salvarEventos(sb, eventos);
-    const diagnostico = normalizarDiagnosticoColeta(req.body?.diagnostico);
+    const coletaNoServidor = req.body?.modo === 'buscar_fontes';
+    const resultadoCompleto = coletaNoServidor
+      ? await coletarEventosSaoJoao({ supabase: sb })
+      : await salvarCargaRecebida(sb, req.body);
+    const { calendario, noticias, falhas, ...resultado } = resultadoCompleto;
+    const diagnostico = normalizarDiagnosticoColeta({ calendario, noticias, falhas });
     await registrarColeta(sb, {
       status: diagnostico.falhas.length ? 'parcial' : 'sucesso',
       ...resultado,
@@ -87,6 +94,12 @@ async function coletarEventosAutomaticamente(req, res) {
     });
     return res.status(502).json({ error: 'Falha ao coletar eventos oficiais', detalhe: error.message });
   }
+}
+
+async function salvarCargaRecebida(sb, body) {
+  const eventos = normalizarEventosRecebidos(body?.eventos);
+  const resultado = await salvarEventos(sb, eventos);
+  return { ...resultado, ...normalizarDiagnosticoColeta(body?.diagnostico) };
 }
 
 function normalizarDiagnosticoColeta(diagnostico) {

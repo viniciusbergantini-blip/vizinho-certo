@@ -26,10 +26,7 @@ jobs:
       - name: Instalar dependências
         run: npm ci --ignore-scripts
 
-      - name: Ler fontes oficiais
-        run: node scripts/coletar-eventos-sao-joao.js > eventos-sao-joao.json
-
-      - name: Obter identidade do GitHub e executar coleta
+      - name: Obter identidade do GitHub e executar coleta no backend
         shell: bash
         env:
           OIDC_AUDIENCE: vizinho-certo-eventos
@@ -46,5 +43,5 @@ jobs:
             --header "Authorization: Bearer ${oidc_token}" \
             --header "Content-Type: application/json" \
             --request POST \
-            --data-binary @eventos-sao-joao.json \
+            --data '{"modo":"buscar_fontes"}' \
             "${COLETOR_URL}"
