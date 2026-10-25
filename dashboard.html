@@ -65,6 +65,19 @@
   .moderation-btn.approve{background:var(--verde);}
   .moderation-btn.reject{background:var(--laranja);}
   .event-detail{font-size:12px;color:var(--muted);line-height:1.45;max-width:360px;}
+  .operations-summary{grid-template-columns:repeat(5,minmax(140px,1fr));margin-bottom:10px;}
+  .operations-alert{padding:11px 14px;border-radius:8px;background:#FFF7ED;border:1px solid #FDBA74;color:#9A3412;font-size:13px;line-height:1.45;margin-bottom:10px;}
+  .health-panel{padding:18px;display:grid;grid-template-columns:minmax(210px,1fr) minmax(320px,2fr);gap:18px;align-items:center;}
+  .health-main{display:flex;align-items:center;gap:12px;}
+  .health-dot{width:14px;height:14px;border-radius:50%;background:var(--verde);box-shadow:0 0 0 6px rgba(45,106,79,.12);flex:0 0 auto;}
+  .health-dot.warning{background:#D97706;box-shadow:0 0 0 6px rgba(217,119,6,.12);}
+  .health-dot.danger{background:#BE123C;box-shadow:0 0 0 6px rgba(190,18,60,.12);}
+  .health-title{font-weight:700;color:var(--verde-escuro);font-size:18px;}
+  .health-description{font-size:12px;color:var(--muted);line-height:1.45;margin-top:3px;}
+  .health-details{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:10px;}
+  .health-detail{background:#FBF7E7;border:1px solid var(--borda);border-radius:8px;padding:11px 12px;}
+  .health-detail strong{display:block;color:var(--verde-escuro);font-size:17px;margin-top:4px;}
+  .health-detail span{font-size:11px;color:var(--muted);text-transform:uppercase;font-weight:700;letter-spacing:.04em;}
   .positive{color:var(--verde);font-weight:700;}
   .negative{color:var(--laranja);font-weight:700;}
   .empty{padding:40px;text-align:center;color:var(--muted);}
@@ -90,8 +103,8 @@
   .funnel-rate strong{color:var(--texto);}
   .funnel-loss{color:#9A3412;}
   .funnel-empty{padding:42px 18px;text-align:center;color:var(--muted);line-height:1.5;}
-  @media(max-width:900px){.summary,.adoption-summary{grid-template-columns:repeat(2,1fr);} .top{flex-direction:column;} .status{text-align:left;} .actions{justify-content:flex-start;} .section-head{align-items:flex-start;flex-direction:column;} .panel{overflow-x:auto;} table{min-width:780px;} .funnel-panel{overflow:hidden;} .funnel-row{grid-template-columns:minmax(126px,1fr) minmax(180px,1.65fr) minmax(100px,.75fr);gap:9px;} }
-  @media(max-width:620px){.shell{padding-left:12px;padding-right:12px;} .funnel-panel{padding:16px 12px;} .funnel-kpis{grid-template-columns:1fr 1fr;} .funnel-kpi:last-child{grid-column:1/-1;} .funnel-row{grid-template-columns:minmax(112px,1fr) minmax(92px,1fr) 82px;gap:7px;min-height:64px;} .funnel-stage{gap:6px;} .funnel-stage-index{flex-basis:20px;height:20px;font-size:10px;} .funnel-stage-label{font-size:11px;padding-top:3px;} .funnel-track{height:42px;} .funnel-count{font-size:18px;} .funnel-rate{font-size:10px;} }
+  @media(max-width:900px){.summary,.adoption-summary,.operations-summary{grid-template-columns:repeat(2,1fr);} .top{flex-direction:column;} .status{text-align:left;} .actions{justify-content:flex-start;} .section-head{align-items:flex-start;flex-direction:column;} .panel{overflow-x:auto;} table{min-width:780px;} .funnel-panel{overflow:hidden;} .funnel-row{grid-template-columns:minmax(126px,1fr) minmax(180px,1.65fr) minmax(100px,.75fr);gap:9px;} .health-panel{grid-template-columns:1fr;} }
+  @media(max-width:620px){.shell{padding-left:12px;padding-right:12px;} .funnel-panel{padding:16px 12px;} .funnel-kpis{grid-template-columns:1fr 1fr;} .funnel-kpi:last-child{grid-column:1/-1;} .funnel-row{grid-template-columns:minmax(112px,1fr) minmax(92px,1fr) 82px;gap:7px;min-height:64px;} .funnel-stage{gap:6px;} .funnel-stage-index{flex-basis:20px;height:20px;font-size:10px;} .funnel-stage-label{font-size:11px;padding-top:3px;} .funnel-track{height:42px;} .funnel-count{font-size:18px;} .funnel-rate{font-size:10px;} .health-details{grid-template-columns:1fr;} }
   @media(prefers-reduced-motion:reduce){.funnel-shape{transition:none;}}
 </style>
 </head>
@@ -145,6 +158,16 @@
     <section class="section">
       <div class="section-head"><div class="section-title">Acessos recentes</div><div class="section-note">Localização aproximada da rede; nenhum IP ou coordenada exata é armazenado.</div></div>
       <div id="accesses-table" class="panel"></div>
+    </section>
+    <section class="section">
+      <div class="section-head"><div class="section-title">Controle de anúncios pagos</div><div class="section-note">Concilia o valor pago no Stripe com a publicação criada no aplicativo.</div></div>
+      <div id="paid-ads-alert"></div>
+      <div id="paid-ads-summary" class="summary operations-summary"></div>
+      <div id="paid-ads-table" class="panel"><div class="empty">Carregando anúncios...</div></div>
+    </section>
+    <section class="section">
+      <div class="section-head"><div class="section-title">Automação de eventos — São João</div><div class="section-note">Monitor diário das fontes oficiais e da atualização da agenda.</div></div>
+      <div id="events-automation" class="panel health-panel"><div class="empty">Verificando automação...</div></div>
     </section>
     <section class="section">
       <div class="section-head"><div class="section-title">Eventos aguardando aprovação</div><div class="section-note">Revise data, local e fonte antes de publicar na agenda local.</div></div>
@@ -332,7 +355,67 @@ function render(){
   ].join('');
   renderLinks(data.links || []);
   renderAccesses(data.accesses || []);
+  renderPaidAds(metrics.operations?.paid_ads);
+  renderEventsAutomation(metrics.operations?.events_automation);
 }
+
+function renderPaidAds(data){
+  const resumo=data?.resumo||{};
+  document.getElementById('paid-ads-summary').innerHTML=[
+    metric('Pagamentos confirmados', resumo.pagamentos_confirmados||0, 'checkout pago no Stripe'),
+    metric('Publicados', resumo.anuncios_publicados||0, 'registro criado no aplicativo'),
+    metric('Ativos agora', resumo.anuncios_ativos||0, 'visíveis dentro da validade'),
+    metric('Divergências', resumo.divergencias||0, resumo.divergencias?'precisam de conferência':'pagamento e publicação conferem'),
+    metric('Total debitado', resumo.total_pago_centavos==null?'—':formatCurrency(resumo.total_pago_centavos), data?.stripe_disponivel?'confirmado no Stripe':'aguardando confirmação do Stripe')
+  ].join('');
+
+  const alerta=document.getElementById('paid-ads-alert');
+  const mensagens=[];
+  if(data?.aviso) mensagens.push(data.aviso);
+  if(resumo.divergencias) mensagens.push(`${resumo.divergencias} pagamento(s) ou publicação(ões) precisam de conferência.`);
+  alerta.innerHTML=mensagens.length?`<div class="operations-alert"><strong>Atenção:</strong> ${escapeHtml(mensagens.join(' '))}</div>`:'';
+
+  const anuncios=data?.anuncios||[];
+  if(!anuncios.length){
+    document.getElementById('paid-ads-table').innerHTML='<div class="empty">Nenhum anúncio pago encontrado.</div>';
+    return;
+  }
+
+  const rows=anuncios.map(item=>`<tr>
+    <td>${item.criado_em?formatDate(item.criado_em):'—'}</td>
+    <td><strong>${escapeHtml(item.nome)}</strong><div class="event-detail">${escapeHtml(item.tipo)} · ${item.dias||0} dias</div></td>
+    <td>${item.valor_pago_centavos==null?'—':formatCurrency(item.valor_pago_centavos)}<div class="event-detail">Previsto: ${item.valor_esperado_centavos==null?'—':formatCurrency(item.valor_esperado_centavos)}</div></td>
+    <td>${statusBadge(paymentLabel(item.pagamento),item.pagamento==='pago')}</td>
+    <td>${statusBadge(publicationLabel(item.publicacao),item.publicacao!=='ausente')}</td>
+    <td>${item.expira_em?formatDate(item.expira_em):'—'}</td>
+    <td>${statusBadge(reconciliationLabel(item.conciliacao),item.conciliacao==='conciliado')}</td>
+  </tr>`).join('');
+  document.getElementById('paid-ads-table').innerHTML=`<table><thead><tr><th>Data</th><th>Anúncio</th><th>Valor</th><th>Pagamento</th><th>Publicação</th><th>Validade</th><th>Conferência</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderEventsAutomation(data){
+  const el=document.getElementById('events-automation');
+  if(!data){ el.innerHTML='<div class="empty">Não foi possível verificar a automação.</div>'; return; }
+  const labels={em_dia:'Atualização em dia',parcial:'Atualização parcial',falha:'Última coleta falhou',atrasado:'Atualização atrasada',sem_execucao:'Nenhuma execução registrada'};
+  const danger=['falha','atrasado','sem_execucao'].includes(data.status);
+  const warning=data.status==='parcial';
+  const coleta=data.ultima_coleta;
+  const coletados=coleta?`${coleta.encontrados} encontrados · ${coleta.inseridos} novos · ${coleta.atualizados} atualizados`:'Histórico detalhado começa após a próxima coleta.';
+  const falhas=coleta?.falhas?.length?`${coleta.falhas.length} fonte(s) com aviso`:'Fontes sem aviso registrado';
+  el.innerHTML=`
+    <div class="health-main"><span class="health-dot${danger?' danger':warning?' warning':''}"></span><div><div class="health-title">${labels[data.status]||'Status desconhecido'}</div><div class="health-description">${escapeHtml(data.programacao)}<br>${data.ultima_execucao_em?`Última atualização: ${formatDate(data.ultima_execucao_em)}`:'Sem horário disponível'}</div></div></div>
+    <div class="health-details">
+      <div class="health-detail"><span>Próximos eventos</span><strong>${data.proximos_eventos||0}</strong></div>
+      <div class="health-detail"><span>Resultado da coleta</span><strong>${escapeHtml(coletados)}</strong></div>
+      <div class="health-detail"><span>Fontes</span><strong>${escapeHtml(falhas)}</strong></div>
+    </div>`;
+}
+
+function paymentLabel(status){ return ({pago:'Debitado',nao_pago:'Não pago',nao_encontrado:'Não encontrado',nao_verificado:'Não verificado'})[status]||status; }
+function publicationLabel(status){ return ({ativo:'Publicado e ativo',inativo:'Publicado e inativo',expirado:'Publicado e expirado',ausente:'Não publicado'})[status]||status; }
+function reconciliationLabel(status){ return ({conciliado:'Conferido',pagamento_sem_publicacao:'Pago, não publicado',publicacao_sem_pagamento:'Publicado, pagamento pendente',nao_verificada:'Aguardando Stripe'})[status]||status; }
+function statusBadge(label,positive){ return `<span class="badge${positive?'':' no'}">${escapeHtml(label)}</span>`; }
+function formatCurrency(centavos){ return new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(Number(centavos||0)/100); }
 
 function renderLinks(links){
   if(!links.length){

@@ -61,23 +61,59 @@ async function coletarEventosAutomaticamente(req, res) {
   const serviceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   if (!serviceKey) return res.status(500).json({ error: 'SUPABASE_SERVICE_KEY nao configurada' });
 
+  const sb = createClient(SUPABASE_URL, serviceKey);
   try {
-    const sb = createClient(SUPABASE_URL, serviceKey);
     const eventos = normalizarEventosRecebidos(req.body?.eventos);
     const resultado = await salvarEventos(sb, eventos);
+    const diagnostico = normalizarDiagnosticoColeta(req.body?.diagnostico);
+    await registrarColeta(sb, {
+      status: diagnostico.falhas.length ? 'parcial' : 'sucesso',
+      ...resultado,
+      ...diagnostico,
+    });
     return res.json({
       ok: true,
       cidade: 'São João da Boa Vista',
       uf: 'SP',
       ...resultado,
-      calendario: Number(req.body?.diagnostico?.calendario || 0),
-      noticias: Number(req.body?.diagnostico?.noticias || 0),
-      falhas: Array.isArray(req.body?.diagnostico?.falhas) ? req.body.diagnostico.falhas.slice(0, 5) : [],
+      ...diagnostico,
     });
   } catch (error) {
     console.error('[eventos:sao-joao] Coleta automática falhou', error);
+    await registrarColeta(sb, {
+      status: 'falha',
+      ...normalizarDiagnosticoColeta(req.body?.diagnostico),
+      erro: String(error.message || 'Falha desconhecida').slice(0, 500),
+    });
     return res.status(502).json({ error: 'Falha ao coletar eventos oficiais', detalhe: error.message });
   }
+}
+
+function normalizarDiagnosticoColeta(diagnostico) {
+  return {
+    calendario: Math.max(0, Number(diagnostico?.calendario || 0)),
+    noticias: Math.max(0, Number(diagnostico?.noticias || 0)),
+    falhas: Array.isArray(diagnostico?.falhas) ? diagnostico.falhas.slice(0, 5) : [],
+  };
+}
+
+async function registrarColeta(sb, dados) {
+  const { error } = await sb.from('eventos_coletas').insert({
+    cidade: 'São João da Boa Vista',
+    uf: 'SP',
+    fonte: 'github_actions',
+    status: dados.status,
+    encontrados: Math.max(0, Number(dados.encontrados || 0)),
+    inseridos: Math.max(0, Number(dados.inseridos || 0)),
+    atualizados: Math.max(0, Number(dados.atualizados || 0)),
+    preservados: Math.max(0, Number(dados.preservados || 0)),
+    calendario: Math.max(0, Number(dados.calendario || 0)),
+    noticias: Math.max(0, Number(dados.noticias || 0)),
+    falhas: Array.isArray(dados.falhas) ? dados.falhas.slice(0, 5) : [],
+    erro: dados.erro || null,
+  });
+
+  if (error) console.error('[eventos:sao-joao] Falha ao registrar diagnóstico da coleta', error);
 }
 
 async function listarEventos(req, res, sb, usuario, perfil) {

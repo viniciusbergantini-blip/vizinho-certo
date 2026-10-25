@@ -1,5 +1,9 @@
 const { createClient } = require('@supabase/supabase-js');
 const { buildWindow } = require('../lib/analytics-dashboard');
+const {
+  buildEventsAutomationOverview,
+  buildPaidAdsOverview,
+} = require('../lib/dashboard-operations');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
 
@@ -28,7 +32,11 @@ module.exports = async (req, res) => {
   const lastMonthStart = new Date(todayStart);
   lastMonthStart.setDate(lastMonthStart.getDate() - 29);
 
-  const { events, error } = await fetchAnalyticsEvents(sb);
+  const [{ events, error }, paidAds, eventsAutomation] = await Promise.all([
+    fetchAnalyticsEvents(sb),
+    fetchPaidAdsOverview(sb, now),
+    fetchEventsAutomationOverview(sb, now),
+  ]);
 
   if (error) {
     console.error('Dashboard metrics error:', error);
@@ -42,7 +50,11 @@ module.exports = async (req, res) => {
       seven_days: buildWindow(events || [], sevenDaysStart, now),
       last_month: buildWindow(events || [], lastMonthStart, now),
       all_time: buildWindow(events || [], null, now)
-    }
+    },
+    operations: {
+      paid_ads: paidAds,
+      events_automation: eventsAutomation,
+    },
   });
 };
 
@@ -86,4 +98,106 @@ async function fetchAnalyticsEvents(sb) {
   }
 
   return { events, error: null };
+}
+
+async function fetchPaidAdsOverview(sb, now) {
+  const { data: anuncios, error } = await sb
+    .from('anuncios')
+    .select('id, nome, tipo, dias, stripe_session_id, ativo, criado_em, expira_em')
+    .not('stripe_session_id', 'is', null)
+    .order('criado_em', { ascending: false })
+    .limit(500);
+
+  if (error) {
+    console.error('Dashboard paid ads database error:', error);
+    return {
+      ...buildPaidAdsOverview({ agora: now }),
+      aviso: 'Não foi possível consultar os anúncios publicados.',
+    };
+  }
+
+  const stripeKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeKey) {
+    return {
+      ...buildPaidAdsOverview({ anuncios: anuncios || [], agora: now }),
+      aviso: 'Stripe não configurado neste ambiente; publicações exibidas sem confirmação do débito.',
+    };
+  }
+
+  try {
+    const stripe = require('stripe')(stripeKey);
+    const sessoes = await fetchStripeCheckoutSessions(stripe);
+    return buildPaidAdsOverview({
+      anuncios: anuncios || [],
+      sessoes,
+      stripeDisponivel: true,
+      agora: now,
+    });
+  } catch (stripeError) {
+    console.error('Dashboard paid ads Stripe error:', stripeError);
+    return {
+      ...buildPaidAdsOverview({ anuncios: anuncios || [], agora: now }),
+      aviso: 'O Stripe não respondeu; os anúncios continuam visíveis, mas o débito não pôde ser confirmado agora.',
+    };
+  }
+}
+
+async function fetchStripeCheckoutSessions(stripe) {
+  const sessoes = [];
+  let startingAfter;
+
+  for (let pagina = 0; pagina < 5; pagina += 1) {
+    const resposta = await stripe.checkout.sessions.list({
+      limit: 100,
+      ...(startingAfter ? { starting_after: startingAfter } : {}),
+    });
+    sessoes.push(...(resposta.data || []));
+    if (!resposta.has_more || !resposta.data?.length) break;
+    startingAfter = resposta.data.at(-1).id;
+  }
+
+  return sessoes;
+}
+
+async function fetchEventsAutomationOverview(sb, now) {
+  const [coletasResultado, atualizacaoResultado, proximosResultado] = await Promise.all([
+    sb
+      .from('eventos_coletas')
+      .select('status, encontrados, inseridos, atualizados, preservados, calendario, noticias, falhas, erro, executado_em')
+      .eq('cidade', 'São João da Boa Vista')
+      .eq('uf', 'SP')
+      .order('executado_em', { ascending: false })
+      .limit(10),
+    sb
+      .from('eventos')
+      .select('atualizado_em')
+      .eq('cidade', 'São João da Boa Vista')
+      .eq('uf', 'SP')
+      .eq('fonte_tipo', 'oficial')
+      .order('atualizado_em', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    sb
+      .from('eventos')
+      .select('id', { count: 'exact', head: true })
+      .eq('cidade', 'São João da Boa Vista')
+      .eq('uf', 'SP')
+      .eq('status', 'aprovado')
+      .gte('inicio_em', now.toISOString()),
+  ]);
+
+  const tabelaAindaNaoCriada = coletasResultado.error?.code === 'PGRST205'
+    || /eventos_coletas/i.test(coletasResultado.error?.message || '');
+  if (coletasResultado.error && !tabelaAindaNaoCriada) {
+    console.error('Dashboard events collection history error:', coletasResultado.error);
+  }
+  if (atualizacaoResultado.error) console.error('Dashboard events latest update error:', atualizacaoResultado.error);
+  if (proximosResultado.error) console.error('Dashboard upcoming events count error:', proximosResultado.error);
+
+  return buildEventsAutomationOverview({
+    coletas: coletasResultado.error ? [] : (coletasResultado.data || []),
+    ultimaAtualizacaoEvento: atualizacaoResultado.data?.atualizado_em || null,
+    proximosEventos: proximosResultado.count || 0,
+    agora: now,
+  });
 }
