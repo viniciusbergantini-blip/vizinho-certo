@@ -2,6 +2,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   categoriaEvento,
+  coletarEventosSaoJoaoSemSalvar,
+  FEED_URL,
   USER_AGENT,
   normalizarEventosRecebidos,
   parseArtigoEventos,
@@ -16,6 +18,25 @@ test('identifica o coletor em formato compatível com a fonte oficial', () => {
   assert.match(USER_AGENT, /^Mozilla\/5\.0/);
   assert.match(USER_AGENT, /VizinhoCertoEventos\/1\.0/);
   assert.match(USER_AGENT, /vizinhocerto\.com\.br/);
+});
+
+test('coleta diária usa o feed oficial estável sem depender do calendário bloqueado', async () => {
+  const urls = [];
+  const resultado = await coletarEventosSaoJoaoSemSalvar({
+    agora: new Date('2026-10-21T12:00:00.000Z'),
+    fetchImpl: async url => {
+      urls.push(url);
+      return {
+        ok: true,
+        headers: new Map([['content-length', '50']]),
+        text: async () => '<?xml version="1.0"?><rss><channel></channel></rss>',
+      };
+    },
+  });
+
+  assert.deepEqual(urls, [FEED_URL]);
+  assert.equal(resultado.noticias, 0);
+  assert.deepEqual(resultado.falhas, []);
 });
 
 test('gera o mesmo UUID para a mesma fonte e UUIDs diferentes para fontes distintas', () => {
