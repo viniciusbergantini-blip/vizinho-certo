@@ -4,11 +4,13 @@ const {
   buildEventsAutomationOverview,
   buildPaidAdsOverview,
 } = require('../lib/dashboard-operations');
+const { enforceRateLimit, noStore, serverError } = require('../lib/api-security');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  noStore(res);
 
   const serviceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   if (!serviceKey) return res.status(500).json({ error: 'SUPABASE_SERVICE_KEY nao configurada' });
@@ -24,6 +26,7 @@ module.exports = async (req, res) => {
   const email = userData?.user?.email?.toLowerCase();
   if (userError || !email) return res.status(401).json({ error: 'Sessao invalida' });
   if (!adminEmails.has(email)) return res.status(403).json({ error: 'Acesso restrito a admins' });
+  if (!enforceRateLimit(req, res, 'dashboard', { limit: 30, windowMs: 60_000 }, userData.user.id)) return;
 
   const now = new Date();
   const todayStart = startOfSaoPauloDay(now);
@@ -39,8 +42,7 @@ module.exports = async (req, res) => {
   ]);
 
   if (error) {
-    console.error('Dashboard metrics error:', error);
-    return res.status(500).json({ error: error.message });
+    return serverError(res, 'Dashboard metrics error:', error);
   }
 
   res.json({

@@ -1,4 +1,5 @@
 const { normalizarCep, normalizarTexto } = require('../lib/localizacao');
+const { enforceBodyLimit, noStore } = require('../lib/api-security');
 
 const JANELA_MS = 60 * 1000;
 const LIMITE_POR_JANELA = 10;
@@ -12,7 +13,8 @@ const ORIGENS_PERMITIDAS = new Set([
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  res.setHeader('Cache-Control', 'no-store');
+  noStore(res);
+  if (!enforceBodyLimit(req, res, 8 * 1024)) return;
 
   const origem = String(req.headers.origin || '');
   const origemLocal = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origem);

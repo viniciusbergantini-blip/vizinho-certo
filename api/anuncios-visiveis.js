@@ -1,10 +1,12 @@
 const { createClient } = require('@supabase/supabase-js');
 const { avaliarVisibilidadeAnuncio, coordenadasValidas } = require('../lib/localizacao');
+const { enforceRateLimit, noStore, serverError } = require('../lib/api-security');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  noStore(res);
 
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
   if (!token) return res.status(401).json({ error: 'Login obrigatorio' });
@@ -15,6 +17,7 @@ module.exports = async (req, res) => {
   const sb = createClient(SUPABASE_URL, serviceKey);
   const { data: userData, error: userError } = await sb.auth.getUser(token);
   if (userError || !userData?.user) return res.status(401).json({ error: 'Sessao invalida' });
+  if (!enforceRateLimit(req, res, 'visible-ads', { limit: 120, windowMs: 60_000 }, userData.user.id)) return;
 
   const { data: visitante, error: visitanteError } = await sb
     .from('usuarios')
@@ -22,7 +25,7 @@ module.exports = async (req, res) => {
     .eq('id', userData.user.id)
     .maybeSingle();
 
-  if (visitanteError) return res.status(500).json({ error: visitanteError.message });
+  if (visitanteError) return serverError(res, 'Visible ads profile error:', visitanteError);
   if (!visitante) return res.status(409).json({ error: 'Complete seu cadastro antes de ver os anuncios' });
 
   const campos = 'id, usuario_id, nome, tipo, descricao, telefone, icon, raio_km, dias, destaque, ativo, expira_em, criado_em, lat, lon';
@@ -43,8 +46,8 @@ module.exports = async (req, res) => {
       .order('criado_em', { ascending: false }),
   ]);
 
-  if (resultadoPublicos.error) return res.status(500).json({ error: resultadoPublicos.error.message });
-  if (resultadoProprios.error) return res.status(500).json({ error: resultadoProprios.error.message });
+  if (resultadoPublicos.error) return serverError(res, 'Visible ads query error:', resultadoPublicos.error);
+  if (resultadoProprios.error) return serverError(res, 'Own ads query error:', resultadoProprios.error);
   const anuncios = resultadoPublicos.data || [];
   const anunciosProprios = resultadoProprios.data || [];
 
@@ -55,7 +58,7 @@ module.exports = async (req, res) => {
       .from('usuarios')
       .select('id, rua, cep, lat, lon')
       .in('id', proprietariosIds);
-    if (resultado.error) return res.status(500).json({ error: resultado.error.message });
+    if (resultado.error) return serverError(res, 'Ad owners query error:', resultado.error);
     proprietarios = resultado.data || [];
   }
 

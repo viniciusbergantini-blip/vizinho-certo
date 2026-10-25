@@ -1,5 +1,11 @@
 const { createClient } = require('@supabase/supabase-js');
 const { EVENTOS, EVENTOS_ADOCAO } = require('../lib/analytics-dashboard');
+const {
+  enforceBodyLimit,
+  enforceRateLimit,
+  enforceTrustedOrigin,
+  noStore,
+} = require('../lib/api-security');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
 const CITIES = Object.freeze({
@@ -32,9 +38,13 @@ const METADATA_KEYS = new Set([
 
 module.exports = async (req, res) => {
   if (req.method === 'GET' && getQueryValue(req, 'view') === 'public-stats') {
+    if (!enforceRateLimit(req, res, 'public-stats', { limit: 60, windowMs: 60_000 })) return;
     return publicStats(req, res);
   }
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  noStore(res);
+  if (!enforceTrustedOrigin(req, res) || !enforceBodyLimit(req, res, 16 * 1024)) return;
+  if (!enforceRateLimit(req, res, 'analytics', { limit: 180, windowMs: 60_000 })) return;
 
   const serviceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
   if (!serviceKey) return res.status(500).json({ error: 'SUPABASE_SERVICE_KEY nao configurada' });
@@ -45,7 +55,9 @@ module.exports = async (req, res) => {
   const path = normalizarLink(body.path);
 
   if (!EVENTOS.has(eventType)) return res.status(400).json({ error: 'event_type invalido' });
-  if (!sessionId) return res.status(400).json({ error: 'session_id obrigatorio' });
+  if (!/^[A-Za-z0-9._:-]{8,120}$/.test(sessionId)) {
+    return res.status(400).json({ error: 'session_id invalido' });
+  }
 
   const sb = createClient(SUPABASE_URL, serviceKey);
   const metadata = sanitizarMetadata(body.metadata);
@@ -69,7 +81,7 @@ module.exports = async (req, res) => {
 
   if (error) {
     console.error('Track error:', error);
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ error: 'Nao foi possivel registrar o evento' });
   }
 
   res.json({ ok: true });

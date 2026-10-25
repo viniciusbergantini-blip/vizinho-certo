@@ -28,9 +28,17 @@ const mimeTypes = {
   '.jpeg': 'image/jpeg',
   '.webp': 'image/webp',
 };
+const publicStaticFiles = new Set([
+  '/index.html', '/app.html', '/dashboard.html', '/saojoao.html', '/maringa.html',
+  '/londrina.html', '/indaiatuba.html', '/offline.html', '/app-runtime.js',
+  '/install-app.js', '/engagement.js', '/landing-analytics.js', '/landing-page.js',
+  '/landing-session.js', '/sw.js', '/landing.css', '/manifest.json', '/icon.svg',
+  '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png',
+]);
 
 const server = http.createServer(async (req, res) => {
   try {
+    setSecurityHeaders(res);
     const url = new URL(req.url, `http://${req.headers.host}`);
 
     if (url.pathname.startsWith('/api/')) {
@@ -43,9 +51,9 @@ const server = http.createServer(async (req, res) => {
   } catch (error) {
     console.error(error);
     if (!res.headersSent) {
-      res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.writeHead(error.statusCode || 500, { 'Content-Type': 'application/json; charset=utf-8' });
     }
-    res.end(JSON.stringify({ error: error.message }));
+    res.end(JSON.stringify({ error: error.statusCode === 413 ? 'Requisicao muito grande' : 'Erro interno' }));
   }
 });
 
@@ -65,8 +73,22 @@ function serveStatic(requestPath, res) {
   if (filePath === '/londrina' || filePath.startsWith('/londrina/')) filePath = '/londrina.html';
   if (filePath.startsWith('/saojoao')) filePath = '/app.html';
 
-  const resolved = path.resolve(root, `.${decodeURIComponent(filePath)}`);
-  if (!resolved.startsWith(root)) {
+  let decodedPath;
+  try {
+    decodedPath = decodeURIComponent(filePath);
+  } catch {
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Bad request');
+    return;
+  }
+  if (!publicStaticFiles.has(decodedPath)) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Not found');
+    return;
+  }
+  const resolved = path.resolve(root, `.${decodedPath}`);
+  const relative = path.relative(root, resolved);
+  if (relative.startsWith('..') || path.isAbsolute(relative)) {
     res.writeHead(403);
     res.end('Forbidden');
     return;
@@ -135,10 +157,20 @@ function readJsonBody(req) {
     }
 
     let raw = '';
+    let settled = false;
     req.on('data', chunk => {
+      if (settled) return;
       raw += chunk;
+      if (Buffer.byteLength(raw, 'utf8') > 64 * 1024) {
+        settled = true;
+        const error = new Error('Request body too large');
+        error.statusCode = 413;
+        reject(error);
+      }
     });
     req.on('end', () => {
+      if (settled) return;
+      settled = true;
       if (!raw) {
         resolve({});
         return;
@@ -150,8 +182,22 @@ function readJsonBody(req) {
         reject(error);
       }
     });
-    req.on('error', reject);
+    req.on('error', error => {
+      if (settled) return;
+      settled = true;
+      reject(error);
+    });
   });
+}
+
+function setSecurityHeaders(res) {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(self), geolocation=(), microphone=(), payment=(self)');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+  res.setHeader('Content-Security-Policy', "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://www.clarity.ms https://cdn.vercel-insights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; img-src 'self' data: blob: https://xurtdibicsxmouvzfxvb.supabase.co https://*.clarity.ms https://c.bing.com; connect-src 'self' https://xurtdibicsxmouvzfxvb.supabase.co wss://xurtdibicsxmouvzfxvb.supabase.co https://viacep.com.br https://*.clarity.ms https://vitals.vercel-insights.com; worker-src 'self' blob:; manifest-src 'self'; frame-src 'none'");
 }
 
 function loadEnv(filePath) {

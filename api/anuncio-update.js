@@ -1,15 +1,30 @@
 const { createClient } = require('@supabase/supabase-js');
 const { ICONES_ANUNCIO, TIPOS_ANUNCIO } = require('../lib/planos-anuncios');
+const {
+  cleanText,
+  enforceBodyLimit,
+  enforceRateLimit,
+  enforceTrustedOrigin,
+  noStore,
+  safeRecordId,
+  serverError,
+} = require('../lib/api-security');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  noStore(res);
+  if (!enforceTrustedOrigin(req, res) || !enforceBodyLimit(req, res, 16 * 1024)) return;
 
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
   if (!token) return res.status(401).json({ error: 'Login obrigatório' });
 
-  const { id, tipo, nome, descricao, telefone } = req.body || {};
+  const id = safeRecordId(req.body?.id);
+  const tipo = cleanText(req.body?.tipo, 60);
+  const nome = cleanText(req.body?.nome, 120);
+  const descricao = cleanText(req.body?.descricao, 500, { multiline: true });
+  const telefone = String(req.body?.telefone || '').replace(/\D/g, '').slice(0, 15);
   if (!id || !tipo || !nome || !descricao || !telefone) {
     return res.status(400).json({ error: 'Dados incompletos' });
   }
@@ -26,12 +41,13 @@ module.exports = async (req, res) => {
     if (userError || !userData.user) {
       return res.status(401).json({ error: 'Sessão inválida' });
     }
+    if (!enforceRateLimit(req, res, 'ad-update', { limit: 20, windowMs: 10 * 60_000 }, userData.user.id)) return;
 
     const updates = {
       tipo,
-      nome: String(nome).trim().slice(0, 120),
-      descricao: String(descricao).trim().slice(0, 500),
-      telefone: String(telefone).trim().slice(0, 40),
+      nome,
+      descricao,
+      telefone,
       icon: ICONES_ANUNCIO.get(tipo) || '🏪',
     };
 
@@ -51,7 +67,6 @@ module.exports = async (req, res) => {
 
     res.json({ anuncio: data });
   } catch (e) {
-    console.error('Anuncio update error:', e);
-    res.status(500).json({ error: e.message });
+    return serverError(res, 'Anuncio update error:', e);
   }
 };

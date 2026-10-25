@@ -23,8 +23,7 @@
 <script src="/install-app.js"></script>
 <script src="/engagement.js"></script>
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://sdk.mercadopago.com/js/v2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.1"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -486,7 +485,7 @@
         <div class="campaign-form-note"><span>⚡</span><span><strong>Direto ao ponto:</strong> informe somente nome, e-mail e sua região. Não pedimos telefone.</span></div>
         <div class="ig"><label for="inp-nome">Nome</label><input type="text" id="inp-nome" autocomplete="name" placeholder="Como podemos chamar você?" oninput="registrarInteracaoCadastro();limparErroCadastro(this)"/></div>
         <div class="ig"><label for="inp-email">E-mail</label><input type="email" id="inp-email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="voce@email.com" oninput="registrarInteracaoCadastro();limparErroCadastro(this)"/></div>
-        <div class="ig"><label for="inp-senha">Senha</label><div class="password-field"><input type="password" id="inp-senha" autocomplete="new-password" placeholder="Crie uma senha" oninput="registrarInteracaoCadastro();limparErroCadastro(this)"/><button type="button" class="password-toggle" onclick="alternarSenha('inp-senha',this)" aria-label="Mostrar senha">Mostrar</button></div><div class="field-hint">Use pelo menos 6 caracteres.</div></div>
+        <div class="ig"><label for="inp-senha">Senha</label><div class="password-field"><input type="password" id="inp-senha" autocomplete="new-password" minlength="8" maxlength="72" placeholder="Crie uma senha" oninput="registrarInteracaoCadastro();limparErroCadastro(this)"/><button type="button" class="password-toggle" onclick="alternarSenha('inp-senha',this)" aria-label="Mostrar senha">Mostrar</button></div><div class="field-hint">Use pelo menos 8 caracteres.</div></div>
         <div class="signup-error" id="signup-error" role="alert" aria-live="polite"></div>
         <button class="btnp" id="signup-next-button" onclick="avancarCadastroEndereco()">Continuar para minha região →</button>
         <div class="signup-inline-trust">🔒 Outros usuários não veem seu endereço.</div>
@@ -570,8 +569,8 @@
         <div style="font-size:14px;color:rgba(254,250,224,0.7);">Digite sua nova senha abaixo.</div>
       </div>
       <div class="card">
-        <div class="ig"><label>Nova senha</label><input type="password" id="nova-senha" placeholder="Mínimo 6 caracteres"/></div>
-        <div class="ig"><label>Confirmar senha</label><input type="password" id="conf-senha" placeholder="Repita a senha"/></div>
+        <div class="ig"><label>Nova senha</label><input type="password" id="nova-senha" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Mínimo 8 caracteres"/></div>
+        <div class="ig"><label>Confirmar senha</label><input type="password" id="conf-senha" minlength="8" maxlength="72" autocomplete="new-password" placeholder="Repita a senha"/></div>
         <button class="btnp" id="btn-nova-senha" onclick="salvarNovaSenha()">Salvar nova senha →</button>
       </div>
     </div>
@@ -1148,6 +1147,17 @@ window.addEventListener('DOMContentLoaded', async () => {
     if(modoRecuperacaoSenha){ irTela('t-nova-senha'); return; }
     E.userId = session.user.id;
     iniciarVisita(E.userId);
+    try{
+      const pendente=JSON.parse(sessionStorage.getItem('vc_cadastro')||'null');
+      if(pendente?.email&&String(pendente.email).toLowerCase()===String(session.user.email||'').toLowerCase()){
+        cadastroTemp=pendente;
+        E.nome=pendente.apelido||pendente.nome||'Vizinho';
+        E.apelido=pendente.apelido||pendente.nome||'Vizinho';
+        E.raio=500;
+        await irFeed();
+        return;
+      }
+    }catch(e){ sessionStorage.removeItem('vc_cadastro'); }
     const { data: perfil } = await sb.from('usuarios').select('*').eq('id', session.user.id).single();
     if(!perfil || !perfil.apelido){
       irTela('t-bv'); mostrarCadastro();
@@ -1168,13 +1178,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     E.raio    = perfil.raio    || 150;
     E.fotoUrl = perfil.foto_url || null;
     document.getElementById('fsub').textContent = `${E.cidade||E.bairro||'Minha cidade'} · ${E.raio}m`;
-    const favEl = document.getElementById('fav');
-    if(E.fotoUrl){
-      favEl.innerHTML = `<img src="${E.fotoUrl}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">`;
-      favEl.style.padding = '0';
-    } else {
-      favEl.textContent = E.nome.charAt(0).toUpperCase();
-    }
+    renderAvatarCabecalho();
     await carregarPosts();
     irTela('t-feed');
     carregarResumoEventosSilencioso();
@@ -1251,7 +1255,7 @@ function avancarCadastroEndereco(){
   limparErrosCadastro();
   if(!nome){ mostrarErroCadastro('Digite seu nome para continuar.','inp-nome'); return; }
   if(!email||!email.includes('@')){ mostrarErroCadastro('Digite um e-mail válido.','inp-email'); return; }
-  if(!senha||senha.length<6){ mostrarErroCadastro('Sua senha precisa ter pelo menos 6 caracteres.','inp-senha'); return; }
+  if(!senha||senha.length<8){ mostrarErroCadastro('Sua senha precisa ter pelo menos 8 caracteres.','inp-senha'); return; }
   document.getElementById('signup-step-account').style.display='none';
   document.getElementById('signup-step-address').style.display='';
   document.getElementById('signup-progress-2').classList.add('on');
@@ -1280,7 +1284,7 @@ async function recuperarSenha(){
 async function salvarNovaSenha(){
   const senha = document.getElementById('nova-senha').value;
   const conf  = document.getElementById('conf-senha').value;
-  if(!senha || senha.length < 6){ toast('Senha deve ter pelo menos 6 caracteres!'); return; }
+  if(!senha || senha.length < 8){ toast('Senha deve ter pelo menos 8 caracteres!'); return; }
   if(senha !== conf){ toast('As senhas não coincidem!'); return; }
   const btn = document.getElementById('btn-nova-senha');
   btn.disabled=true; btn.textContent='Salvando...';
@@ -1305,7 +1309,7 @@ async function irRaio(){
   limparErrosCadastro();
   if(!nome){ voltarCadastroConta({track:false}); mostrarErroCadastro('Digite seu nome para continuar.','inp-nome'); return; }
   if(!email||!email.includes('@')){ voltarCadastroConta({track:false}); mostrarErroCadastro('Digite um e-mail válido.','inp-email'); return; }
-  if(!senha||senha.length<6){ voltarCadastroConta({track:false}); mostrarErroCadastro('Sua senha precisa ter pelo menos 6 caracteres.','inp-senha'); return; }
+  if(!senha||senha.length<8){ voltarCadastroConta({track:false}); mostrarErroCadastro('Sua senha precisa ter pelo menos 8 caracteres.','inp-senha'); return; }
   if(cep.length!==8){ mostrarErroCadastro('Digite um CEP válido com 8 números.','inp-cep','signup-location-error'); return; }
   if(!E.bairro){ mostrarErroCadastro('Aguarde a confirmação do CEP antes de continuar.','inp-cep','signup-location-error'); return; }
   if(!num){ mostrarErroCadastro('Digite o número da residência para calcular sua região.','inp-num','signup-location-error'); return; }
@@ -1352,11 +1356,19 @@ async function irRaio(){
       mostrarErroCadastro('Não conseguimos confirmar a criação da conta. Tente novamente.','inp-email');
       btn.disabled=false; btn.textContent='Criar conta e ver minha vizinhança →'; return;
     }
+    cadastroTemp = { nome, apelido, email, cep, numero: num, rua: E.rua, bairro: E.bairro, cidade: E.cidade, uf: E.uf, lat: E.lat, lon: E.lon };
+    sessionStorage.setItem('vc_cadastro',JSON.stringify(cadastroTemp));
     trackCadastro('signup_auth_success');
+    if(!authData.session){
+      E.userId=null;
+      document.getElementById('conf-email').textContent=email;
+      irTela('t-confirmar');
+      btn.disabled=false; btn.textContent='Criar conta e ver minha vizinhança →';
+      return;
+    }
     E.userId = authData.user.id;
     E.nome = apelido; E.apelido = apelido;
     E.raio = 500;
-    cadastroTemp = { nome, apelido, email, cep, numero: num, rua: E.rua, bairro: E.bairro, cidade: E.cidade, uf: E.uf, lat: E.lat, lon: E.lon };
     faseCadastro = 'profile';
     await irFeed();
     btn.disabled=false; btn.textContent='Criar conta e ver minha vizinhança →';
@@ -1410,9 +1422,17 @@ async function carregarPerfil(uid){
     E.fotoUrl = data.foto_url || null;
   }
   document.getElementById('fsub').textContent = `${E.cidade||E.bairro||'Minha cidade'} · ${E.raio}m`;
+  renderAvatarCabecalho();
+}
+
+function renderAvatarCabecalho(){
   const favEl = document.getElementById('fav');
-  if(E.fotoUrl){
-    favEl.innerHTML = `<img src="${E.fotoUrl}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;">`;
+  const foto=urlImagemSegura(E.fotoUrl);
+  favEl.replaceChildren();
+  if(foto){
+    const img=document.createElement('img');
+    img.src=foto;img.alt='';img.style.cssText='width:38px;height:38px;border-radius:50%;object-fit:cover;';
+    favEl.appendChild(img);
     favEl.style.padding = '0';
   } else {
     favEl.textContent = E.nome.charAt(0).toUpperCase();
@@ -1424,10 +1444,11 @@ async function uploadFotoPerfil(input){
   const file = input.files[0];
   if(!file) return;
   if(file.size > 5*1024*1024){ toast('Foto muito grande! Máximo 5MB.'); return; }
+  const ext=extensaoImagemSegura(file);
+  if(!ext){ toast('Use uma imagem JPG, PNG ou WebP.'); input.value=''; return; }
   toast('Enviando foto...');
   try{
-    const ext = file.name.split('.').pop()||'jpg';
-    const path = `perfis/${E.userId}.${ext}`;
+    const path = `perfis/${E.userId}/avatar.${ext}`;
     const { error } = await sb.storage.from('fotos').upload(path, file, { contentType: file.type, upsert: true });
     if(error) throw error;
     const { data } = sb.storage.from('fotos').getPublicUrl(path);
@@ -1530,15 +1551,17 @@ async function carregarPosts(){
     return;
   }
 
-  const { data, error } = await sb.rpc('posts_no_raio', { user_lat: E.lat, user_lon: E.lon, raio_metros: E.raio });
-  if(error){ console.error(error); E.posts = anunciosFeed.length ? anunciosFeed : postsBoasVindas(); render(); return; }
-
-  const postsNoRaio = (data||[]).filter(postDentroDoRaio);
-  const ids = postsNoRaio.map(p => p.id);
-  const comMap = {};
-  if(ids.length > 0){
-    const { data: comData } = await sb.from('comentarios').select('*').in('post_id', ids);
-    (comData||[]).forEach(c => { if(!comMap[c.post_id]) comMap[c.post_id]=[]; comMap[c.post_id].push(c); });
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session?.access_token){ E.posts=anunciosFeed.length?anunciosFeed:postsBoasVindas(); render(); return; }
+  let postsNoRaio=[];
+  try{
+    const resposta=await fetch(apiUrl('/api/feed'),{headers:{Authorization:`Bearer ${session.access_token}`}});
+    const resultado=await resposta.json();
+    if(!resposta.ok) throw new Error(resultado.error||'Erro ao carregar publicações');
+    postsNoRaio=resultado.posts||[];
+  }catch(error){
+    console.error('Erro ao carregar feed:',error);
+    E.posts=anunciosFeed.length?anunciosFeed:postsBoasVindas(); render(); return;
   }
   E.posts = postsNoRaio.map(p => ({
     id: p.id, nome: p.apelido_autor || 'Vizinho', dist: formatarDistancia(p.distancia_metros),
@@ -1547,13 +1570,15 @@ async function carregarPosts(){
     cor: COR[Math.abs(hashStr(p.id+'')) % COR.length],
     foto_url: p.foto_url || null, usuario_id: p.usuario_id,
     tempo: formatarTempo(p.criado_em), criado_em:p.criado_em||null,
-    coms: (comMap[p.id]||[]).map(c=>({
+    coms: (p.comentarios||[]).map(c=>({
       nome: c.apelido_autor||'Vizinho', dist: '0m', txt: c.texto, usuario_id: c.usuario_id,
+      foto_url:c.foto_autor_url||null,
       av: (c.apelido_autor||'V').charAt(0).toUpperCase(),
       cor: COR[Math.abs(hashStr(c.id+'')) % COR.length]
     }))
   }));
-  await carregarFotosPerfil(postsNoRaio.map(p=>p.usuario_id));
+  postsNoRaio.forEach(p=>{if(p.usuario_id&&p.foto_autor_url) fotoPerfilCache[p.usuario_id]=p.foto_autor_url;});
+  postsNoRaio.flatMap(p=>p.comentarios||[]).forEach(c=>{if(c.usuario_id&&c.foto_autor_url) fotoPerfilCache[c.usuario_id]=c.foto_autor_url;});
   const apoiosLocais = getApoiosLocais();
   E.posts.forEach(p => { if(apoiosLocais.includes(p.id)) p.apd = true; });
   E.posts = [...anunciosFeed, ...E.posts];
@@ -1648,14 +1673,6 @@ function postsBoasVindas(){
   ];
 }
 
-async function carregarFotosPerfil(userIds){
-  const ids = [...new Set(userIds.filter(Boolean))];
-  if(!ids.length) return;
-  const { data } = await sb.from('usuarios').select('id, foto_url').in('id', ids);
-  (data||[]).forEach(u => { if(u.foto_url) fotoPerfilCache[u.id] = u.foto_url; });
-  if(E.userId && E.fotoUrl) fotoPerfilCache[E.userId] = E.fotoUrl;
-}
-
 function hashStr(s){ let h=0; for(let i=0;i<s.length;i++) h=Math.imul(31,h)+s.charCodeAt(i)|0; return h; }
 
 function getApoiosLocais(){ try{ return JSON.parse(localStorage.getItem('vc_apoios')||'[]'); } catch(e){ return []; } }
@@ -1682,10 +1699,19 @@ async function postar(){
     catch(e){ toast('Erro ao enviar foto: ' + e.message); document.getElementById('foto-loading').style.display='none'; btn.disabled=false; btn.textContent='Publicar →'; return; }
     document.getElementById('foto-loading').style.display='none';
   }
-  const { data, error } = await sb.from('posts').insert({
-    usuario_id: E.userId, apelido_autor: E.apelido, tipo: tipoAt, texto: txt || '',
-    bairro: E.bairro, cidade: E.cidade, cep: E.cep, lat: E.lat, lon: E.lon, apoios: 0, foto_url: uploadedUrl
-  }).select().single();
+  const {data:{session}}=await sb.auth.getSession();
+  let data=null,error=null;
+  try{
+    if(!session?.access_token) throw new Error('Sua sessão expirou. Entre novamente.');
+    const resposta=await fetch(apiUrl('/api/posts'),{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},
+      body:JSON.stringify({action:'create',tipo:tipoAt,texto:txt||'',foto_url:uploadedUrl})
+    });
+    const resultado=await resposta.json();
+    if(!resposta.ok) throw new Error(resultado.error||'Erro ao publicar');
+    data=resultado.post;
+  }catch(e){error=e;}
   btn.disabled=false; btn.textContent='Publicar →';
   if(error){ toast('Erro ao publicar: ' + error.message); return; }
   fecharM();
@@ -1703,15 +1729,25 @@ async function postar(){
     localStorage.setItem('vc_first_post_tracked','1');
     trackAppEvent('first_post_created',{source:'composer'});
   }
-  fetch(apiUrl('/api/notify'), {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'📢 Nova publicação na sua rua!', corpo: (txt||'').slice(0,80), url:'/app', lat:E.lat, lon:E.lon, raio:E.raio})}).catch(()=>{});
 }
 
 async function apoiar(id){
   const p = E.posts.find(x=>x.id===id); if(!p) return;
-  p.apd = !p.apd; p.ap += p.apd ? 1 : -1;
-  if(p.apd) salvarApoioLocal(id); else removerApoioLocal(id);
-  if(typeof id === 'string' && id.startsWith('bv')) { render(); return; }
-  await sb.from('posts').update({ apoios: p.ap }).eq('id', id);
+  const anterior=p.apd;
+  p.apd=!p.apd;
+  if(typeof id === 'string' && id.startsWith('bv')) { p.ap+=p.apd?1:-1; render(); return; }
+  const {data:{session}}=await sb.auth.getSession();
+  try{
+    if(!session?.access_token) throw new Error('Sua sessão expirou.');
+    const resposta=await fetch(apiUrl('/api/posts'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({action:'support',post_id:id,supported:p.apd})});
+    const resultado=await resposta.json();
+    if(!resposta.ok) throw new Error(resultado.error||'Não foi possível registrar o apoio');
+    p.ap=resultado.apoios;
+    if(p.apd) salvarApoioLocal(id); else removerApoioLocal(id);
+  }catch(error){
+    p.apd=anterior;
+    toast(error.message);
+  }
   render();
   if(p.apd) toast('Você apoiou! 👊');
 }
@@ -1728,15 +1764,18 @@ async function envCom(id){
     p.coms.push({nome:E.apelido,dist:'0m',txt,av:E.apelido.charAt(0).toUpperCase(),cor:COR[Math.floor(Math.random()*COR.length)]});
     render(); toast('Comentário publicado! 💬'); return;
   }
-  const { error } = await sb.from('comentarios').insert({ post_id: id, usuario_id: E.userId, apelido_autor: E.apelido, texto: txt });
-  if(error){ toast('Erro ao comentar: ' + error.message); return; }
-  p.coms.push({nome:E.apelido,dist:'0m',txt,av:E.apelido.charAt(0).toUpperCase(),cor:COR[Math.floor(Math.random()*COR.length)]});
+  const {data:{session}}=await sb.auth.getSession();
+  let comentario;
+  try{
+    if(!session?.access_token) throw new Error('Sua sessão expirou.');
+    const resposta=await fetch(apiUrl('/api/posts'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({action:'comment',post_id:id,texto:txt})});
+    const resultado=await resposta.json();
+    if(!resposta.ok) throw new Error(resultado.error||'Erro ao comentar');
+    comentario=resultado.comment;
+  }catch(error){toast('Erro ao comentar: '+error.message);return;}
+  p.coms.push({nome:comentario.apelido_autor||E.apelido,dist:'0m',txt:comentario.texto,av:(comentario.apelido_autor||E.apelido).charAt(0).toUpperCase(),cor:COR[Math.floor(Math.random()*COR.length)]});
   render();
   toast('Comentário publicado! 💬');
-  // Notifica o dono do post (se não for o próprio usuário)
-  if(p.usuario_id && p.usuario_id !== E.userId){
-    fetch(apiUrl('/api/notify'), {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'💬 '+E.apelido+' comentou no seu post', corpo: txt.slice(0,80), url:'/app', usuario_ids:[p.usuario_id]})}).catch(()=>{});
-  }
 }
 
 const TL={problema:'🚧 Problema',aviso:'⚠️ Aviso',ajuda:'🤝 Ajuda',info:'💬 Info'};
@@ -1852,48 +1891,52 @@ function render(){
   const rows = ps.map(p=>{
     const cA = E.abCom.has(p.id), oA = E.abOq.has(p.id);
     const db = p.tipo==='problema' ? OQ[detectOq(p.txt)] : null;
+    const postId=htmlSeguro(String(p.id||''));
     const coms = p.coms.map(c=>{
-      const fotoC = fotoPerfilCache[c.usuario_id];
-      const cavHtml = fotoC ? `<img src="${fotoC}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : `<div class="cav" style="background:${c.cor}20;color:${c.cor}">${c.av}</div>`;
-      return `<div class="com">${cavHtml}<div><span class="cnome">${c.nome}</span> <span class="cdist">· ${c.dist}</span><div class="ctxt">${c.txt}</div></div></div>`;
+      const fotoC = urlImagemSegura(c.foto_url||fotoPerfilCache[c.usuario_id]);
+      const cavHtml = fotoC ? `<img src="${htmlSeguro(fotoC)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">` : `<div class="cav" style="background:${c.cor}20;color:${c.cor}">${htmlSeguro(c.av)}</div>`;
+      return `<div class="com">${cavHtml}<div><span class="cnome">${htmlSeguro(c.nome)}</span> <span class="cdist">· ${htmlSeguro(c.dist)}</span><div class="ctxt">${htmlSeguro(c.txt)}</div></div></div>`;
     }).join('');
     const eMeu = p.usuario_id === E.userId;
-    const fotoAutor = fotoPerfilCache[p.usuario_id];
-    const avatarHtml = fotoAutor ? `<img src="${fotoAutor}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : `<div class="pav" style="background:${p.cor}20;color:${p.cor}">${p.av}</div>`;
+    const fotoAutor = urlImagemSegura(fotoPerfilCache[p.usuario_id]);
+    const avatarHtml = fotoAutor ? `<img src="${htmlSeguro(fotoAutor)}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">` : `<div class="pav" style="background:${p.cor}20;color:${p.cor}">${htmlSeguro(p.av)}</div>`;
     if(p.isAnuncio){
       const tel=(p.telefone||'').replace(/[^0-9]/g,'');
-      return `<div class="pc" id="pc${p.id}">
+      return `<div class="pc" id="pc${postId}">
         <div class="pm" style="border:1.5px solid var(--verde-claro);background:#FBFFF8;">
-          <div class="ph">${avatarHtml}<div><div class="pnome">${p.nome}</div><div class="pdist">${p.dist ? 'a '+p.dist+' de você' : ''}${p.tempo ? ' · '+p.tempo : ''}</div></div><span class="ptag t-in">Patrocinado</span></div>
-          <div class="ptxt">${p.txt}</div>
-          <div class="srv-tags" style="margin-top:10px;"><span class="srv-tag">${p.categoria||'Serviço'}</span>${p.destaque?'<span class="srv-tag">✓ Destaque</span>':''}</div>
+          <div class="ph">${avatarHtml}<div><div class="pnome">${htmlSeguro(p.nome)}</div><div class="pdist">${p.dist ? 'a '+htmlSeguro(p.dist)+' de você' : ''}${p.tempo ? ' · '+htmlSeguro(p.tempo) : ''}</div></div><span class="ptag t-in">Patrocinado</span></div>
+          <div class="ptxt">${htmlSeguro(p.txt)}</div>
+          <div class="srv-tags" style="margin-top:10px;"><span class="srv-tag">${htmlSeguro(p.categoria||'Serviço')}</span>${p.destaque?'<span class="srv-tag">✓ Destaque</span>':''}</div>
           <div class="srv-acoes" style="margin-top:12px;">
             ${tel?`<button class="srv-btn-wa" onclick="window.open('https://wa.me/55${tel}','_blank')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligar('${tel}')">📞 Ligar</button>`:''}
           </div>
         </div>
       </div>`;
     }
-    return `<div class="pc" id="pc${p.id}">
+    const fotoPost=urlImagemSegura(p.foto_url);
+    const tipoClasse=TC[p.tipo]||'t-in';
+    const tipoRotulo=TL[p.tipo]||TL.info;
+    return `<div class="pc" id="pc${postId}">
       <div class="pm">
-        <div class="ph">${avatarHtml}<div><div class="pnome">${p.nome}</div><div class="pdist">${p.dist ? 'a '+p.dist+' de você' : ''}${p.tempo ? ' · '+p.tempo : ''}</div></div><span class="ptag ${TC[p.tipo]}">${TL[p.tipo]}</span></div>
-        <div class="ptxt">${p.txt}</div>
-        ${p.foto_url ? `<img class="post-foto" src="${p.foto_url}" alt="Foto do post" loading="lazy" onclick="verFoto('${p.foto_url}')">` : ''}
+        <div class="ph">${avatarHtml}<div><div class="pnome">${htmlSeguro(p.nome)}</div><div class="pdist">${p.dist ? 'a '+htmlSeguro(p.dist)+' de você' : ''}${p.tempo ? ' · '+htmlSeguro(p.tempo) : ''}</div></div><span class="ptag ${tipoClasse}">${tipoRotulo}</span></div>
+        <div class="ptxt">${htmlSeguro(p.txt)}</div>
+        ${fotoPost ? `<img class="post-foto" src="${htmlSeguro(fotoPost)}" alt="Foto do post" loading="lazy" onclick="verFotoPost('${postId}')">` : ''}
         <div class="pac">
-          <button class="bapoiar ${p.apd?'ap':''}" onclick="apoiar('${p.id}')">${p.apd?'✓':'+'} <span id="ac${p.id}">${p.ap}</span> apoio${p.ap!==1?'s':''}</button>
-          ${db?`<button class="boq" onclick="togOq('${p.id}')">💡 O que fazer</button>`:''}
-          <button class="bcom" onclick="togCom('${p.id}')">💬 ${p.coms.length?p.coms.length+' com.':'Comentar'}</button>
-          ${eMeu?`<button class="bia" style="border-color:#E24B4A;color:#A32D2D;margin-left:auto;" onclick="excluirPost('${p.id}')">🗑️</button>`:''}
+          <button class="bapoiar ${p.apd?'ap':''}" onclick="apoiar('${postId}')">${p.apd?'✓':'+'} <span id="ac${postId}">${Math.max(0,Number(p.ap)||0)}</span> apoio${p.ap!==1?'s':''}</button>
+          ${db?`<button class="boq" onclick="togOq('${postId}')">💡 O que fazer</button>`:''}
+          <button class="bcom" onclick="togCom('${postId}')">💬 ${p.coms.length?p.coms.length+' com.':'Comentar'}</button>
+          ${eMeu?`<button class="bia" style="border-color:#E24B4A;color:#A32D2D;margin-left:auto;" onclick="excluirPost('${postId}')">🗑️</button>`:''}
         </div>
       </div>
-      ${db?`<div class="oqf ${oA?'vis':''}" id="oq${p.id}">
+      ${db?`<div class="oqf ${oA?'vis':''}" id="oq${postId}">
         <div class="oqlbl">💡 O que fazer — ${db.titulo}</div>
         ${db.acoes.map(a=>`<div class="oqi"><div class="oqic">${a.i}</div><div class="oqtx">${a.t}
           ${a.tel?`<br><button class="btntel" onclick="ligar('${a.tel}')">📞 Ligar agora</button>`:''}
           ${a.google?`<br><button class="btntel" style="background:var(--laranja);" onclick="buscarNoGoogle('${a.google}')">🔍 Buscar contato da minha cidade</button>`:''}
         </div></div>`).join('')}
-        <div style="margin-top:10px;"><button class="bia" style="border-color:var(--verde-claro);color:var(--verde);" onclick="abrirIA('${p.id}')">🤖 Gerar pedido formal</button></div>
+        <div style="margin-top:10px;"><button class="bia" style="border-color:var(--verde-claro);color:var(--verde);" onclick="abrirIA('${postId}')">🤖 Gerar pedido formal</button></div>
       </div>`:''}
-      <div class="carea">${cA?`<div class="clista">${coms||'<div style="padding:12px;font-size:13px;color:var(--texto-muted);">Seja o primeiro a comentar!</div>'}</div><div class="cform"><textarea class="cinput" id="ci${p.id}" placeholder="Comente com respeito..." rows="1"></textarea><button class="cenv" onclick="envCom('${p.id}')">Enviar</button></div>`:''}</div>
+      <div class="carea">${cA?`<div class="clista">${coms||'<div style="padding:12px;font-size:13px;color:var(--texto-muted);">Seja o primeiro a comentar!</div>'}</div><div class="cform"><textarea class="cinput" id="ci${postId}" placeholder="Comente com respeito..." rows="1"></textarea><button class="cenv" onclick="envCom('${postId}')">Enviar</button></div>`:''}</div>
     </div>`;
   });
   lista.innerHTML = resumoHtml+rows.join('');
@@ -1905,9 +1948,13 @@ function filtrar(f,el){E.filtro=f;document.querySelectorAll('.ftab').forEach(t=>
 
 async function excluirPost(id){
   if(!confirm('Excluir este post?')) return;
-  await sb.from('comentarios').delete().eq('post_id', id);
-  const { error } = await sb.from('posts').delete().eq('id', id).eq('usuario_id', E.userId);
-  if(error){ toast('Erro ao excluir: ' + error.message); return; }
+  const {data:{session}}=await sb.auth.getSession();
+  try{
+    if(!session?.access_token) throw new Error('Sua sessão expirou.');
+    const resposta=await fetch(apiUrl('/api/posts'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({action:'delete',post_id:id})});
+    const resultado=await resposta.json();
+    if(!resposta.ok) throw new Error(resultado.error||'Erro ao excluir');
+  }catch(error){toast('Erro ao excluir: '+error.message);return;}
   E.posts = E.posts.filter(p => p.id != id);
   render();
   toast('Post excluído! 🗑️');
@@ -2026,10 +2073,12 @@ function irTela(id){
 }
 function ligar(n){toast('Abrindo discador... 📞');setTimeout(()=>window.open('tel:'+n),500);}
 
+const EXTENSOES_IMAGEM=Object.freeze({'image/jpeg':'jpg','image/png':'png','image/webp':'webp'});
 let fotoFile = null, fotoUrl = null;
 function previewFoto(input){
   const file = input.files[0]; if(!file) return;
-  if(file.size > 10*1024*1024){ toast('Foto muito grande! Máximo 10MB.'); return; }
+  if(file.size > 5*1024*1024){ toast('Foto muito grande! Máximo 5MB.'); input.value=''; return; }
+  if(!extensaoImagemSegura(file)){ toast('Use uma imagem JPG, PNG ou WebP.'); input.value=''; return; }
   fotoFile = file;
   const reader = new FileReader();
   reader.onload = e => { document.getElementById('foto-img').src = e.target.result; document.getElementById('foto-preview').style.display = ''; };
@@ -2042,19 +2091,32 @@ function removerFoto(){
   document.getElementById('foto-img').src='';
 }
 async function uploadFoto(file){
-  const ext = file.name.split('.').pop()||'jpg';
-  const path = `posts/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+  const ext=extensaoImagemSegura(file);
+  if(!ext) throw new Error('Formato de imagem não permitido.');
+  const nome=crypto.randomUUID?crypto.randomUUID():`${Date.now()}_${Math.random().toString(36).slice(2)}`;
+  const path = `posts/${E.userId}/${nome}.${ext}`;
   const { error } = await sb.storage.from('fotos').upload(path, file, { contentType: file.type, upsert: false });
   if(error) throw error;
   const { data } = sb.storage.from('fotos').getPublicUrl(path);
   return data.publicUrl;
 }
+function extensaoImagemSegura(file){ return EXTENSOES_IMAGEM[file?.type]||null; }
 function verFoto(url){
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;';
-  overlay.innerHTML = `<img src="${url}" style="max-width:95vw;max-height:90vh;border-radius:12px;object-fit:contain;">`;
+  const segura=urlImagemSegura(url);
+  if(!segura) return;
+  const imagem=document.createElement('img');
+  imagem.src=segura;
+  imagem.alt='Foto ampliada';
+  imagem.style.cssText='max-width:95vw;max-height:90vh;border-radius:12px;object-fit:contain;';
+  overlay.appendChild(imagem);
   overlay.onclick = () => document.body.removeChild(overlay);
   document.body.appendChild(overlay);
+}
+function verFotoPost(id){
+  const post=E.posts.find(item=>String(item.id)===String(id));
+  if(post) verFoto(post.foto_url);
 }
 
 let tipoAt='problema';
@@ -2068,7 +2130,9 @@ async function abrirIA(id){
   document.getElementById('iatit').textContent='Gerando pedido formal...';
   document.getElementById('iatx').innerHTML='<div class="ial"><div class="iad"></div><div class="iad"></div><div class="iad"></div></div>';
   try{
-    const resp=await fetch(apiUrl('/api/gerar-pedido'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({texto:p.txt,bairro:E.bairro||'meu bairro',apoios:p.ap})});
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session?.access_token) throw new Error('Sua sessão expirou. Entre novamente.');
+    const resp=await fetch(apiUrl('/api/gerar-pedido'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({texto:p.txt,bairro:E.bairro||'meu bairro',apoios:p.ap})});
     const data=await resp.json();
     if(data.texto){ document.getElementById('iatit').textContent='Pedido pronto para enviar!'; document.getElementById('iatx').textContent=data.texto; }
     else { document.getElementById('iatit').textContent='Erro'; document.getElementById('iatx').textContent=JSON.stringify(data); }
@@ -2347,7 +2411,15 @@ async function carregarVizinhos(){
     srvEl.innerHTML=`<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;"><div style="font-size:48px;margin-bottom:1rem;">📍</div><div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Endereço não encontrado</div><p style="font-size:13px;line-height:1.6;">Atualize seu endereço no perfil para ver seus vizinhos.</p></div>`;
     return;
   }
-  const { data, error } = await sb.rpc('vizinhos_no_raio', { user_lat: E.lat, user_lon: E.lon, raio_metros: E.raio, user_id: E.userId });
+  const {data:{session}}=await sb.auth.getSession();
+  let data=[],error=null;
+  try{
+    if(!session?.access_token) throw new Error('Sua sessão expirou.');
+    const resposta=await fetch(apiUrl('/api/vizinhos'),{headers:{Authorization:`Bearer ${session.access_token}`}});
+    const resultado=await resposta.json();
+    if(!resposta.ok) throw new Error(resultado.error||'Erro ao buscar vizinhos');
+    data=resultado.vizinhos||[];
+  }catch(e){error=e;}
   if(error || !data || data.length === 0){
     srvEl.innerHTML=`<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;"><div style="font-size:48px;margin-bottom:1rem;">🏘️</div><div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Nenhum vizinho ainda</div><p style="font-size:13px;line-height:1.6;">Você é um dos primeiros na sua rua! Compartilhe o app com seus vizinhos.</p><div style="margin-top:1.5rem;background:var(--verde-bg);border-radius:12px;padding:1rem;font-size:13px;color:#1B4D37;margin-bottom:1rem;">📲 <strong>vizinhocerto.com.br</strong></div><button onclick="compartilharApp()" style="width:100%;padding:14px;background:#2D6A4F;color:white;border:none;border-radius:12px;font-size:15px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px;"><span>📤</span> Compartilhar com vizinhos</button></div>`;
     return;
@@ -2356,8 +2428,9 @@ async function carregarVizinhos(){
     const inicial = (v.apelido||'V').charAt(0).toUpperCase();
     const cor = COR[Math.abs(hashStr(v.id+'')) % COR.length];
     const dist = formatarDistancia(v.distancia_metros);
-    const avatarHtml = v.foto_url ? `<img src="${v.foto_url}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;flex-shrink:0;">` : `<div style="width:46px;height:46px;border-radius:50%;background:${cor}20;color:${cor};display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:20px;font-weight:600;flex-shrink:0;">${inicial}</div>`;
-    return `<div style="background:var(--branco);border-radius:var(--radius);border:1px solid var(--borda);padding:1rem 1.25rem;display:flex;align-items:center;gap:12px;margin-bottom:10px;">${avatarHtml}<div style="flex:1;"><div style="font-size:15px;font-weight:500;color:var(--texto);">${v.apelido||'Vizinho'}</div><div style="font-size:12px;color:var(--texto-muted);margin-top:2px;">${v.bairro||v.cidade||''}</div></div><div style="font-size:12px;font-weight:500;color:var(--verde);background:var(--verde-bg);padding:4px 10px;border-radius:20px;">a ${dist}</div></div>`;
+    const foto=urlImagemSegura(v.foto_url);
+    const avatarHtml = foto ? `<img src="${htmlSeguro(foto)}" style="width:46px;height:46px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">` : `<div style="width:46px;height:46px;border-radius:50%;background:${cor}20;color:${cor};display:flex;align-items:center;justify-content:center;font-family:Fraunces,serif;font-size:20px;font-weight:600;flex-shrink:0;">${htmlSeguro(inicial)}</div>`;
+    return `<div style="background:var(--branco);border-radius:var(--radius);border:1px solid var(--borda);padding:1rem 1.25rem;display:flex;align-items:center;gap:12px;margin-bottom:10px;">${avatarHtml}<div style="flex:1;"><div style="font-size:15px;font-weight:500;color:var(--texto);">${htmlSeguro(v.apelido||'Vizinho')}</div><div style="font-size:12px;color:var(--texto-muted);margin-top:2px;">${htmlSeguro(v.bairro||'')}</div></div><div style="font-size:12px;font-weight:500;color:var(--verde);background:var(--verde-bg);padding:4px 10px;border-radius:20px;">a ${htmlSeguro(dist)}</div></div>`;
   }).join('');
   srvEl.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div style="background:linear-gradient(135deg,#2D6A4F,#52B788);padding:1.25rem;border-radius:var(--radius);margin-bottom:1rem;"><div style="font-family:Fraunces,serif;font-size:20px;color:white;margin-bottom:4px;">Seus Vizinhos</div><div style="font-size:12px;color:rgba(255,255,255,.7);">${data.length} vizinho${data.length!==1?'s':''} no raio de ${E.raio}m</div></div>${cards}<button onclick="compartilharApp()" style="width:100%;padding:12px;background:var(--branco);color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;margin-top:6px;">📤 Convidar mais vizinhos</button></div>`;
 }
@@ -2427,6 +2500,14 @@ function cardServico(s,proprio=false){
 
 function htmlSeguro(valor){
   return String(valor??'').replace(/[&<>"']/g,caractere=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[caractere]));
+}
+
+function urlImagemSegura(valor){
+  try{
+    const url=new URL(String(valor||''));
+    if(url.protocol!=='https:'||url.hostname!=='xurtdibicsxmouvzfxvb.supabase.co') return null;
+    return url.pathname.startsWith('/storage/v1/object/public/fotos/')?url.toString():null;
+  }catch(e){return null;}
 }
 
 function formatarDataCurta(valor){
@@ -2596,14 +2677,17 @@ async function enviarAlerta(){
   const btn=document.getElementById('btn-alertar');
   if(btn.disabled) return;
   btn.disabled=true;btn.innerHTML='⏳ Enviando alerta...';
-  const txt=`🆘 ALERTA DE EMERGÊNCIA — ${E.nome} acionou o botão de pânico nas proximidades. Fique atento e verifique se pode ajudar. Polícia 190 | SAMU 192 | Bombeiros 193.`;
   if(E.userId){
-    await sb.from('posts').insert({
-      usuario_id:E.userId, apelido_autor:E.apelido,
-      tipo:'aviso', texto:txt,
-      bairro:E.bairro, cidade:E.cidade, cep:E.cep, lat:E.lat, lon:E.lon, apoios:0
-    });
-    fetch(apiUrl('/api/notify'), {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({titulo:'🆘 ALERTA DE EMERGÊNCIA!', corpo: E.nome+' acionou o botão de pânico nas proximidades!', url:'/app', lat:E.lat, lon:E.lon, raio:E.raio})}).catch(()=>{});
+    try{
+      const {data:{session}}=await sb.auth.getSession();
+      if(!session?.access_token) throw new Error('Sua sessão expirou.');
+      const resposta=await fetch(apiUrl('/api/posts'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({action:'panic'})});
+      const resultado=await resposta.json();
+      if(!resposta.ok) throw new Error(resultado.error||'Não foi possível enviar o alerta');
+    }catch(error){
+      btn.disabled=false;btn.innerHTML='📣 Alertar todos os vizinhos do raio';
+      toast(error.message);return;
+    }
   }
   setTimeout(()=>{
     const vc=Math.floor(3+(E.raio/100));
@@ -2620,9 +2704,11 @@ async function confirmarPublicacaoAnuncio(sessionId){
   if(!sessionId) return { published:false, error:'Sessao de pagamento nao encontrada.' };
   for(let tentativa=0; tentativa<4; tentativa++){
     try{
+      const {data:{session}}=await sb.auth.getSession();
+      if(!session?.access_token) return {published:false,error:'Sua sessão expirou. Entre novamente.'};
       const resp=await fetch(apiUrl('/api/checkout-status'),{
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},
         body:JSON.stringify({session_id:sessionId})
       });
       const data=await resp.json();

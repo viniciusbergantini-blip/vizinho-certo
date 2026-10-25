@@ -1,0 +1,11 @@
+.codex-attachments/
+.github/
+deliverables/
+supabase/
+test/
+*.log
+local-server.js
+scripts/*.py
+scripts/*.ps1
+scripts/gerar-mapa-clusters-sao-joao.js
+scripts/inspect-mp4.py

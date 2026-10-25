@@ -1,14 +1,24 @@
 const { createClient } = require('@supabase/supabase-js');
+const {
+  enforceBodyLimit,
+  enforceRateLimit,
+  enforceTrustedOrigin,
+  noStore,
+  safeRecordId,
+  serverError,
+} = require('../lib/api-security');
 
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://xurtdibicsxmouvzfxvb.supabase.co';
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  noStore(res);
+  if (!enforceTrustedOrigin(req, res) || !enforceBodyLimit(req, res, 8 * 1024)) return;
 
   const token = (req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
   if (!token) return res.status(401).json({ error: 'Login obrigatório' });
 
-  const { id } = req.body || {};
+  const id = safeRecordId(req.body?.id);
   if (!id) return res.status(400).json({ error: 'ID do anúncio obrigatório' });
 
   const serviceKey = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_KEY;
@@ -20,6 +30,7 @@ module.exports = async (req, res) => {
     if (userError || !userData.user) {
       return res.status(401).json({ error: 'Sessão inválida' });
     }
+    if (!enforceRateLimit(req, res, 'ad-delete', { limit: 10, windowMs: 10 * 60_000 }, userData.user.id)) return;
 
     const { data, error } = await sb
       .from('anuncios')
@@ -36,7 +47,6 @@ module.exports = async (req, res) => {
 
     res.json({ deleted: true, id: data.id });
   } catch (e) {
-    console.error('Anuncio delete error:', e);
-    res.status(500).json({ error: e.message });
+    return serverError(res, 'Anuncio delete error:', e);
   }
 };
