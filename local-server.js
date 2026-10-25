@@ -58,6 +58,7 @@ function serveStatic(requestPath, res) {
   let filePath = requestPath;
   if (filePath === '/') filePath = '/index.html';
   if (filePath === '/app' || filePath.startsWith('/app/')) filePath = '/app.html';
+  if (filePath.startsWith('/cadastro-saojoao')) filePath = '/app.html';
   if (filePath === '/dashboard' || filePath.startsWith('/dashboard/')) filePath = '/dashboard.html';
   if (filePath === '/indaiatuba' || filePath.startsWith('/indaiatuba/')) filePath = '/indaiatuba.html';
   if (filePath === '/maringa' || filePath.startsWith('/maringa/')) filePath = '/maringa.html';

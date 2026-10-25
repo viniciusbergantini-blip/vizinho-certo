@@ -58,6 +58,9 @@
   .auth-intro>p{max-width:350px;margin-top:9px;color:rgba(254,250,224,.78);font-size:14px;line-height:1.5;}
   .auth-benefits{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px;}
   .auth-benefits span{padding:6px 9px;border:1px solid rgba(254,250,224,.16);border-radius:999px;background:rgba(255,255,255,.08);color:rgba(254,250,224,.92);font-size:11px;font-weight:600;backdrop-filter:blur(8px);}
+  .campaign-proof{display:none;align-items:center;gap:9px;margin-top:12px;padding:9px 11px;border:1px solid rgba(189,238,210,.24);border-radius:12px;background:rgba(7,42,28,.24);color:#F6F0CC;font-size:11px;line-height:1.35;}
+  .campaign-proof>span{display:grid;place-items:center;flex:none;width:20px;height:20px;border-radius:50%;background:#75D6A1;color:#174E38;font-size:12px;font-weight:900;}
+  .campaign-proof strong{font-weight:700;}
   .card{background:var(--creme);border-radius:var(--radius);padding:1.75rem;}
   #t-bv .card{background:#FFFDF4;border:1px solid rgba(255,255,255,.55);border-radius:22px;padding:20px;box-shadow:0 22px 55px rgba(5,34,22,.24);}
   .auth-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:15px;}
@@ -93,6 +96,9 @@
   .signup-progress span{height:4px;flex:1;border-radius:999px;background:#DED8C8;transition:background .2s;}
   .signup-progress span.on{background:var(--verde-claro);}
   .signup-step-label{font-size:13px;color:#314D40;margin-bottom:13px;font-weight:700;}
+  .campaign-form-note{display:none;gap:8px;align-items:flex-start;margin:-2px 0 14px;padding:10px 11px;border-radius:10px;background:#F4F0DF;color:#4F4A3F;font-size:11px;line-height:1.45;}
+  .campaign-form-note strong{color:#285B42;}
+  .signup-inline-trust{display:flex;align-items:flex-start;justify-content:center;gap:5px;margin-top:9px;color:#5F5B52;font-size:10px;line-height:1.4;text-align:center;}
   .signup-back{width:100%;margin-top:6px;padding:10px;background:transparent;border:0;color:var(--verde);font:600 13px 'DM Sans',sans-serif;cursor:pointer;}
   .signup-privacy{display:flex;gap:9px;align-items:flex-start;background:#EDF8F2;border:1px solid #B7DEC8;border-radius:11px;padding:11px 12px;margin:2px 0 14px;color:#285B42;font-size:11px;line-height:1.45;}
   .signup-privacy strong{display:block;margin-bottom:2px;font-size:12px;}
@@ -102,6 +108,25 @@
   .auth-assurance span:first-child{font-size:14px;}
   .login-help{display:flex;justify-content:space-between;align-items:center;margin-top:13px;font-size:12px;}
   .login-help button{border:0;background:transparent;color:var(--verde);font:700 12px 'DM Sans',sans-serif;cursor:pointer;}
+  #t-bv.campaign-signup .bv-inner{justify-content:flex-start;padding-top:18px;}
+  #t-bv.campaign-signup .auth-brand{margin-bottom:10px;}
+  #t-bv.campaign-signup .auth-brand img{width:36px;height:36px;border-radius:11px;}
+  #t-bv.campaign-signup .auth-brand .logo{font-size:22px;}
+  #t-bv.campaign-signup .tagline{display:none;}
+  #t-bv.campaign-signup .auth-intro{margin-bottom:11px;}
+  #t-bv.campaign-signup .auth-eyebrow{margin-bottom:5px;font-size:9px;}
+  #t-bv.campaign-signup .auth-intro h1{font-size:27px;max-width:370px;}
+  #t-bv.campaign-signup .auth-intro>p{margin-top:5px;font-size:12px;line-height:1.38;}
+  #t-bv.campaign-signup .auth-benefits{margin-top:8px;gap:5px;}
+  #t-bv.campaign-signup .auth-benefits span{padding:5px 7px;font-size:10px;}
+  #t-bv.campaign-signup .campaign-proof{margin-top:8px;padding:7px 9px;}
+  #t-bv.campaign-signup .campaign-proof,
+  #t-bv.campaign-signup .campaign-form-note{display:flex;}
+  #t-bv.campaign-signup .campaign-form-note{padding:7px 9px;margin-bottom:10px;}
+  #t-bv.campaign-signup .auth-card-head{margin-bottom:10px;}
+  #t-bv.campaign-signup .auth-time{display:none;}
+  #t-bv.campaign-signup .signup-progress{margin-bottom:11px;}
+  #t-bv.campaign-signup .auth-assurance{margin-top:11px;}
   #t-raio{background:var(--creme);}
   .rh{background:var(--verde);padding:2rem 1.5rem 3rem;position:relative;overflow:hidden;}
   .rh::after{content:'';position:absolute;bottom:-20px;left:0;right:0;height:40px;background:var(--creme);border-radius:40px 40px 0 0;}
@@ -419,7 +444,7 @@
   .activity-item button{padding:7px 9px;border:1px solid var(--verde);border-radius:8px;background:white;color:var(--verde);font:600 11px 'DM Sans',sans-serif;cursor:pointer;}
   .activity-empty{padding:13px;border:1px dashed var(--borda);border-radius:10px;color:var(--texto-muted);font-size:12px;line-height:1.5;background:rgba(255,255,255,.45);}
   html,body{height:100%;overflow-x:hidden;}
-  @media(max-width:479px){.tela{width:100%;min-height:100vh;}.bv-inner{padding:20px 16px 30px;justify-content:flex-start;}.auth-brand{margin-bottom:20px;}.auth-intro{margin-bottom:18px;}.auth-intro h1{font-size:29px;}#t-bv .card{padding:18px;border-radius:20px;}.card{margin:0;}input,textarea,select{font-size:16px!important;}}
+  @media(max-width:479px){.tela{width:100%;min-height:100vh;}.bv-inner{padding:20px 16px 30px;justify-content:flex-start;}.auth-brand{margin-bottom:20px;}.auth-intro{margin-bottom:18px;}.auth-intro h1{font-size:29px;}#t-bv .card{padding:18px;border-radius:20px;}.card{margin:0;}input,textarea,select{font-size:16px!important;}#t-bv.campaign-signup .bv-inner{padding:12px 12px 26px;}#t-bv.campaign-signup .auth-brand{margin-bottom:8px;}#t-bv.campaign-signup .auth-intro h1{font-size:25px;}#t-bv.campaign-signup .campaign-proof{margin-top:7px;}#t-bv.campaign-signup .card{padding:15px;}}
   @media(max-height:720px) and (max-width:479px){.auth-brand{margin-bottom:14px;}.auth-intro{margin-bottom:14px;}.auth-intro h1{font-size:27px;}.auth-intro>p{margin-top:6px;}.auth-benefits{margin-top:10px;}#t-bv .card{padding:16px;}.auth-card-head{margin-bottom:12px;}}
   @media(min-width:480px){.tela{max-width:420px;margin:0 auto}body{background:#E8E0CC}.fab{right:calc(50% - 210px + 24px)}.panico-fab{left:calc(50% - 210px + 16px)!important;right:auto!important}}
 </style>
@@ -443,25 +468,28 @@
       <div><div class="logo">Vizinho<span>Certo</span></div><div class="tagline">Sua rua. Seus vizinhos. Do seu jeito.</div></div>
     </div>
     <div class="auth-intro">
-      <div class="auth-eyebrow">● Sua cidade, mais perto de você</div>
-      <h1>Entre na sua vizinhança.</h1>
-      <p>Avisos, ajuda, serviços e eventos locais em um só lugar.</p>
+      <div class="auth-eyebrow" id="auth-eyebrow">● Sua cidade, mais perto de você</div>
+      <h1 id="auth-title">Entre na sua vizinhança.</h1>
+      <p id="auth-description">Avisos, ajuda, serviços e eventos locais em um só lugar.</p>
       <div class="auth-benefits" aria-label="Recursos do Vizinho Certo"><span>📣 Avisos</span><span>🛠️ Serviços</span><span>📅 Eventos</span></div>
+      <div class="campaign-proof" id="campaign-proof"><span>✓</span><strong id="campaign-proof-text">Moradores de São João já estão entrando</strong></div>
     </div>
     <div class="card auth-card" id="card-cadastro">
       <div class="auth-card-head">
-        <div><span class="auth-card-kicker">Cadastro gratuito</span><h2>Crie sua conta</h2><p class="auth-card-copy">Comece com seus dados de acesso.</p></div>
+        <div><span class="auth-card-kicker">Cadastro gratuito</span><h2 id="signup-card-title">Crie sua conta</h2><p class="auth-card-copy" id="signup-card-copy">Comece com seus dados de acesso.</p></div>
         <span class="auth-time">≈ 1 min</span>
       </div>
       <div class="signup-progress-labels"><span id="signup-label-1" class="on">1 · Conta</span><span id="signup-label-2">2 · Região</span></div>
       <div class="signup-progress"><span id="signup-progress-1" class="on"></span><span id="signup-progress-2"></span></div>
       <div id="signup-step-account">
         <div class="signup-step-label">Seus dados</div>
+        <div class="campaign-form-note"><span>⚡</span><span><strong>Direto ao ponto:</strong> informe somente nome, e-mail e sua região. Não pedimos telefone.</span></div>
         <div class="ig"><label for="inp-nome">Nome</label><input type="text" id="inp-nome" autocomplete="name" placeholder="Como podemos chamar você?" oninput="registrarInteracaoCadastro();limparErroCadastro(this)"/></div>
         <div class="ig"><label for="inp-email">E-mail</label><input type="email" id="inp-email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="voce@email.com" oninput="registrarInteracaoCadastro();limparErroCadastro(this)"/></div>
         <div class="ig"><label for="inp-senha">Senha</label><div class="password-field"><input type="password" id="inp-senha" autocomplete="new-password" placeholder="Crie uma senha" oninput="registrarInteracaoCadastro();limparErroCadastro(this)"/><button type="button" class="password-toggle" onclick="alternarSenha('inp-senha',this)" aria-label="Mostrar senha">Mostrar</button></div><div class="field-hint">Use pelo menos 6 caracteres.</div></div>
         <div class="signup-error" id="signup-error" role="alert" aria-live="polite"></div>
-        <button class="btnp" onclick="avancarCadastroEndereco()">Continuar para minha região →</button>
+        <button class="btnp" id="signup-next-button" onclick="avancarCadastroEndereco()">Continuar para minha região →</button>
+        <div class="signup-inline-trust">🔒 Outros usuários não veem seu endereço.</div>
       </div>
       <div id="signup-step-address" style="display:none;">
         <div class="signup-step-label">Onde fica sua vizinhança?</div>
@@ -776,6 +804,55 @@ function getLandingSource(){
   return legacyCity?{landing_city:legacyCity,link_url:`/${legacyCity}`}:{link_url:'/app'};
 }
 
+const DIRECT_CAMPAIGN_KEYS = ['utm_source','utm_medium','utm_campaign','utm_content','utm_term','ref','src'];
+
+function contextoCadastroDireto(){
+  let path=window.location.pathname||'';
+  try{ path=decodeURIComponent(path); }catch(e){}
+  path=path.replace(/[\u200B-\u200D\u2060\uFEFF]/g,'').replace(/\/+$/,'').toLowerCase();
+  if(path!=='/cadastro-saojoao') return null;
+  return {slug:'saojoao',cidade:'São João da Boa Vista',path:'/cadastro-saojoao'};
+}
+
+function prepararCadastroDireto(){
+  const contexto=contextoCadastroDireto();
+  if(!contexto) return null;
+  const params=new URLSearchParams(window.location.search);
+  const safeParams=new URLSearchParams();
+  const source={landing_city:contexto.slug,link_url:contexto.path,title:'Cadastro Vizinho Certo em São João da Boa Vista'};
+  for(const key of DIRECT_CAMPAIGN_KEYS){
+    const value=String(params.get(key)||'').trim().slice(0,120);
+    if(!value) continue;
+    source[key]=value;
+    safeParams.set(key,value);
+  }
+  if(safeParams.toString()) source.link_url+=`?${safeParams.toString()}`;
+  if(document.referrer){ try{ source.referrer_host=new URL(document.referrer).hostname.slice(0,160); }catch(e){} }
+  localStorage.setItem('vc_landing_source',JSON.stringify(source));
+  localStorage.setItem('vc_landing_source_city',contexto.slug);
+
+  document.title='Entre no Vizinho Certo em São João da Boa Vista';
+  document.getElementById('t-bv')?.classList.add('campaign-signup');
+  document.getElementById('auth-eyebrow').textContent='● São João da Boa Vista · comunidade local';
+  document.getElementById('auth-title').textContent='Entre na sua vizinhança.';
+  document.getElementById('auth-description').textContent='Avisos, serviços e ajuda de quem mora perto. Tudo em um só lugar.';
+  document.getElementById('signup-card-title').textContent='Entre grátis agora';
+  document.getElementById('signup-card-copy').textContent='Acesse sua vizinhança em cerca de 1 minuto.';
+  document.getElementById('signup-next-button').textContent='Continuar — falta só minha região →';
+  return source;
+}
+
+async function carregarProvaCadastroDireto(){
+  const alvo=document.getElementById('campaign-proof-text');
+  if(!alvo||!contextoCadastroDireto()) return;
+  try{
+    const response=await fetch(apiUrl('/api/track?view=public-stats&city=saojoao'));
+    const data=await response.json();
+    const total=Number(data?.registered_city||0);
+    if(response.ok&&total>=10) alvo.textContent=`${Math.floor(total/10)*10}+ moradores de São João já se cadastraram`;
+  }catch(e){}
+}
+
 function getLandingSignupPrefill(){
   const params = new URLSearchParams(window.location.search);
   let stored = {};
@@ -1049,6 +1126,14 @@ window.addEventListener('DOMContentLoaded', async () => {
   atualizarEstadoRede();
   atuRaio(150);
   verificarRetornoPagamento();
+  const campanhaDireta=prepararCadastroDireto();
+  if(campanhaDireta){
+    carregarProvaCadastroDireto();
+    if(!sessionStorage.getItem('vc_direct_landing_viewed')){
+      sessionStorage.setItem('vc_direct_landing_viewed','1');
+      trackAppEvent('landing_view',{source:'direct_signup',title:document.title});
+    }
+  }
   aplicarLandingSignupPrefill();
 
   sb.auth.onAuthStateChange(async (event, session) => {
@@ -1251,7 +1336,20 @@ async function irRaio(){
     const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
     if(authErr){
       trackCadastro('signup_auth_failed',{status:'auth_error'});
-      toast('Não foi possível criar a conta. Confira o email ou tente entrar se já possui cadastro.');
+      voltarCadastroConta({track:false});
+      const detalhe=String(authErr.message||'').toLowerCase();
+      const mensagem=detalhe.includes('already')||detalhe.includes('registered')
+        ? 'Este e-mail já tem uma conta. Use a opção “Entrar” logo abaixo.'
+        : detalhe.includes('rate')||detalhe.includes('too many')
+          ? 'Muitas tentativas seguidas. Aguarde alguns minutos e tente novamente.'
+          : 'Não conseguimos criar a conta agora. Confira o e-mail e tente novamente.';
+      mostrarErroCadastro(mensagem,'inp-email');
+      btn.disabled=false; btn.textContent='Criar conta e ver minha vizinhança →'; return;
+    }
+    if(!authData?.user?.id){
+      trackCadastro('signup_auth_failed',{status:'missing_user'});
+      voltarCadastroConta({track:false});
+      mostrarErroCadastro('Não conseguimos confirmar a criação da conta. Tente novamente.','inp-email');
       btn.disabled=false; btn.textContent='Criar conta e ver minha vizinhança →'; return;
     }
     trackCadastro('signup_auth_success');

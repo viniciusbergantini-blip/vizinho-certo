@@ -38,3 +38,16 @@ test('cadastro explica valor e privacidade com controles acessiveis', () => {
   assert.match(html, /aria-label="Mostrar senha"/);
   assert.match(html, /role="alert" aria-live="polite"/);
 });
+
+test('cadastro direto de anuncios explica valor e preserva a atribuicao', () => {
+  const html = fs.readFileSync(path.join(root, 'app.html'), 'utf8');
+  const vercel = fs.readFileSync(path.join(root, 'vercel.json'), 'utf8');
+  assert.match(html, /Avisos, serviços e ajuda de quem mora perto\./);
+  assert.match(html, /Não pedimos telefone\./);
+  assert.match(html, /Outros usuários não veem seu endereço\./);
+  assert.match(html, /DIRECT_CAMPAIGN_KEYS/);
+  assert.match(html, /vc_landing_source/);
+  assert.match(html, /vc_direct_landing_viewed/);
+  assert.match(vercel, /\/cadastro-saojoao/);
+  assert.match(fs.readFileSync(path.join(root, 'local-server.js'), 'utf8'), /startsWith\('\/cadastro-saojoao'\)/);
+});
