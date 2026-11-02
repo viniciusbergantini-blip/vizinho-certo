@@ -46,6 +46,12 @@ test('cadastro explica valor e privacidade com controles acessiveis', () => {
   assert.match(html, /Sua região, não seu endereço público/);
   assert.match(html, /aria-label="Mostrar senha"/);
   assert.match(html, /role="alert" aria-live="polite"/);
+  assert.match(html, /id="inp-consentimento"/);
+  assert.match(html, /href="\/termos"/);
+  assert.match(html, /href="\/privacidade"/);
+  assert.match(html, /legal_version:LEGAL_VERSION/);
+  assert.match(html, /terms_accepted_at:acceptedAt/);
+  assert.match(html, /privacy_accepted_at:acceptedAt/);
 });
 
 test('conta existente vai para o login com email mantido e recuperacao de senha', () => {

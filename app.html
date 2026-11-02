@@ -101,6 +101,10 @@
   .signup-back{width:100%;margin-top:6px;padding:10px;background:transparent;border:0;color:var(--verde);font:600 13px 'DM Sans',sans-serif;cursor:pointer;}
   .signup-privacy{display:flex;gap:9px;align-items:flex-start;background:#EDF8F2;border:1px solid #B7DEC8;border-radius:11px;padding:11px 12px;margin:2px 0 14px;color:#285B42;font-size:11px;line-height:1.45;}
   .signup-privacy strong{display:block;margin-bottom:2px;font-size:12px;}
+  .signup-consent{display:flex;align-items:flex-start;gap:9px;margin:2px 0 12px;padding:11px 12px;border:1px solid #D8D1C0;border-radius:11px;background:#FFFDF7;color:#4F4A3F;font-size:11px;line-height:1.45;}
+  .signup-consent input{width:18px!important;min-height:18px!important;height:18px;margin:1px 0 0;padding:0!important;flex:0 0 auto;accent-color:var(--verde);box-shadow:none!important;}
+  .signup-consent a{color:var(--verde);font-weight:700;text-decoration:underline;text-underline-offset:2px;}
+  .signup-consent.invalid{border-color:#C95D4C;background:#FFF0EC;}
   .auth-switch{text-align:center;margin-top:14px;color:#716D64;font-size:12px;}
   .auth-switch button{padding:3px;border:0;background:transparent;color:var(--verde);font:700 12px 'DM Sans',sans-serif;cursor:pointer;}
   .auth-assurance{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:14px;color:rgba(254,250,224,.76);font-size:11px;line-height:1.35;text-align:center;}
@@ -530,6 +534,7 @@
         <div class="ig"><label for="inp-cep">CEP</label><input type="tel" id="inp-cep" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" maxlength="9" oninput="registrarInteracaoCadastro();limparErroCadastro(this);formataCEP(this)"/></div>
         <div class="ig" id="cep-resultado" style="display:none;"><label for="inp-cep-addr">Rua encontrada</label><input type="text" id="inp-cep-addr" readonly style="background:#F0FBF4;color:#2D6A4F;font-weight:600;"/></div>
         <div class="ig" id="num-wrap" style="display:none;"><label for="inp-num">Número da residência</label><input type="text" id="inp-num" autocomplete="address-line2" placeholder="Ex: 142 ou 332B" oninput="registrarInteracaoCadastro();limparErroCadastro(this)" onblur="geocodificarComNumero(this.value)"/></div>
+        <label class="signup-consent" id="signup-consent-wrap"><input type="checkbox" id="inp-consentimento" onchange="registrarInteracaoCadastro();limparConsentimentoCadastro()"><span>Li e aceito os <a href="/termos" target="_blank" rel="noopener">Termos de Uso</a> e a <a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a>.</span></label>
         <div class="signup-error" id="signup-location-error" role="alert" aria-live="polite"></div>
         <button class="btnp" id="btn-cadastrar" onclick="irRaio()">Criar conta e ver minha vizinhança →</button>
         <button class="signup-back" onclick="voltarCadastroConta()">← Voltar</button>
@@ -827,6 +832,7 @@
 const SUPABASE_URL = 'https://xurtdibicsxmouvzfxvb.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh1cnRkaWJpY3N4bW91dnpmeHZiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyOTUzNjcsImV4cCI6MjA4OTg3MTM2N30.WQ36EsY2JHP5G4VvLAfRNv7j4RjArne1sjbRS_tfvUU';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const LEGAL_VERSION = '2026-11-02';
 const apiUrl = window.VizinhoCertoRuntime.apiUrl;
 
 const VC_PLAY_STORE_MODE_KEY = 'vc_play_store_consumption_mode';
@@ -1312,6 +1318,12 @@ function limparErroCadastro(input){
   document.querySelectorAll('#t-bv .signup-error').forEach(el=>{el.textContent='';el.classList.remove('show');});
 }
 
+function limparConsentimentoCadastro(){
+  document.getElementById('signup-consent-wrap')?.classList.remove('invalid');
+  const erro=document.getElementById('signup-location-error');
+  if(erro?.textContent.includes('Termos de Uso')){erro.textContent='';erro.classList.remove('show');}
+}
+
 function mostrarErroCadastro(mensagem,campoId,erroId='signup-error'){
   const erro=document.getElementById(erroId);
   const campo=document.getElementById(campoId);
@@ -1402,6 +1414,7 @@ async function irRaio(){
   const senha   = document.getElementById('inp-senha').value;
   const cep     = document.getElementById('inp-cep').value.replace(/[^0-9]/g,'');
   const num     = document.getElementById('inp-num').value.trim();
+  const consentimento = document.getElementById('inp-consentimento')?.checked === true;
   limparErrosCadastro();
   if(!nome){ voltarCadastroConta({track:false}); mostrarErroCadastro('Digite seu nome para continuar.','inp-nome'); return; }
   if(!email||!email.includes('@')){ voltarCadastroConta({track:false}); mostrarErroCadastro('Digite um e-mail válido.','inp-email'); return; }
@@ -1409,6 +1422,11 @@ async function irRaio(){
   if(cep.length!==8){ mostrarErroCadastro('Digite um CEP válido com 8 números.','inp-cep','signup-location-error'); return; }
   if(!E.bairro){ mostrarErroCadastro('Aguarde a confirmação do CEP antes de continuar.','inp-cep','signup-location-error'); return; }
   if(!num){ mostrarErroCadastro('Digite o número da residência para calcular sua região.','inp-num','signup-location-error'); return; }
+  if(!consentimento){
+    document.getElementById('signup-consent-wrap')?.classList.add('invalid');
+    mostrarErroCadastro('Para criar a conta, aceite os Termos de Uso e a Política de Privacidade.','inp-consentimento','signup-location-error');
+    return;
+  }
   const btn = document.getElementById('btn-cadastrar');
   btn.disabled = true; btn.textContent = 'Localizando endereço...';
   trackCadastro('signup_submit');
@@ -1433,7 +1451,12 @@ async function irRaio(){
     btn.textContent = 'Criando conta...';
     faseCadastro = 'auth';
     trackCadastro('signup_started');
-    const { data: authData, error: authErr } = await sb.auth.signUp({ email, password: senha });
+    const acceptedAt = new Date().toISOString();
+    const { data: authData, error: authErr } = await sb.auth.signUp({
+      email,
+      password: senha,
+      options:{data:{legal_version:LEGAL_VERSION,terms_accepted_at:acceptedAt,privacy_accepted_at:acceptedAt}}
+    });
     if(authErr){
       if(erroDeContaExistente(authErr)){
         recuperarContaExistente(email,authErr);
@@ -2444,6 +2467,7 @@ function navTab(tab,el){
       </div>
       <button onclick="alterarRaio()" style="width:100%;margin-top:1rem;padding:12px;background:#2D6A4F;color:white;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">🎯 Alterar raio de vizinhança</button>
       <button onclick="abrirAlterarEndereco()" style="width:100%;margin-top:10px;padding:12px;background:var(--branco);color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">📍 Alterar endereço</button>
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:16px;font-size:12px;"><a href="/privacidade" target="_blank" rel="noopener" style="color:var(--verde);">Privacidade</a><a href="/termos" target="_blank" rel="noopener" style="color:var(--verde);">Termos</a><a href="/excluir-conta" target="_blank" rel="noopener" style="color:var(--verde);">Excluir conta</a></div>
       <button style="width:100%;margin-top:10px;padding:12px;background:transparent;border:1.5px solid #E24B4A;border-radius:10px;color:#A32D2D;font-size:14px;cursor:pointer;font-family:DM Sans,sans-serif;" onclick="sair()">Sair da conta</button>
     </div>`;
     window.VizinhoCertoInstall?.refresh();
