@@ -30,6 +30,10 @@ test('mantem o projeto Android sincronizado com o manifesto Bubblewrap', () => {
   const checksum = fs.readFileSync(path.join(root, 'android', 'manifest-checksum.txt'), 'utf8');
   const expected = crypto.createHash('sha1').update(fs.readFileSync(manifestPath)).digest('hex');
   const gradle = fs.readFileSync(path.join(root, 'android', 'app', 'build.gradle'), 'utf8');
+  const gradleWrapper = fs.readFileSync(
+    path.join(root, 'android', 'gradle', 'wrapper', 'gradle-wrapper.properties'),
+    'utf8',
+  );
   const androidManifest = fs.readFileSync(
     path.join(root, 'android', 'app', 'src', 'main', 'AndroidManifest.xml'),
     'utf8',
@@ -37,6 +41,8 @@ test('mantem o projeto Android sincronizado com o manifesto Bubblewrap', () => {
 
   assert.equal(checksum, expected);
   assert.match(gradle, /com\.google\.androidbrowserhelper:locationdelegation:1\.1\.2/);
+  assert.match(gradleWrapper, /distributionUrl=.*gradle-8\.11\.1-bin\.zip/);
+  assert.match(gradleWrapper, /distributionSha256Sum=[a-f0-9]{64}/);
   assert.match(androidManifest, /android:name="\.DelegationService"/);
 });
 
