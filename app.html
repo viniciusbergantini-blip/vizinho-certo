@@ -2792,7 +2792,9 @@ async function salvarAvaliacaoPrestador(){
     });
     const resultado=await resposta.json();
     if(!resposta.ok) throw new Error(resultado.error||'Não foi possível salvar sua nota.');
-    avaliacoesPrestadoresCache[String(resultado.avaliacao.prestador_id)]=resultado.avaliacao;
+    const prestadorId=String(resultado.avaliacao?.prestador_id||anuncio.usuario_id||'');
+    if(!prestadorId) throw new Error('A resposta da avaliação está incompleta.');
+    avaliacoesPrestadoresCache[prestadorId]=resultado.avaliacao;
     toast('Sua avaliação foi salva. Obrigado!');
     renderListaServicos();
     renderPerfilServico();

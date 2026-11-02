@@ -135,4 +135,4 @@ async function carregarMetricasAnuncios(sb, anuncios, proprietarioId) {
   return metricasPorAnuncio(data || [], anuncios, proprietarioId);
 }
 
-module.exports._private = { carregarMetricasAnuncios };
+module.exports._private = { aplicarLocalizacaoTemporaria, carregarMetricasAnuncios };

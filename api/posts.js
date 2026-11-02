@@ -377,4 +377,11 @@ async function reachedPersistentLimit(sb, table, userId, limit, windowMs) {
   return Number(count || 0) >= limit;
 }
 
-module.exports._private = { POST_TYPES, postVisibleToProfile, reachedPersistentLimit, safeOwnedPhotoUrl, safePhotoUrl };
+module.exports._private = {
+  POST_TYPES,
+  aplicarLocalizacaoTemporaria,
+  postVisibleToProfile,
+  reachedPersistentLimit,
+  safeOwnedPhotoUrl,
+  safePhotoUrl,
+};

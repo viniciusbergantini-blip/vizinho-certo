@@ -10,11 +10,13 @@
 
 ## Gerar APK/AAB assinado
 
-1. Abra a pasta `android/` no terminal e confirme que Java, Android SDK e Node.js estão disponíveis. Bubblewrap pode instalar dependências Android na primeira execução.
+1. Abra a pasta `android/` no terminal e confirme que Java, Android SDK e Node.js estão disponíveis. A toolchain validada em 02/11/2026 usa Node.js 22, JDK 17, Android SDK 36, Build Tools 36.1.0, Gradle 8.11.1 e Bubblewrap 1.27.0. Rode `pnpm dlx @bubblewrap/cli@1.27.0 doctor` antes do build. O pin da versão evita que uma atualização futura do CLI regenere o projeto de forma diferente.
 2. Solicite ao Vinícius o arquivo `vizinhocerto-upload.keystore` por um canal privado. Copie-o para `android/vizinhocerto-upload.keystore`; esse caminho está ignorado pelo Git. O alias é `vizinhocerto-upload`.
-3. Rode `pnpm dlx @bubblewrap/cli build` na pasta `android/`. Se o comando perguntar se deve aplicar alterações detectadas em `twa-manifest.json`, leia o resumo e aplique-as para que o projeto gerado corresponda ao manifesto.
+3. Rode `pnpm dlx @bubblewrap/cli build` na pasta `android/`. Para repetir exatamente a toolchain validada, use `pnpm dlx @bubblewrap/cli@1.27.0 build`. Se o comando detectar mudanças no `twa-manifest.json`, interrompa e revise o diff antes de regenerar; `bubblewrap update` pode sobrescrever arquivos e incrementar a versão. Use `pnpm dlx @bubblewrap/cli@1.27.0 update --skipVersionUpgrade` somente quando a mudança não representar uma nova versão da Play Store.
 4. Digite as senhas da keystore/chave somente no terminal local. O terminal pode não exibir os caracteres; não as envie ao Codex, chat, WhatsApp ou GitHub.
 5. O Bubblewrap gera `app-release-signed.apk` para teste direto em aparelho e `app-release-bundle.aab` para uma futura submissão na Play Console. Esses binários são artefatos locais, não arquivos-fonte do Git.
+
+Para validar a compilação sem a chave, pode-se usar `pnpm dlx @bubblewrap/cli@1.27.0 build --skipSigning`. Esse comando gera somente artefatos sem assinatura, que não substituem o APK/AAB finais.
 
 Não crie uma keystore nova para gerar atualizações do mesmo app. A chave de upload precisa ser preservada para as próximas versões. Nunca inclua a keystore ou senhas em commits.
 
@@ -24,7 +26,7 @@ Não crie uma keystore nova para gerar atualizações do mesmo app. A chave de u
 - Preserve todas as landing pages, rotas públicas e o domínio atual. Mantenha `/app` como entrada do app.
 - Antes de usar `bubblewrap update`, verifique o diff: o Bubblewrap pode regenerar arquivos Android. Prefira manter configurações em `twa-manifest.json` e revisar os arquivos gerados.
 - A migration `supabase/migrations/20261102182551_add_provider_ratings.sql` cria a base de avaliações. Não a aplique no Supabase de produção sem conferir o projeto vinculado, revisar RLS/permissões e obter autorização do Vinícius.
-- Antes de submeter à Play Store, revisar a regra de cobrança do Google Play para os planos pagos de divulgação, além de privacidade, permissões e conteúdo. O AAB gerado não significa aprovação automática.
+- Antes de submeter à Play Store, revisar a [política de pagamentos do Google Play](https://support.google.com/googleplay/android-developer/answer/18265346) para os planos pagos de divulgação. Se a compra liberar divulgação, destaque ou outra funcionalidade digital dentro do app, a regra geral exige o sistema de cobrança do Google Play, salvo uma exceção aplicável. Confirmar o enquadramento e o fluxo de compra antes da submissão, além de privacidade, permissões e conteúdo. O AAB gerado não significa aprovação automática.
 
 ## Prompt para iniciar no Codex
 

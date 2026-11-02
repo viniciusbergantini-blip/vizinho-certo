@@ -86,7 +86,12 @@ async function carregarAvaliacoes(sb, prestadores, userId) {
   if (resumo.error) throw resumo.error;
   if (minhas.error) throw minhas.error;
 
-  const resultado = Object.fromEntries(prestadores.map(id => [id, { media: 0, quantidade: 0, minha_nota: 0 }]));
+  const resultado = Object.fromEntries(prestadores.map(id => [id, {
+    prestador_id: id,
+    media: 0,
+    quantidade: 0,
+    minha_nota: 0,
+  }]));
   for (const item of resumo.data || []) {
     resultado[item.prestador_id] = {
       ...resultado[item.prestador_id],
