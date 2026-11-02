@@ -26,6 +26,7 @@ const publicFiles = [
   'icon-512.png',
   'apple-touch-icon.png',
 ];
+const assetLinksSource = path.resolve(root, '.well-known', 'assetlinks.json');
 
 if (path.dirname(output) !== root || path.basename(output) !== 'public') {
   throw new Error('Diretorio de saida invalido');
@@ -42,4 +43,11 @@ for (const relativePath of publicFiles) {
   fs.copyFileSync(source, path.join(output, relativePath));
 }
 
-console.log(`Build publico concluido: ${publicFiles.length} arquivos permitidos.`);
+if (!fs.existsSync(assetLinksSource)) {
+  throw new Error('Arquivo publico ausente ou invalido: .well-known/assetlinks.json');
+}
+const assetLinksDestination = path.join(output, '.well-known', 'assetlinks.json');
+fs.mkdirSync(path.dirname(assetLinksDestination), { recursive: true });
+fs.copyFileSync(assetLinksSource, assetLinksDestination);
+
+console.log(`Build publico concluido: ${publicFiles.length} arquivos permitidos e assetlinks.json.`);

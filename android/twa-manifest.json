@@ -1,0 +1,59 @@
+{
+  "packageId": "br.com.vizinhocerto.app",
+  "host": "www.vizinhocerto.com.br",
+  "name": "Vizinho Certo",
+  "launcherName": "VizinhoCerto",
+  "display": "standalone",
+  "themeColor": "#1B4D37",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#FEFAE0",
+  "enableNotifications": true,
+  "startUrl": "/app",
+  "iconUrl": "https://www.vizinhocerto.com.br/icon-512.png",
+  "maskableIconUrl": "https://www.vizinhocerto.com.br/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./vizinhocerto-upload.keystore",
+    "alias": "vizinhocerto-upload"
+  },
+  "appVersionName": "1.0.0",
+  "appVersionCode": 4,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://www.vizinhocerto.com.br/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {
+    "playBilling": {
+      "enabled": true
+    },
+    "locationDelegation": {
+      "enabled": true
+    }
+  },
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://www.vizinhocerto.com.br/",
+  "minSdkVersion": 24,
+  "orientation": "portrait",
+  "fingerprints": [
+    {
+      "name": "Chave de teste local",
+      "value": "A7:C9:D0:8B:2B:62:5A:1A:C7:94:31:A0:78:33:CC:C4:03:92:D3:AA:51:C4:1F:2D:FB:88:57:62:DC:D4:33:0D"
+    }
+  ],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "1.0.0"
+}

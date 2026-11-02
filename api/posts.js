@@ -1,4 +1,4 @@
-const { coordenadasValidas, distanciaMetros } = require('../lib/localizacao');
+const { coordenadasValidas, distanciaMetros, numeroFinito } = require('../lib/localizacao');
 const { notifyNearby, notifyUsers } = require('../lib/push-notifications');
 const {
   authenticate,
@@ -26,11 +26,11 @@ module.exports = async (req, res) => {
       const view = cleanText(req.query?.view, 20);
       if (view === 'feed') {
         if (!enforceRateLimit(req, res, 'feed', { limit: 120, windowMs: 60_000 }, auth.user.id)) return;
-        return getFeed(res, sb, auth.user.id);
+        return getFeed(req, res, sb, auth.user.id);
       }
       if (view === 'vizinhos') {
         if (!enforceRateLimit(req, res, 'neighbors', { limit: 60, windowMs: 60_000 }, auth.user.id)) return;
-        return getNeighbors(res, sb, auth.user.id);
+        return getNeighbors(req, res, sb, auth.user.id);
       }
       return res.status(400).json({ error: 'Visualizacao invalida' });
     }
@@ -51,14 +51,15 @@ module.exports = async (req, res) => {
   }
 };
 
-async function getFeed(res, sb, userId) {
+async function getFeed(req, res, sb, userId) {
   const { data: profile, error: profileError } = await sb
     .from('usuarios')
     .select('id, cidade, lat, lon, raio')
     .eq('id', userId)
     .maybeSingle();
   if (profileError) throw profileError;
-  if (!profile || !coordenadasValidas(profile)) return res.json({ posts: [] });
+  const position = aplicarLocalizacaoTemporaria(req, profile);
+  if (!profile || !coordenadasValidas(position)) return res.json({ posts: [] });
 
   const radius = Math.min(Math.max(Number(profile.raio) || 150, 50), 500);
   const { data: rows, error } = await sb
@@ -71,7 +72,7 @@ async function getFeed(res, sb, userId) {
 
   const visible = (rows || []).map(post => ({
     ...post,
-    distancia_metros: distanciaMetros(profile.lat, profile.lon, post.lat, post.lon),
+    distancia_metros: distanciaMetros(position.lat, position.lon, post.lat, post.lon),
   })).filter(post => post.distancia_metros !== null && post.distancia_metros <= radius);
 
   const postIds = visible.map(post => post.id);
@@ -121,14 +122,15 @@ async function getFeed(res, sb, userId) {
   });
 }
 
-async function getNeighbors(res, sb, userId) {
+async function getNeighbors(req, res, sb, userId) {
   const { data: profile, error: profileError } = await sb
     .from('usuarios')
     .select('id, cidade, uf, lat, lon, raio')
     .eq('id', userId)
     .maybeSingle();
   if (profileError) throw profileError;
-  if (!profile || !coordenadasValidas(profile)) return res.json({ vizinhos: [] });
+  const position = aplicarLocalizacaoTemporaria(req, profile);
+  if (!profile || !coordenadasValidas(position)) return res.json({ vizinhos: [] });
 
   const radius = Math.min(Math.max(Number(profile.raio) || 150, 50), 500);
   let query = sb
@@ -146,12 +148,21 @@ async function getNeighbors(res, sb, userId) {
     apelido: user.apelido || user.nome || 'Vizinho',
     bairro: user.bairro || user.cidade || '',
     foto_url: safePhotoUrl(user.foto_url),
-    distancia_metros: distanciaMetros(profile.lat, profile.lon, user.lat, user.lon),
+    distancia_metros: distanciaMetros(position.lat, position.lon, user.lat, user.lon),
   })).filter(user => user.distancia_metros !== null && user.distancia_metros <= radius)
     .sort((a, b) => a.distancia_metros - b.distancia_metros)
     .slice(0, 100);
 
   return res.json({ vizinhos: neighbors });
+}
+
+function aplicarLocalizacaoTemporaria(req, perfil) {
+  if (!perfil) return perfil;
+  const latitude = numeroFinito(req.headers['x-vizinho-latitude']);
+  const longitude = numeroFinito(req.headers['x-vizinho-longitude']);
+  if (latitude === null || longitude === null
+    || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return perfil;
+  return { ...perfil, lat: latitude, lon: longitude };
 }
 
 async function getProfile(sb, userId) {
@@ -366,4 +377,11 @@ async function reachedPersistentLimit(sb, table, userId, limit, windowMs) {
   return Number(count || 0) >= limit;
 }
 
-module.exports._private = { POST_TYPES, postVisibleToProfile, reachedPersistentLimit, safeOwnedPhotoUrl, safePhotoUrl };
+module.exports._private = {
+  POST_TYPES,
+  aplicarLocalizacaoTemporaria,
+  postVisibleToProfile,
+  reachedPersistentLimit,
+  safeOwnedPhotoUrl,
+  safePhotoUrl,
+};

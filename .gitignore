@@ -4,3 +4,14 @@ node_modules/
 
 .vercel
 public/
+
+# Android local build outputs and signing materials. Never commit the upload key.
+android/.gradle/
+android/.idea/
+android/local.properties
+android/**/build/
+android/**/*.apk
+android/**/*.aab
+android/**/*.idsig
+*.keystore
+*.jks
