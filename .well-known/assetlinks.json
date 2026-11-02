@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "br.com.vizinhocerto.app",
+      "sha256_cert_fingerprints": [
+        "A7:C9:D0:8B:2B:62:5A:1A:C7:94:31:A0:78:33:CC:C4:03:92:D3:AA:51:C4:1F:2D:FB:88:57:62:DC:D4:33:0D"
+      ]
+    }
+  }
+]

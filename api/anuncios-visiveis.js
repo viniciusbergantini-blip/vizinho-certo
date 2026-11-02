@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const { avaliarVisibilidadeAnuncio, coordenadasValidas } = require('../lib/localizacao');
+const { avaliarVisibilidadeAnuncio, coordenadasValidas, numeroFinito } = require('../lib/localizacao');
 const { metricasPorAnuncio, ordenarAnunciosPorPrioridade } = require('../lib/anuncio-metrics');
 const { enforceRateLimit, noStore, serverError } = require('../lib/api-security');
 
@@ -28,6 +28,8 @@ module.exports = async (req, res) => {
 
   if (visitanteError) return serverError(res, 'Visible ads profile error:', visitanteError);
   if (!visitante) return res.status(409).json({ error: 'Complete seu cadastro antes de ver os anuncios' });
+
+  const visitanteConsulta = aplicarLocalizacaoTemporaria(req, visitante);
 
   const campos = 'id, usuario_id, nome, tipo, descricao, telefone, icon, plano_id, raio_km, alcance_tipo, cidade_alvo, uf_alvo, dias, destaque, ativo, expira_em, criado_em, lat, lon';
   const agora = new Date().toISOString();
@@ -70,7 +72,7 @@ module.exports = async (req, res) => {
     const resultado = avaliarVisibilidadeAnuncio({
       anuncio,
       anunciante: proprietariosPorId.get(anuncio.usuario_id),
-      visitante,
+      visitante: visitanteConsulta,
     });
     if (!resultado.visivel) continue;
 
@@ -99,9 +101,17 @@ module.exports = async (req, res) => {
   return res.json({
     anuncios: ordenarAnunciosPorPrioridade(visiveis),
     meus_anuncios: meusAnuncios,
-    location_status: coordenadasValidas(visitante) ? 'precise' : 'same_street_only',
+    location_status: coordenadasValidas(visitanteConsulta) ? 'precise' : 'same_street_only',
   });
 };
+
+function aplicarLocalizacaoTemporaria(req, perfil) {
+  const latitude = numeroFinito(req.headers['x-vizinho-latitude']);
+  const longitude = numeroFinito(req.headers['x-vizinho-longitude']);
+  if (latitude === null || longitude === null
+    || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) return perfil;
+  return { ...perfil, lat: latitude, lon: longitude };
+}
 
 async function carregarMetricasAnuncios(sb, anuncios, proprietarioId) {
   if (!anuncios.length) return new Map();

@@ -158,6 +158,14 @@
   .fh h1{font-family:'Fraunces',serif;font-size:20px;color:var(--creme);}
   .fh p{font-size:12px;color:rgba(254,250,224,.65);margin-top:1px;}
   .fav{width:38px;height:38px;border-radius:50%;background:var(--verde-claro);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:16px;color:var(--verde);font-weight:600;border:2px solid rgba(254,250,224,.3);}
+  .home-service-entry{width:100%;display:flex;align-items:center;gap:12px;padding:12px 16px;border:0;border-bottom:1px solid var(--borda);background:var(--branco);text-align:left;cursor:pointer;font-family:'DM Sans',sans-serif;}
+  .home-service-entry:focus-visible{outline:3px solid var(--verde-claro);outline-offset:-3px;}
+  .home-service-icon{width:38px;height:38px;border-radius:12px;background:var(--verde-bg);display:flex;align-items:center;justify-content:center;color:var(--verde);font-size:20px;flex-shrink:0;}
+  .home-service-icon svg{width:19px;height:19px;}
+  .home-service-copy{flex:1;min-width:0;}
+  .home-service-copy strong{display:block;color:var(--texto);font-size:13px;font-weight:600;}
+  .home-service-copy small{display:block;margin-top:2px;color:var(--texto-muted);font-size:11px;}
+  .home-service-arrow{color:var(--verde);font-size:20px;font-weight:600;}
   .ft{display:flex;background:var(--branco);border-bottom:1px solid var(--borda);overflow-x:auto;scrollbar-width:none;}
   .ft::-webkit-scrollbar{display:none;}
   .ftab{padding:12px 16px;font-size:13px;font-weight:500;color:var(--texto-muted);white-space:nowrap;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;}
@@ -262,6 +270,23 @@
   .srv-nome{font-size:15px;font-weight:500;color:var(--texto);}
   .srv-tipo{font-size:11px;color:var(--texto-muted);margin-top:1px;}
   .srv-desc{font-size:13px;color:var(--texto-muted);line-height:1.55;margin-bottom:10px;}
+  .srv-review-line{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;font-size:12px;color:var(--texto-muted);}
+  .srv-profile-cta{padding:0;border:0;background:transparent;color:var(--verde);font:500 12px 'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;}
+  .srv-profile-sheet{max-height:92vh;max-height:92dvh;overflow:auto;padding-bottom:calc(1.5rem + env(safe-area-inset-bottom));}
+  .srv-profile-close{float:right;width:34px;height:34px;border:1px solid var(--borda);border-radius:50%;background:var(--branco);color:var(--texto);font-size:22px;line-height:1;cursor:pointer;}
+  .srv-profile-heading{display:flex;gap:12px;align-items:center;margin-bottom:1rem;}
+  .srv-profile-heading .srv-logo{width:56px;height:56px;font-size:26px;}
+  .srv-profile-title{font-family:'Fraunces',serif;font-size:21px;color:var(--texto);margin:0 42px 3px 0;}
+  .srv-profile-subtitle{font-size:12px;color:var(--texto-muted);}
+  .srv-profile-rating{padding:14px;border:1px solid var(--borda);border-radius:14px;background:var(--branco);margin:12px 0;}
+  .srv-profile-rating-score{font-weight:600;color:var(--texto);}
+  .srv-rating-stars{display:flex;gap:8px;margin:10px 0;}
+  .srv-rating-star{width:42px;height:42px;border:1px solid var(--borda);border-radius:10px;background:var(--creme);color:#A6A6A6;font-size:24px;cursor:pointer;}
+  .srv-rating-star.at{background:#FFF7DF;border-color:#E9C46A;color:#D69E00;}
+  .srv-rating-note{font-size:11px;line-height:1.5;color:var(--texto-muted);margin:8px 0 0;}
+  .srv-profile-description{white-space:pre-line;font-size:14px;line-height:1.65;color:var(--texto);margin:12px 0 16px;}
+  .srv-profile-actions{display:flex;gap:8px;margin-top:14px;}
+  .srv-profile-actions .srv-btn-wa,.srv-profile-actions .srv-btn-tel{min-height:42px;}
   .srv-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
   .srv-tag{font-size:11px;padding:2px 8px;border-radius:20px;background:var(--verde-bg);color:#2D6A4F;}
   .srv-acoes{display:flex;gap:8px;}
@@ -592,6 +617,11 @@
     <div><h1>Vizinho Certo</h1><p id="fsub">Carregando...</p></div>
     <div class="fav" id="fav">?</div>
   </div>
+  <button class="home-service-entry" type="button" onclick="navTab('servicos',document.getElementById('nav-servicos'))" aria-label="Buscar serviços e prestadores próximos">
+    <span class="home-service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg></span>
+    <span class="home-service-copy"><strong>Precisa de um serviço no bairro?</strong><small>Encontre profissionais e comércios perto de você</small></span>
+    <span class="home-service-arrow" aria-hidden="true">›</span>
+  </button>
   <div class="ft" id="feed-tabs">
     <div class="ftab ativo" onclick="filtrar('tudo',this)">Tudo</div>
     <div class="ftab" onclick="filtrar('problema',this)">🚧 Problemas</div>
@@ -761,6 +791,14 @@
     <div class="ig" id="end-cep-resultado" style="display:none;"><label>Rua encontrada</label><input type="text" id="end-cep-addr" readonly style="background:#F0FBF4;color:#2D6A4F;font-weight:500;"/></div>
     <div class="ig" id="end-num-wrap" style="display:none;"><label>Número da sua casa</label><input type="text" id="end-num" placeholder="Ex: 142 ou 332B"/></div>
     <div class="mac"><button class="bcanc" onclick="fecharAlterarEndereco()">Cancelar</button><button class="bpost" onclick="salvarEndereco()">Salvar →</button></div>
+  </div>
+</div>
+
+<div class="moverlay" id="m-perfil-servico" role="dialog" aria-modal="true" aria-labelledby="srv-profile-title" onclick="if(event.target===this)fecharPerfilServico()">
+  <div class="msheet srv-profile-sheet">
+    <div class="mhandle"></div>
+    <button type="button" class="srv-profile-close" onclick="fecharPerfilServico()" aria-label="Fechar perfil">×</button>
+    <div id="srv-profile-content"></div>
   </div>
 </div>
 
@@ -950,6 +988,8 @@ const E={
   raio:150, tipo:'problema', filtro:'tudo', abCom:new Set(), abOq:new Set(), posts:[], fotoUrl:null,
   ultimaVisita:null, resumoEventos:0
 };
+let localizacaoGpsSessao=null;
+let solicitandoLocalizacaoGps=false;
 let usuarioVisitaAtual=null;
 
 function iniciarVisita(uid){
@@ -1511,7 +1551,7 @@ async function uploadFotoPerfil(input){
 async function sair(){
   if(!confirm('Deseja sair da sua conta?')) return;
   await sb.auth.signOut();
-  E.userId=null; E.nome=''; E.posts=[]; E.ultimaVisita=null; E.resumoEventos=0; usuarioVisitaAtual=null;
+  E.userId=null; E.nome=''; E.posts=[]; E.ultimaVisita=null; E.resumoEventos=0; usuarioVisitaAtual=null; localizacaoGpsSessao=null;
   irTela('t-bv');
 }
 
@@ -1591,7 +1631,8 @@ async function salvarEndereco(){
 async function carregarPosts(){
   document.getElementById('feed').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando feed...</div>';
   const anunciosFeed = anunciosComoPosts(await carregarAnunciosVisiveis());
-  if(!E.lat || !E.lon || !E.raio){
+  const posicao=localizacaoGpsSessao||E;
+  if(!Number.isFinite(Number(posicao.lat)) || !Number.isFinite(Number(posicao.lon)) || !E.raio){
     E.posts = anunciosFeed.length ? anunciosFeed : postsBoasVindas();
     render();
     return;
@@ -1601,7 +1642,7 @@ async function carregarPosts(){
   if(!session?.access_token){ E.posts=anunciosFeed.length?anunciosFeed:postsBoasVindas(); render(); return; }
   let postsNoRaio=[];
   try{
-    const resposta=await fetch(apiUrl('/api/posts?view=feed'),{headers:{Authorization:`Bearer ${session.access_token}`}});
+    const resposta=await fetch(apiUrl('/api/posts?view=feed'),{headers:{Authorization:`Bearer ${session.access_token}`,...headersLocalizacaoSessao()}});
     const resultado=await resposta.json();
     if(!resposta.ok) throw new Error(resultado.error||'Erro ao carregar publicações');
     postsNoRaio=resultado.posts||[];
@@ -1657,7 +1698,8 @@ function postDentroDoRaio(post){
   if(!Number.isFinite(raioMetros)) return false;
   const distanciaRpc = parseFloat(post.distancia_metros);
   if(Number.isFinite(distanciaRpc)) return distanciaRpc <= raioMetros;
-  const distKm = distanciaKm(E.lat, E.lon, post.lat, post.lon);
+  const posicao=localizacaoGpsSessao||E;
+  const distKm = distanciaKm(posicao.lat, posicao.lon, post.lat, post.lon);
   return distKm !== null && distKm * 1000 <= raioMetros;
 }
 
@@ -1671,22 +1713,93 @@ function distanciaKm(lat1, lon1, lat2, lon2){
   return R*2*Math.atan2(Math.sqrt(h), Math.sqrt(1-h));
 }
 
+function headersLocalizacaoSessao(){
+  if(!localizacaoGpsSessao) return {};
+  return {
+    'X-Vizinho-Latitude':String(localizacaoGpsSessao.lat),
+    'X-Vizinho-Longitude':String(localizacaoGpsSessao.lon)
+  };
+}
+
+function renderControleLocalizacao(){
+  const gpsAtivo=Boolean(localizacaoGpsSessao);
+  const texto=gpsAtivo?'↩ Voltar para minha região cadastrada':'📍 Usar minha localização atual';
+  const explicacao=gpsAtivo
+    ? 'GPS ativo só nesta sessão. Publicações e alertas continuam ligados à região do cadastro.'
+    : 'Opcional. Use o GPS para ajustar distâncias de publicações, vizinhos e serviços. A cidade e o raio cadastrados continuam valendo.';
+  return `<div style="margin:12px 0;padding:12px;border:1px solid var(--borda);border-radius:12px;background:var(--branco);">
+    <button type="button" onclick="alternarLocalizacaoGps()" ${solicitandoLocalizacaoGps?'disabled':''} style="width:100%;padding:10px 12px;border:1px solid #2D6A4F;border-radius:9px;background:${gpsAtivo?'#E8F5E9':'#fff'};color:#1B4D37;font:500 13px 'DM Sans',sans-serif;cursor:pointer;">
+      ${solicitandoLocalizacaoGps?'Obtendo localização…':texto}
+    </button>
+    <div style="margin-top:7px;color:var(--texto-muted);font-size:11px;line-height:1.45;">${explicacao} A posição não é gravada no perfil.</div>
+  </div>`;
+}
+
+async function alternarLocalizacaoGps(){
+  if(solicitandoLocalizacaoGps) return;
+  if(localizacaoGpsSessao){
+    localizacaoGpsSessao=null;
+    await atualizarConteudoLocalizacao();
+    toast('Voltamos à região do seu cadastro.');
+    return;
+  }
+  if(!navigator.geolocation){ toast('Este aparelho não disponibiliza localização para o app.'); return; }
+
+  solicitandoLocalizacaoGps=true;
+  const guia=document.querySelector('.nitem.at')?.id;
+  if(guia==='nav-servicos') renderServicos(false);
+  else if(guia!=='nav-vizinhos') render();
+  try{
+    const posicao=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{
+      enableHighAccuracy:true,
+      timeout:20000,
+      maximumAge:60000
+    }));
+    const lat=Number(posicao.coords.latitude), lon=Number(posicao.coords.longitude);
+    if(!Number.isFinite(lat)||!Number.isFinite(lon)||lat < -90||lat > 90||lon < -180||lon > 180){
+      throw new Error('invalid-position');
+    }
+    localizacaoGpsSessao={lat,lon};
+    await atualizarConteudoLocalizacao();
+    toast('Usando sua localização atual nesta sessão.');
+  }catch(error){
+    if(error?.code===1) toast('Permita a localização nas configurações do aparelho e tente novamente.');
+    else if(error?.code===3) toast('A localização demorou. Tente novamente em um local com sinal.');
+    else toast('Não conseguimos obter sua localização agora. Confira o GPS e tente novamente.');
+  }finally{
+    solicitandoLocalizacaoGps=false;
+    const tab=document.querySelector('.nitem.at')?.id;
+    if(tab==='nav-servicos') renderServicos(false);
+    else if(tab==='nav-vizinhos') carregarVizinhos();
+    else render();
+  }
+}
+
+async function atualizarConteudoLocalizacao(){
+  const tab=document.querySelector('.nitem.at')?.id;
+  if(tab==='nav-servicos') return renderServicos();
+  if(tab==='nav-vizinhos') return carregarVizinhos();
+  return carregarPosts();
+}
+
 async function carregarAnunciosVisiveis(){
   const { data:{ session } } = await sb.auth.getSession();
-  if(!session?.access_token) return [];
+  if(!session?.access_token){ anunciosVisiveisCache=[]; meusAnunciosCache=[]; return []; }
   try{
     const resposta = await fetch(apiUrl('/api/anuncios-visiveis'), {
-      headers:{'Authorization':'Bearer '+session.access_token}
+      headers:{'Authorization':'Bearer '+session.access_token,...headersLocalizacaoSessao()}
     });
     const resultado = await resposta.json();
     if(!resposta.ok) throw new Error(resultado.error||'Erro ao carregar anúncios');
     anunciosLocationStatus = resultado.location_status || 'precise';
     meusAnunciosCache = (resultado.meus_anuncios||[]).map(formatarAnuncioRecebido);
-    return (resultado.anuncios||[]).map(anuncio=>({
+    anunciosVisiveisCache = (resultado.anuncios||[]).map(anuncio=>({
       ...formatarAnuncioRecebido(anuncio)
     }));
+    return anunciosVisiveisCache;
   }catch(error){
     console.error('Erro ao carregar anúncios:', error);
+    anunciosVisiveisCache=[];
     meusAnunciosCache = [];
     return [];
   }
@@ -1909,6 +2022,7 @@ function renderResumoVizinhanca(){
       <button class="neighborhood-metric" onclick="navTab('eventos',document.getElementById('nav-eventos'))"><strong>${resumo.events}</strong><span>eventos</span></button>
     </div>
     <div class="neighborhood-footer"><span>📍 ${htmlSeguro(E.cidade||E.bairro||'Sua região')} · raio de ${E.raio}m</span><button class="neighborhood-link" onclick="alterarRaio()">Ajustar raio</button></div>
+    ${renderControleLocalizacao()}
     ${convite}
   </section>`;
 }
@@ -1953,7 +2067,7 @@ function render(){
         <div class="pm" style="border:1.5px solid var(--verde-claro);background:#FBFFF8;">
           <div class="ph">${avatarHtml}<div><div class="pnome">${htmlSeguro(p.nome)}</div><div class="pdist">${p.dist ? 'a '+htmlSeguro(p.dist)+' de você' : ''}${p.tempo ? ' · '+htmlSeguro(p.tempo) : ''}</div></div><span class="ptag t-in">Patrocinado</span></div>
           <div class="ptxt">${htmlSeguro(p.txt)}</div>
-          <div class="srv-tags" style="margin-top:10px;"><span class="srv-tag">${htmlSeguro(p.categoria||'Serviço')}</span>${p.destaque?'<span class="srv-tag">✓ Destaque</span>':''}</div>
+          <div class="srv-tags" style="margin-top:10px;"><span class="srv-tag">${htmlSeguro(p.categoria||'Serviço')}</span>${p.destaque?'<span class="srv-tag">★ Em destaque</span>':''}</div>
           <div class="srv-acoes" style="margin-top:12px;">
             ${tel?`<button class="srv-btn-wa" onclick="abrirWhatsAppAnuncio('${anuncioId}','${tel}','feed')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligarAnuncio('${anuncioId}','${tel}','feed')">📞 Ligar</button>`:''}
           </div>
@@ -2145,7 +2259,10 @@ function observarAnuncios(raiz){
 }
 function abrirWhatsAppAnuncio(id,telefone,surface){
   trackAppEvent('ad_whatsapp_click',{source:'ads',ad_id:id,surface});
-  window.open(`https://wa.me/55${telefone}`,'_blank');
+  const anuncio=[...anunciosVisiveisCache,...meusAnunciosCache].find(item=>String(item.id)===String(id));
+  const nome=String(anuncio?.nome||'o serviço anunciado').trim().slice(0,120);
+  const mensagem=`Olá! Encontrei seu contato pelo Vizinho Certo e gostaria de saber mais sobre ${nome}.`;
+  window.open(`https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`,'_blank','noopener,noreferrer');
 }
 function ligarAnuncio(id,telefone,surface){
   trackAppEvent('ad_phone_click',{source:'ads',ad_id:id,surface});
@@ -2225,6 +2342,10 @@ let catAtiva='todos';
 const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Costureira','Jardineiro','Pedreiro','Marido de Aluguel','Anúncio','Outros Serviços'];
 let anunciosVisiveisCache=[];
 let meusAnunciosCache=[];
+let avaliacoesPrestadoresCache={};
+let avaliacoesPrestadoresDisponiveis=false;
+let perfilServicoAtualId='';
+let notaPrestadorSelecionada=0;
 let anunciosLocationStatus='precise';
 let servicoBusca='';
 let eventosPeriodo='7dias';
@@ -2486,7 +2607,8 @@ function compartilharApp(){
 
 async function carregarVizinhos(){
   const srvEl = document.getElementById('servicos-tab');
-  if(!E.lat || !E.lon){
+  const posicao=localizacaoGpsSessao||E;
+  if(!Number.isFinite(Number(posicao.lat)) || !Number.isFinite(Number(posicao.lon))){
     srvEl.innerHTML=`<div style="padding:2rem 1rem;text-align:center;color:var(--texto-muted);font-size:14px;"><div style="font-size:48px;margin-bottom:1rem;">📍</div><div style="font-size:16px;font-weight:500;color:var(--texto);margin-bottom:8px;">Endereço não encontrado</div><p style="font-size:13px;line-height:1.6;">Atualize seu endereço no perfil para ver seus vizinhos.</p></div>`;
     return;
   }
@@ -2494,7 +2616,7 @@ async function carregarVizinhos(){
   let data=[],error=null;
   try{
     if(!session?.access_token) throw new Error('Sua sessão expirou.');
-    const resposta=await fetch(apiUrl('/api/posts?view=vizinhos'),{headers:{Authorization:`Bearer ${session.access_token}`}});
+    const resposta=await fetch(apiUrl('/api/posts?view=vizinhos'),{headers:{Authorization:`Bearer ${session.access_token}`,...headersLocalizacaoSessao()}});
     const resultado=await resposta.json();
     if(!resposta.ok) throw new Error(resultado.error||'Erro ao buscar vizinhos');
     data=resultado.vizinhos||[];
@@ -2520,6 +2642,7 @@ async function renderServicos(recarregar=true){
     el.innerHTML='<div style="text-align:center;padding:2rem;color:var(--texto-muted);">Carregando serviços...</div>';
     const anuncios = await carregarAnunciosVisiveis();
     anunciosVisiveisCache = [...new Map([...meusAnunciosCache,...anuncios].map(item=>[String(item.id),item])).values()];
+    await carregarAvaliacoesPrestadores(anunciosVisiveisCache);
   }
   const cats=CATS.map(c=>`<div class="srv-cat ${c===catAtiva?'at':''}" onclick="setcat('${c}')">${c==='todos'?'Todos':c}</div>`).join('');
   const avisoLocalizacao=anunciosLocationStatus==='same_street_only'
@@ -2527,7 +2650,7 @@ async function renderServicos(recarregar=true){
     : '';
   const meusCards=meusAnunciosCache.map(s=>cardServico(s,true)).join('');
   const meusHtml=meusAnunciosCache.length?`<section class="srv-meus"><div class="srv-meus-titulo">Meus anúncios</div><div class="srv-meus-sub">Edite ou exclua o que você publicou.</div>${meusCards}</section>`:'';
-  el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Serviços do Bairro</h2><p>Encontre ajuda prática perto de você</p></div>${avisoLocalizacao}${meusHtml}<div class="srv-search"><input id="srv-search-input" type="search" value="${htmlSeguro(servicoBusca)}" placeholder="Buscar diarista, eletricista, comércio..." oninput="atualizarBuscaServicos(this.value)" aria-label="Buscar serviços"><span>🔎</span></div><div class="srv-cats">${cats}</div><div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div><div class="srv-grid" id="srv-grid"></div></div>`;
+  el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Encontre serviços no seu bairro</h2><p>Busque uma profissão, veja as avaliações e fale direto pelo WhatsApp.</p></div>${renderControleLocalizacao()}${avisoLocalizacao}${meusHtml}<div class="srv-search"><input id="srv-search-input" type="search" value="${htmlSeguro(servicoBusca)}" placeholder="Ex: eletricista, diarista, comércio..." oninput="atualizarBuscaServicos(this.value)" aria-label="Buscar serviços"><span>🔎</span></div><div class="srv-cats">${cats}</div><div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div><div class="srv-grid" id="srv-grid"></div></div>`;
   renderListaServicos();
 }
 
@@ -2570,14 +2693,119 @@ function cardServico(s,proprio=false){
   const status=s.status==='expirado'?'Expirado':`Ativo até ${formatarDataCurta(s.expira_em)}`;
   const metricas=s.metricas||{alcance:0,whatsapp:0,ligacoes:0};
   const alcance=s.alcance_tipo==='cidade'?'Toda a cidade':(s.distancia_fmt?`a ${htmlSeguro(s.distancia_fmt)}`:'');
+  const avaliacao=avaliacoesPrestadoresCache[String(s.usuario_id)]||{media:0,quantidade:0};
+  const resumoAvaliacao=avaliacao.quantidade?`★ ${Number(avaliacao.media).toFixed(1)} · ${avaliacao.quantidade} ${avaliacao.quantidade===1?'avaliação':'avaliações'}`:avaliacoesPrestadoresDisponiveis?'☆ Ainda sem avaliações':'Avaliações temporariamente indisponíveis';
+  const perfilCta=avaliacoesPrestadoresDisponiveis?'Ver perfil e avaliar →':'Ver perfil →';
   const tracking=proprio?'':` data-ad-id="${htmlSeguro(id)}" data-ad-surface="services"`;
   return `<div class="srv-card ${s.destaque?'destaque':''}"${tracking}>
     ${s.destaque?'<div class="srv-destaque-label">★ PARCEIRO DESTAQUE</div>':''}
     <div class="srv-body"><div class="srv-top"><div class="srv-logo" style="background:#E8F5E9">${icone}</div><div class="srv-info"><div class="srv-nome">${nome}</div><div class="srv-tipo">${tipo}</div></div></div>
     <div class="srv-desc">${descricao}</div>
-    <div class="srv-tags"><span class="srv-tag">${tipo}</span>${proprio?`<span class="srv-tag">${status}</span>`:(alcance?`<span class="srv-tag">${alcance}</span>`:'')}${s.destaque?'<span class="srv-tag">✓ Verificado</span>':''}</div>
+    <div class="srv-tags"><span class="srv-tag">${tipo}</span>${proprio?`<span class="srv-tag">${status}</span>`:(alcance?`<span class="srv-tag">${alcance}</span>`:'')}${s.destaque?'<span class="srv-tag">★ Em destaque</span>':''}</div>
+    <div class="srv-review-line"><span>${resumoAvaliacao}</span><button class="srv-profile-cta" onclick="abrirPerfilServico('${htmlSeguro(id)}')">${perfilCta}</button></div>
     ${proprio?`<div class="srv-owner-metrics"><div class="srv-owner-metric"><strong>${Number(metricas.alcance)||0}</strong><span>alcance</span></div><div class="srv-owner-metric"><strong>${Number(metricas.whatsapp)||0}</strong><span>WhatsApp</span></div><div class="srv-owner-metric"><strong>${Number(metricas.ligacoes)||0}</strong><span>ligações</span></div></div><div class="srv-owner-actions"><button class="srv-owner-edit" onclick="abrirEditarAnuncio('${id}')">✏️ Editar</button><button class="srv-owner-delete" data-delete-id="${id}" onclick="excluirAnuncio('${id}')">🗑️ Excluir</button></div>`:`<div class="srv-acoes">${telefone?`<button class="srv-btn-wa" onclick="abrirWhatsAppAnuncio('${htmlSeguro(id)}','${telefone}','services')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligarAnuncio('${htmlSeguro(id)}','${telefone}','services')">📞 Ligar</button>`:''}</div>`}
     </div></div>`;
+}
+
+async function carregarAvaliacoesPrestadores(anuncios){
+  const prestadores=[...new Set((anuncios||[]).map(item=>String(item.usuario_id||'')).filter(Boolean))];
+  avaliacoesPrestadoresCache={};
+  avaliacoesPrestadoresDisponiveis=false;
+  if(!prestadores.length){avaliacoesPrestadoresDisponiveis=true;return;}
+  try{
+    const token=await tokenAutenticadoAtual();
+    for(let inicio=0;inicio<prestadores.length;inicio+=50){
+      const lote=prestadores.slice(inicio,inicio+50);
+      const resposta=await fetch(apiUrl(`/api/avaliacoes-prestadores?ids=${encodeURIComponent(lote.join(','))}`),{headers:{Authorization:`Bearer ${token}`}});
+      const resultado=await resposta.json();
+      if(!resposta.ok) throw new Error(resultado.error||'Não foi possível carregar as avaliações.');
+      Object.assign(avaliacoesPrestadoresCache,resultado.avaliacoes||{});
+    }
+    avaliacoesPrestadoresDisponiveis=true;
+  }catch(error){
+    console.warn('Avaliações de prestadores indisponíveis:',error);
+  }
+}
+
+async function tokenAutenticadoAtual(){
+  const {data:{session},error}=await sb.auth.getSession();
+  if(error||!session?.access_token) throw new Error('Entre novamente para usar as avaliações.');
+  return session.access_token;
+}
+
+function abrirPerfilServico(id){
+  const anuncio=anunciosVisiveisCache.find(item=>String(item.id)===String(id))
+    ||meusAnunciosCache.find(item=>String(item.id)===String(id));
+  if(!anuncio){toast('Não foi possível abrir este perfil. Atualize a lista e tente novamente.');return;}
+  perfilServicoAtualId=String(anuncio.id);
+  const avaliacao=avaliacoesPrestadoresCache[String(anuncio.usuario_id)]||{};
+  notaPrestadorSelecionada=Number(avaliacao.minha_nota)||0;
+  document.getElementById('m-perfil-servico').classList.add('ab');
+  renderPerfilServico();
+}
+
+function renderPerfilServico(){
+  const el=document.getElementById('srv-profile-content');
+  const anuncio=anunciosVisiveisCache.find(item=>String(item.id)===perfilServicoAtualId)
+    ||meusAnunciosCache.find(item=>String(item.id)===perfilServicoAtualId);
+  if(!el||!anuncio) return;
+  const avaliacao=avaliacoesPrestadoresCache[String(anuncio.usuario_id)]||{media:0,quantidade:0,minha_nota:0};
+  const proprio=String(anuncio.usuario_id||'')===String(E.userId||'');
+  const telefone=String(anuncio.telefone||'').replace(/[^0-9]/g,'');
+  const media=Number(avaliacao.media)||0;
+  const quantidade=Number(avaliacao.quantidade)||0;
+  const notaAtual=Number(avaliacao.minha_nota)||0;
+  const estrelasHtml=Array.from({length:5},(_,index)=>{
+    const nota=index+1;
+    return `<button type="button" class="srv-rating-star ${nota<=notaPrestadorSelecionada?'at':''}" aria-label="Avaliar com ${nota} ${nota===1?'estrela':'estrelas'}" aria-pressed="${nota===notaPrestadorSelecionada}" onclick="selecionarNotaPrestador(${nota})">★</button>`;
+  }).join('');
+  const notaResumo=quantidade?`★ ${media.toFixed(1)} de 5 · ${quantidade} ${quantidade===1?'avaliação':'avaliações'}`:avaliacoesPrestadoresDisponiveis?'Ainda sem avaliações dos moradores':'Avaliações temporariamente indisponíveis';
+  const avaliacaoHtml=proprio
+    ? '<p class="srv-rating-note">Este é o seu anúncio. Você pode ver as notas dos moradores, mas não avaliar a si mesmo.</p>'
+    : !avaliacoesPrestadoresDisponiveis
+      ? '<p class="srv-rating-note">As avaliações estão sendo preparadas. Tente novamente mais tarde.</p>'
+      : `<div class="srv-rating-stars" role="group" aria-label="Escolha sua nota">${estrelasHtml}</div><button class="bpost" id="srv-rating-submit" type="button" onclick="salvarAvaliacaoPrestador()">${notaAtual?'Atualizar minha nota':'Enviar avaliação'}</button><p class="srv-rating-note">Avaliação de morador. O Vizinho Certo não confirma contratação ou execução do serviço.</p>`;
+  el.innerHTML=`<div class="srv-profile-heading"><div class="srv-logo" style="background:#E8F5E9">${htmlSeguro(anuncio.icon||'🏪')}</div><div><h2 class="srv-profile-title" id="srv-profile-title">${htmlSeguro(anuncio.nome||'Prestador local')}</h2><div class="srv-profile-subtitle">${htmlSeguro(anuncio.tipo||'Serviço')}${anuncio.distancia_fmt?` · ${htmlSeguro(anuncio.distancia_fmt)} de você`:''}</div></div></div>
+    ${anuncio.destaque?'<span class="srv-tag">★ Anúncio em destaque</span>':''}
+    <div class="srv-profile-rating"><div class="srv-profile-rating-score">${htmlSeguro(notaResumo)}</div>${avaliacaoHtml}</div>
+    <p class="srv-profile-description">${htmlSeguro(anuncio.descricao||'Entre em contato para saber mais sobre este serviço.')}</p>
+    <div class="srv-tags"><span class="srv-tag">${htmlSeguro(anuncio.alcance_tipo==='cidade'?'Atende toda a cidade':(anuncio.distancia_fmt?`Atende perto de você · ${anuncio.distancia_fmt}`:'Atende sua região'))}</span></div>
+    <div class="srv-profile-actions">${telefone?`<button class="srv-btn-wa" onclick="abrirWhatsAppAnuncio('${htmlSeguro(anuncio.id)}','${telefone}','profile')">💬 Conversar no WhatsApp</button><button class="srv-btn-tel" onclick="ligarAnuncio('${htmlSeguro(anuncio.id)}','${telefone}','profile')">📞 Ligar</button>`:''}</div>`;
+}
+
+function selecionarNotaPrestador(nota){
+  notaPrestadorSelecionada=Math.max(1,Math.min(5,Number(nota)||1));
+  renderPerfilServico();
+}
+
+async function salvarAvaliacaoPrestador(){
+  const anuncio=anunciosVisiveisCache.find(item=>String(item.id)===perfilServicoAtualId);
+  if(!anuncio||!notaPrestadorSelecionada){toast('Escolha de 1 a 5 estrelas.');return;}
+  const botao=document.getElementById('srv-rating-submit');
+  if(botao){botao.disabled=true;botao.textContent='Salvando…';}
+  try{
+    const token=await tokenAutenticadoAtual();
+    const resposta=await fetch(apiUrl('/api/avaliacoes-prestadores'),{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
+      body:JSON.stringify({anuncio_id:anuncio.id,estrelas:notaPrestadorSelecionada})
+    });
+    const resultado=await resposta.json();
+    if(!resposta.ok) throw new Error(resultado.error||'Não foi possível salvar sua nota.');
+    avaliacoesPrestadoresCache[String(resultado.avaliacao.prestador_id)]=resultado.avaliacao;
+    toast('Sua avaliação foi salva. Obrigado!');
+    renderListaServicos();
+    renderPerfilServico();
+  }catch(error){
+    toast(error.message||'Não foi possível salvar sua avaliação.');
+    if(botao){botao.disabled=false;botao.textContent='Tentar novamente';}
+  }
+}
+
+function fecharPerfilServico(){
+  document.getElementById('m-perfil-servico')?.classList.remove('ab');
+  perfilServicoAtualId='';
+  notaPrestadorSelecionada=0;
 }
 
 function htmlSeguro(valor){
