@@ -829,6 +829,20 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const apiUrl = window.VizinhoCertoRuntime.apiUrl;
 
+const VC_PLAY_STORE_MODE_KEY = 'vc_play_store_consumption_mode';
+function iniciarModoConsumoPlayStore(){
+  const params=new URLSearchParams(window.location.search);
+  const origemTwa=/^android-app:\/\/br\.com\.vizinhocerto\.app\/?$/i.test(document.referrer||'');
+  const urlDeLancamentoPlay=params.get('vc_play_store')==='1';
+  try{
+    if(origemTwa||urlDeLancamentoPlay) sessionStorage.setItem(VC_PLAY_STORE_MODE_KEY,'1');
+    return origemTwa||urlDeLancamentoPlay||sessionStorage.getItem(VC_PLAY_STORE_MODE_KEY)==='1';
+  }catch(_){
+    return origemTwa||urlDeLancamentoPlay;
+  }
+}
+const VC_PLAY_STORE_CONSUMPTION_MODE=iniciarModoConsumoPlayStore();
+
 const VAPID_PUBLIC_KEY = 'BOto1nQHk0YOlsxXe38vEb8OJRvpvX_H-14FSURRIltLVnzt40m7pyh7dwWETdzhvWo8Xk_J6nOll8kQp1Jy8NY';
 
 let modoRecuperacaoSenha = false;
@@ -1843,6 +1857,10 @@ async function postar(){
   if(!txt && !fotoFile){ toast('Escreva algo ou adicione uma foto!'); return; }
   if(txt && temPalavrão(txt)){ toast('⚠️ Revise o texto — sem palavrões.'); return; }
   if(txt && temAnuncio(txt)){
+    if(VC_PLAY_STORE_CONSUMPTION_MODE){
+      toast('Para anunciar, consulte as opções no site do Vizinho Certo fora deste aplicativo.');
+      return;
+    }
     toast('🛒 Para anunciar use a aba Serviços!');
     setTimeout(()=>{ fecharM(); navTab('servicos', document.getElementById('nav-servicos')); abrirAnun(); }, 1500);
     return;
@@ -2650,7 +2668,10 @@ async function renderServicos(recarregar=true){
     : '';
   const meusCards=meusAnunciosCache.map(s=>cardServico(s,true)).join('');
   const meusHtml=meusAnunciosCache.length?`<section class="srv-meus"><div class="srv-meus-titulo">Meus anúncios</div><div class="srv-meus-sub">Edite ou exclua o que você publicou.</div>${meusCards}</section>`:'';
-  el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Encontre serviços no seu bairro</h2><p>Busque uma profissão, veja as avaliações e fale direto pelo WhatsApp.</p></div>${renderControleLocalizacao()}${avisoLocalizacao}${meusHtml}<div class="srv-search"><input id="srv-search-input" type="search" value="${htmlSeguro(servicoBusca)}" placeholder="Ex: eletricista, diarista, comércio..." oninput="atualizarBuscaServicos(this.value)" aria-label="Buscar serviços"><span>🔎</span></div><div class="srv-cats">${cats}</div><div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div><div class="srv-grid" id="srv-grid"></div></div>`;
+  const blocoAnuncio=VC_PLAY_STORE_CONSUMPTION_MODE
+    ? '<div class="srv-anunciar"><p><strong>É prestador ou comerciante?</strong><br>Você pode contratar anúncios no site do Vizinho Certo, fora deste aplicativo.</p></div>'
+    : '<div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div>';
+  el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Encontre serviços no seu bairro</h2><p>Busque uma profissão, veja as avaliações e fale direto pelo WhatsApp.</p></div>${renderControleLocalizacao()}${avisoLocalizacao}${meusHtml}<div class="srv-search"><input id="srv-search-input" type="search" value="${htmlSeguro(servicoBusca)}" placeholder="Ex: eletricista, diarista, comércio..." oninput="atualizarBuscaServicos(this.value)" aria-label="Buscar serviços"><span>🔎</span></div><div class="srv-cats">${cats}</div>${blocoAnuncio}<div class="srv-grid" id="srv-grid"></div></div>`;
   renderListaServicos();
 }
 
@@ -2664,9 +2685,16 @@ function renderListaServicos(){
   const filtrados=servicosFiltrados();
   if(filtrados.length){ grid.innerHTML=filtrados.map(s=>cardServico(s)).join(''); observarAnuncios(grid); return; }
   const temFiltro=Boolean(servicoBusca.trim()||catAtiva!=='todos');
-  grid.innerHTML=temFiltro
-    ? `<div class="feed-empty"><strong style="color:var(--texto);">Nenhum serviço encontrado</strong><br>Tente outro termo ou veja todas as categorias.<div class="feed-empty-actions"><button onclick="limparBuscaServicos()">Limpar busca</button><button onclick="abrirAnun()">Anunciar serviço</button></div></div>`
-    : `<div class="feed-empty"><strong style="color:var(--texto);">Ainda não há serviços próximos</strong><br>Confira seu endereço, convide um prestador conhecido ou seja o primeiro a anunciar.<div class="feed-empty-actions"><button onclick="abrirAlterarEndereco()">Revisar endereço</button><button onclick="abrirAnun()">Anunciar serviço</button></div></div>`;
+  if(temFiltro){
+    const acaoAnunciar=VC_PLAY_STORE_CONSUMPTION_MODE?'':`<button onclick="abrirAnun()">Anunciar serviço</button>`;
+    grid.innerHTML=`<div class="feed-empty"><strong style="color:var(--texto);">Nenhum serviço encontrado</strong><br>Tente outro termo ou veja todas as categorias.<div class="feed-empty-actions"><button onclick="limparBuscaServicos()">Limpar busca</button>${acaoAnunciar}</div></div>`;
+    return;
+  }
+  const textoVazio=VC_PLAY_STORE_CONSUMPTION_MODE
+    ? 'Os serviços anunciados no Vizinho Certo aparecem aqui para os moradores próximos.'
+    : 'Confira seu endereço, convide um prestador conhecido ou seja o primeiro a anunciar.';
+  const acaoAnunciar=VC_PLAY_STORE_CONSUMPTION_MODE?'':`<button onclick="abrirAnun()">Anunciar serviço</button>`;
+  grid.innerHTML=`<div class="feed-empty"><strong style="color:var(--texto);">Ainda não há serviços próximos</strong><br>${textoVazio}<div class="feed-empty-actions"><button onclick="abrirAlterarEndereco()">Revisar endereço</button>${acaoAnunciar}</div></div>`;
 }
 
 function atualizarBuscaServicos(valor){
@@ -2910,9 +2938,16 @@ async function excluirAnuncio(id,fecharModal=false){
 }
 
 const anunState={tipo:'',icon:'',nome:'',desc:'',tel:'',plano_id:'',plano_nome:'',beneficios:'',dias:0,preco:0,pgto:'pix'};
-function abrirAnun(){document.getElementById('manun').classList.add('ab');anunStep(1);}
+function abrirAnun(){
+  if(VC_PLAY_STORE_CONSUMPTION_MODE){
+    toast('Para anunciar, consulte as opções no site do Vizinho Certo fora deste aplicativo.');
+    return;
+  }
+  document.getElementById('manun').classList.add('ab');anunStep(1);
+}
 function fecharAnun(){document.getElementById('manun').classList.remove('ab');}
 function anunStep(n){
+  if(VC_PLAY_STORE_CONSUMPTION_MODE) return;
   document.querySelectorAll('.anun-step').forEach(s=>s.classList.remove('ab'));
   document.getElementById('as'+n).classList.add('ab');
   for(let i=1;i<=4;i++){const d=document.getElementById('ap'+i);if(d)d.classList.toggle('done',i<=n);}
@@ -2954,6 +2989,10 @@ function renderPgto(){
   area.innerHTML=`<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">💳</div><div style="font-weight:500;color:var(--texto);font-size:14px;">Valor: R$ ${preco}</div><div style="font-size:12px;color:var(--texto-muted);margin-top:8px;">Ao clicar em Pagar, você será redirecionado para o checkout seguro da Stripe. Aceitamos cartão de crédito e débito.</div></div>`;
 }
 async function anunFinalizar(){
+  if(VC_PLAY_STORE_CONSUMPTION_MODE){
+    toast('Para anunciar, consulte as opções no site do Vizinho Certo fora deste aplicativo.');
+    return;
+  }
   const btn=document.querySelector('#as4 .anun-next');
   btn.textContent='Abrindo pagamento...';btn.disabled=true;
   try{

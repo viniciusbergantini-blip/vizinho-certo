@@ -12,7 +12,7 @@
   "navigationDividerColorDark": "#000000",
   "backgroundColor": "#FEFAE0",
   "enableNotifications": true,
-  "startUrl": "/app",
+  "startUrl": "/app?vc_play_store=1",
   "iconUrl": "https://www.vizinhocerto.com.br/icon-512.png",
   "maskableIconUrl": "https://www.vizinhocerto.com.br/icon-512.png",
   "splashScreenFadeOutDuration": 300,
@@ -20,8 +20,8 @@
     "path": "./vizinhocerto-upload.keystore",
     "alias": "vizinhocerto-upload"
   },
-  "appVersionName": "1.0.0",
-  "appVersionCode": 4,
+  "appVersionName": "1.0.1",
+  "appVersionCode": 5,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://www.vizinhocerto.com.br/manifest.json",
@@ -55,5 +55,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "1.0.0"
+  "appVersion": "1.0.1"
 }
