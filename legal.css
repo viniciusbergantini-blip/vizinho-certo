@@ -1,0 +1,25 @@
+*{box-sizing:border-box}
+:root{--verde:#1b4d37;--verde-claro:#52b788;--creme:#fefae0;--texto:#20241f;--muted:#5f665f;--borda:#dfe5dd;--branco:#fff}
+html{scroll-behavior:smooth}
+body{margin:0;background:#f8f7f1;color:var(--texto);font-family:"DM Sans",Arial,sans-serif;line-height:1.65}
+a{color:var(--verde);text-underline-offset:3px}
+.legal-nav{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:16px max(20px,calc((100vw - 920px)/2));background:var(--verde)}
+.legal-logo{color:var(--creme);font-family:"Fraunces",Georgia,serif;font-size:22px;font-weight:900;text-decoration:none}
+.legal-logo span{color:var(--verde-claro)}
+.legal-nav>a:last-child{color:var(--creme);font-size:14px;font-weight:700;text-decoration:none}
+.legal-main{width:min(920px,calc(100% - 32px));margin:32px auto 56px;background:var(--branco);border:1px solid var(--borda);border-radius:18px;padding:clamp(24px,5vw,52px);box-shadow:0 16px 48px rgba(27,77,55,.08)}
+.legal-kicker{margin:0 0 8px;color:#a64f39;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+h1,h2{color:var(--verde);font-family:"Fraunces",Georgia,serif;line-height:1.18}
+h1{margin:0 0 10px;font-size:clamp(32px,6vw,48px)}
+h2{margin:34px 0 8px;font-size:23px}
+p,li{font-size:15px}
+.legal-updated{margin:0 0 28px;color:var(--muted);font-size:13px}
+.legal-summary{padding:18px 20px;border-left:4px solid var(--verde-claro);border-radius:10px;background:#eef8f1}
+ul{padding-left:22px}
+li+li{margin-top:7px}
+.legal-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:34px;padding-top:24px;border-top:1px solid var(--borda)}
+.legal-button{display:inline-flex;align-items:center;justify-content:center;min-height:46px;padding:0 18px;border-radius:10px;background:var(--verde);color:#fff;font-weight:800;text-decoration:none}
+.legal-button.secondary{border:1px solid var(--verde);background:#fff;color:var(--verde)}
+.legal-footer{padding:24px;text-align:center;background:#07140e;color:rgba(254,250,224,.68);font-size:12px}
+.legal-footer a{color:var(--creme)}
+@media(max-width:600px){.legal-main{margin-top:18px}.legal-nav>a:last-child{font-size:12px}}

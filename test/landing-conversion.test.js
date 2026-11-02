@@ -70,12 +70,34 @@ test('cadastro direto de anuncios explica valor e preserva a atribuicao', () => 
   assert.match(fs.readFileSync(path.join(root, 'local-server.js'), 'utf8'), /startsWith\('\/cadastro-saojoao'\)/);
 });
 
-test('link principal de Sao Joao abre o cadastro direto sem criar outra URL obrigatoria', () => {
-  const html = fs.readFileSync(path.join(root, 'app.html'), 'utf8');
+test('link principal de Sao Joao preserva a landing e cadastro direto continua separado', () => {
   const vercel = fs.readFileSync(path.join(root, 'vercel.json'), 'utf8');
   const localServer = fs.readFileSync(path.join(root, 'local-server.js'), 'utf8');
-  assert.match(html, /path!=='\/saojoao'&&path!=='\/cadastro-saojoao'/);
-  assert.match(vercel, /"source": "\/saojoao", "destination": "\/app\.html"/);
-  assert.match(vercel, /"source": "\/saojoao\(\.\*\)", "destination": "\/app\.html"/);
-  assert.match(localServer, /startsWith\('\/saojoao'\)\) filePath = '\/app\.html'/);
+  assert.match(vercel, /"source": "\/saojoao", "destination": "\/saojoao\.html"/);
+  assert.match(vercel, /"source": "\/saojoao\/\(\.\*\)", "destination": "\/saojoao\.html"/);
+  assert.match(vercel, /"source": "\/cadastro-saojoao", "destination": "\/app\.html"/);
+  assert.match(localServer, /filePath === '\/saojoao'.*filePath = '\/saojoao\.html'/);
+  assert.match(localServer, /startsWith\('\/cadastro-saojoao'\)\) filePath = '\/app\.html'/);
+});
+
+test('paginas legais publicas cobrem privacidade, termos e exclusao', () => {
+  const build = fs.readFileSync(path.join(root, 'scripts', 'build-public.js'), 'utf8');
+  const vercel = fs.readFileSync(path.join(root, 'vercel.json'), 'utf8');
+  for (const [route, file] of [
+    ['/privacidade', 'privacidade.html'],
+    ['/termos', 'termos.html'],
+    ['/excluir-conta', 'excluir-conta.html'],
+  ]) {
+    const html = fs.readFileSync(path.join(root, file), 'utf8');
+    assert.match(html, /Vizinho Certo/);
+    assert.match(build, new RegExp(file.replace('.', '\\.')));
+    assert.match(vercel, new RegExp(`"source": "${route}", "destination": "/${file.replace('.', '\\.')}"`));
+  }
+  assert.match(fs.readFileSync(path.join(root, 'privacidade.html'), 'utf8'), /localiza[cç][aã]o/i);
+  assert.match(fs.readFileSync(path.join(root, 'termos.html'), 'utf8'), /conte[uú]do proibido/i);
+  assert.match(fs.readFileSync(path.join(root, 'excluir-conta.html'), 'utf8'), /O que ser[aá] exclu[ií]do/i);
+  const home = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.match(home, /href="\/privacidade"/);
+  assert.match(home, /href="\/termos"/);
+  assert.match(home, /href="\/excluir-conta"/);
 });

@@ -31,6 +31,7 @@ const mimeTypes = {
 const publicStaticFiles = new Set([
   '/index.html', '/app.html', '/dashboard.html', '/saojoao.html', '/maringa.html',
   '/londrina.html', '/indaiatuba.html', '/offline.html', '/app-runtime.js',
+  '/privacidade.html', '/termos.html', '/excluir-conta.html', '/legal.css',
   '/install-app.js', '/engagement.js', '/landing-analytics.js', '/landing-page.js',
   '/landing-session.js', '/sw.js', '/landing.css', '/manifest.json', '/icon.svg',
   '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png',
@@ -71,7 +72,10 @@ function serveStatic(requestPath, res) {
   if (filePath === '/indaiatuba' || filePath.startsWith('/indaiatuba/')) filePath = '/indaiatuba.html';
   if (filePath === '/maringa' || filePath.startsWith('/maringa/')) filePath = '/maringa.html';
   if (filePath === '/londrina' || filePath.startsWith('/londrina/')) filePath = '/londrina.html';
-  if (filePath.startsWith('/saojoao')) filePath = '/app.html';
+  if (filePath === '/saojoao' || filePath.startsWith('/saojoao/')) filePath = '/saojoao.html';
+  if (filePath === '/privacidade') filePath = '/privacidade.html';
+  if (filePath === '/termos') filePath = '/termos.html';
+  if (filePath === '/excluir-conta') filePath = '/excluir-conta.html';
 
   let decodedPath;
   try {
