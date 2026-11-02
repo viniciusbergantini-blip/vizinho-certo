@@ -102,6 +102,11 @@ test('paginas legais publicas cobrem privacidade, termos e exclusao', () => {
   assert.match(fs.readFileSync(path.join(root, 'privacidade.html'), 'utf8'), /localiza[cç][aã]o/i);
   assert.match(fs.readFileSync(path.join(root, 'termos.html'), 'utf8'), /conte[uú]do proibido/i);
   assert.match(fs.readFileSync(path.join(root, 'excluir-conta.html'), 'utf8'), /O que ser[aá] exclu[ií]do/i);
+  for (const file of ['privacidade.html', 'termos.html', 'excluir-conta.html']) {
+    const html = fs.readFileSync(path.join(root, file), 'utf8');
+    assert.match(html, /vizinhocerto1@gmail\.com/);
+    assert.doesNotMatch(html, /designvarotto@gmail\.com/);
+  }
   const home = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.match(home, /href="\/privacidade"/);
   assert.match(home, /href="\/termos"/);
