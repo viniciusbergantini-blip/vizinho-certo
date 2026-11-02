@@ -31,6 +31,8 @@
     }
   ],
   "rewrites": [
+    { "source": "/api/anuncio-update", "destination": "/api/anuncio?action=update" },
+    { "source": "/api/anuncio-delete", "destination": "/api/anuncio?action=delete" },
     { "source": "/api/eventos-admin", "destination": "/api/eventos?rota=admin" },
     { "source": "/api/eventos-coletar", "destination": "/api/eventos?rota=coletar-sao-joao" },
     { "source": "/app", "destination": "/app.html" },

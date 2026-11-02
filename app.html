@@ -2908,7 +2908,7 @@ async function salvarEditarAnuncio(){
   btn.disabled=true; btn.textContent='Salvando...';
   try{
     const { data:{ session } } = await sb.auth.getSession();
-    const resp=await fetch(apiUrl('/api/anuncio-update'),{
+    const resp=await fetch(apiUrl('/api/anuncio?action=update'),{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+(session?.access_token||'')},
       body:JSON.stringify({id,tipo,nome,descricao,telefone})
@@ -2940,7 +2940,7 @@ async function excluirAnuncio(id,fecharModal=false){
   if(btn){ btn.disabled=true; btn.textContent='Excluindo...'; }
   try{
     const { data:{ session } } = await sb.auth.getSession();
-    const resp=await fetch(apiUrl('/api/anuncio-delete'),{
+    const resp=await fetch(apiUrl('/api/anuncio?action=delete'),{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+(session?.access_token||'')},
       body:JSON.stringify({id})

@@ -112,3 +112,14 @@ test('paginas legais publicas cobrem privacidade, termos e exclusao', () => {
   assert.match(home, /href="\/termos"/);
   assert.match(home, /href="\/excluir-conta"/);
 });
+
+test('deploy permanece dentro do limite de doze funcoes da Vercel Hobby', () => {
+  const apiFiles = fs.readdirSync(path.join(root, 'api')).filter(file => file.endsWith('.js'));
+  assert.equal(apiFiles.length, 12);
+  const html = fs.readFileSync(path.join(root, 'app.html'), 'utf8');
+  const vercel = fs.readFileSync(path.join(root, 'vercel.json'), 'utf8');
+  assert.match(html, /\/api\/anuncio\?action=update/);
+  assert.match(html, /\/api\/anuncio\?action=delete/);
+  assert.match(vercel, /\/api\/anuncio-update.*\/api\/anuncio\?action=update/);
+  assert.match(vercel, /\/api\/anuncio-delete.*\/api\/anuncio\?action=delete/);
+});
