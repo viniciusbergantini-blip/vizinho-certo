@@ -160,9 +160,6 @@
   .rc3.ativo{background:var(--verde);color:var(--creme);border-color:var(--verde);}
   #t-feed{background:var(--creme);}
   .fh{background:#064430;padding:calc(1rem + env(safe-area-inset-top)) 1.25rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:12px;}
-  .fh-brand{display:flex;align-items:center;gap:11px;min-width:0;}
-  .fh-logo{width:44px;height:44px;flex:0 0 44px;border-radius:13px;box-shadow:0 5px 14px rgba(0,0,0,.18);}
-  .fh-copy{min-width:0;}
   .fh h1{font-family:'Fraunces',serif;font-size:20px;color:var(--creme);}
   .fh p{font-size:12px;color:rgba(254,250,224,.65);margin-top:1px;}
   .fav{width:38px;height:38px;border-radius:50%;background:var(--verde-claro);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:16px;color:var(--verde);font-weight:600;border:2px solid rgba(254,250,224,.3);}
@@ -626,7 +623,7 @@
 
 <div class="tela" id="t-feed">
   <div class="fh">
-    <div class="fh-brand"><img class="fh-logo" src="/icon-192.png" alt="" width="44" height="44"><div class="fh-copy"><h1>Vizinho Certo</h1><p id="fsub">Carregando...</p></div></div>
+    <div><h1>Vizinho Certo</h1><p id="fsub">Carregando...</p></div>
     <div class="fav" id="fav">?</div>
   </div>
   <button class="home-service-entry" type="button" onclick="navTab('servicos',document.getElementById('nav-servicos'))" aria-label="Buscar serviços e prestadores próximos">

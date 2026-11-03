@@ -12,7 +12,8 @@ test('cabeçalho e navegação respeitam as áreas seguras do celular', () => {
   assert.match(html, /\.fab\{[^}]*safe-area-inset-bottom/);
 });
 
-test('cabeçalho principal usa o novo ícone do Vizinho Certo', () => {
-  assert.match(html, /class="fh-logo" src="\/icon-192\.png"/);
+test('cabeçalho principal mantém a marca legível sem miniatura recortada', () => {
+  assert.match(html, /<div><h1>Vizinho Certo<\/h1><p id="fsub">/);
+  assert.doesNotMatch(html, /class="fh-logo"/);
   assert.match(html, /meta name="theme-color" content="#064430"/);
 });
