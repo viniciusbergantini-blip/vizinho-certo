@@ -45,6 +45,9 @@ module.exports = async (req, res) => {
     if (action === 'support') return updateSupport(req, res, sb, auth.user.id);
     if (action === 'delete') return deletePost(req, res, sb, auth.user.id);
     if (action === 'panic') return createPanic(req, res, sb, auth.user.id);
+    if (action === 'block') return blockUser(req, res, sb, auth.user.id);
+    if (action === 'unblock') return unblockUser(req, res, sb, auth.user.id);
+    if (action === 'report') return reportContent(req, res, sb, auth.user.id);
     return res.status(400).json({ error: 'Acao invalida' });
   } catch (error) {
     return serverError(res, 'Posts API error:', error);
@@ -70,7 +73,8 @@ async function getFeed(req, res, sb, userId) {
     .limit(500);
   if (error) throw error;
 
-  const visible = (rows || []).map(post => ({
+  const blockedIds = await loadBlockedIds(sb, userId);
+  const visible = (rows || []).filter(post => !blockedIds.has(String(post.usuario_id))).map(post => ({
     ...post,
     distancia_metros: distanciaMetros(position.lat, position.lon, post.lat, post.lon),
   })).filter(post => post.distancia_metros !== null && post.distancia_metros <= radius);
@@ -100,6 +104,7 @@ async function getFeed(req, res, sb, userId) {
     .map(profileRow => [profileRow.id, safePhotoUrl(profileRow.foto_url)]));
   const commentsByPost = new Map();
   for (const comment of commentsResult.data || []) {
+    if (blockedIds.has(String(comment.usuario_id))) continue;
     const list = commentsByPost.get(String(comment.post_id)) || [];
     list.push({
       id: comment.id,
@@ -143,7 +148,8 @@ async function getNeighbors(req, res, sb, userId) {
   const { data, error } = await query;
   if (error) throw error;
 
-  const neighbors = (data || []).map(user => ({
+  const blockedIds = await loadBlockedIds(sb, userId);
+  const neighbors = (data || []).filter(user => !blockedIds.has(String(user.id))).map(user => ({
     id: user.id,
     apelido: user.apelido || user.nome || 'Vizinho',
     bairro: user.bairro || user.cidade || '',
@@ -226,6 +232,9 @@ async function createComment(req, res, sb, userId) {
   if (!profile || !postResult.data || !postVisibleToProfile(postResult.data, profile)) {
     return res.status(404).json({ error: 'Publicacao nao encontrada' });
   }
+  if (await usersBlocked(sb, userId, postResult.data.usuario_id)) {
+    return res.status(403).json({ error: 'Interacao indisponivel entre estes perfis' });
+  }
   if (await reachedPersistentLimit(sb, 'comentarios', userId, 100, 60 * 60_000)) {
     return res.status(429).json({ error: 'Limite de comentarios atingido. Aguarde para continuar.' });
   }
@@ -262,6 +271,9 @@ async function updateSupport(req, res, sb, userId) {
   if (postResult.error) throw postResult.error;
   if (!profile || !postResult.data || !postVisibleToProfile(postResult.data, profile)) {
     return res.status(404).json({ error: 'Publicacao nao encontrada' });
+  }
+  if (await usersBlocked(sb, userId, postResult.data.usuario_id)) {
+    return res.status(403).json({ error: 'Interacao indisponivel entre estes perfis' });
   }
 
   if (supported) {
@@ -336,6 +348,84 @@ async function createPanic(req, res, sb, userId) {
   return res.status(201).json({ post_id: data.id });
 }
 
+async function blockUser(req, res, sb, userId) {
+  if (!enforceRateLimit(req, res, 'user-block', { limit: 30, windowMs: 10 * 60_000 }, userId)) return;
+  const targetId = safeRecordId(req.body?.target_user_id);
+  if (!targetId || targetId === userId) return res.status(400).json({ error: 'Perfil invalido para bloqueio' });
+  const { data: target, error: targetError } = await sb.from('usuarios').select('id').eq('id', targetId).maybeSingle();
+  if (targetError) throw targetError;
+  if (!target) return res.status(404).json({ error: 'Perfil nao encontrado' });
+  const { error } = await sb.from('bloqueios_usuarios').upsert(
+    { bloqueador_id: userId, bloqueado_id: targetId },
+    { onConflict: 'bloqueador_id,bloqueado_id' }
+  );
+  if (error) throw error;
+  return res.json({ blocked: true, target_user_id: targetId });
+}
+
+async function unblockUser(req, res, sb, userId) {
+  const targetId = safeRecordId(req.body?.target_user_id);
+  if (!targetId) return res.status(400).json({ error: 'Perfil invalido' });
+  const { error } = await sb.from('bloqueios_usuarios').delete()
+    .eq('bloqueador_id', userId).eq('bloqueado_id', targetId);
+  if (error) throw error;
+  return res.json({ blocked: false, target_user_id: targetId });
+}
+
+async function reportContent(req, res, sb, userId) {
+  if (!enforceRateLimit(req, res, 'content-report', { limit: 20, windowMs: 24 * 60 * 60_000 }, userId)) return;
+  const contentType = cleanText(req.body?.content_type, 20).toLowerCase();
+  const contentId = safeRecordId(req.body?.content_id);
+  const reason = cleanText(req.body?.reason, 500, { multiline: true });
+  if (!['post', 'comentario', 'perfil', 'anuncio'].includes(contentType) || !contentId || reason.length < 3) {
+    return res.status(400).json({ error: 'Denuncia incompleta' });
+  }
+
+  const lookup = {
+    post: { table: 'posts', owner: 'usuario_id' },
+    comentario: { table: 'comentarios', owner: 'usuario_id' },
+    perfil: { table: 'usuarios', owner: 'id' },
+    anuncio: { table: 'anuncios', owner: 'usuario_id' },
+  }[contentType];
+  const fields = lookup.owner === 'id' ? 'id' : `id, ${lookup.owner}`;
+  const { data: content, error: contentError } = await sb.from(lookup.table)
+    .select(fields).eq('id', contentId).maybeSingle();
+  if (contentError) throw contentError;
+  if (!content) return res.status(404).json({ error: 'Conteudo nao encontrado' });
+  const reportedId = content[lookup.owner];
+  if (reportedId === userId) return res.status(400).json({ error: 'Nao e possivel denunciar seu proprio conteudo' });
+
+  const { error } = await sb.from('denuncias_conteudo').upsert({
+    denunciante_id: userId,
+    denunciado_id: reportedId,
+    tipo_conteudo: contentType,
+    conteudo_id: String(contentId),
+    motivo: reason,
+    status: 'pendente',
+    analisado_em: null,
+  }, { onConflict: 'denunciante_id,tipo_conteudo,conteudo_id' });
+  if (error) throw error;
+  return res.status(201).json({ reported: true });
+}
+
+async function loadBlockedIds(sb, userId) {
+  const { data, error } = await sb.from('bloqueios_usuarios')
+    .select('bloqueador_id, bloqueado_id')
+    .or(`bloqueador_id.eq.${userId},bloqueado_id.eq.${userId}`);
+  if (error) throw error;
+  const ids = new Set();
+  for (const row of data || []) {
+    ids.add(String(row.bloqueador_id === userId ? row.bloqueado_id : row.bloqueador_id));
+  }
+  return ids;
+}
+
+async function usersBlocked(sb, firstId, secondId) {
+  if (!firstId || !secondId || firstId === secondId) return false;
+  const blocked = await loadBlockedIds(sb, firstId);
+  return blocked.has(String(secondId));
+}
+
 function postVisibleToProfile(post, profile) {
   if (post.usuario_id === profile.id) return true;
   if (!coordenadasValidas(post) || !coordenadasValidas(profile)) return false;
@@ -377,4 +467,4 @@ async function reachedPersistentLimit(sb, table, userId, limit, windowMs) {
   return Number(count || 0) >= limit;
 }
 
-module.exports._private = { POST_TYPES, postVisibleToProfile, reachedPersistentLimit, safeOwnedPhotoUrl, safePhotoUrl };
+module.exports._private = { POST_TYPES, loadBlockedIds, postVisibleToProfile, reachedPersistentLimit, safeOwnedPhotoUrl, safePhotoUrl, usersBlocked };

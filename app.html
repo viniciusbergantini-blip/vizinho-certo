@@ -484,6 +484,8 @@
   @media(max-width:479px){.tela{width:100%;min-height:100vh;}.bv-inner{padding:20px 16px 30px;justify-content:flex-start;}.auth-brand{margin-bottom:20px;}.auth-intro{margin-bottom:18px;}.auth-intro h1{font-size:29px;}#t-bv .card{padding:18px;border-radius:20px;}.card{margin:0;}input,textarea,select{font-size:16px!important;}#t-bv.campaign-signup .bv-inner{padding:12px 12px 26px;}#t-bv.campaign-signup .auth-brand{margin-bottom:8px;}#t-bv.campaign-signup .auth-intro h1{font-size:25px;}#t-bv.campaign-signup .campaign-proof{margin-top:7px;}#t-bv.campaign-signup .card{padding:15px;}}
   @media(max-height:720px) and (max-width:479px){.auth-brand{margin-bottom:14px;}.auth-intro{margin-bottom:14px;}.auth-intro h1{font-size:27px;}.auth-intro>p{margin-top:6px;}.auth-benefits{margin-top:10px;}#t-bv .card{padding:16px;}.auth-card-head{margin-bottom:12px;}}
   @media(min-width:480px){.tela{max-width:420px;margin:0 auto}body{background:#E8E0CC}.fab{right:calc(50% - 210px + 24px)}.panico-fab{left:calc(50% - 210px + 16px)!important;right:auto!important}}
+  .link-btn{appearance:none;border:0;background:transparent;padding:2px 0;color:#7A4036;font:600 12px Arial,sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+  .link-btn:hover,.link-btn:focus-visible{color:#A32D2D;outline-offset:3px}
 </style>
 </head>
 <body>
@@ -1695,7 +1697,7 @@ async function carregarPosts(){
     foto_url: p.foto_url || null, usuario_id: p.usuario_id,
     tempo: formatarTempo(p.criado_em), criado_em:p.criado_em||null,
     coms: (p.comentarios||[]).map(c=>({
-      nome: c.apelido_autor||'Vizinho', dist: '0m', txt: c.texto, usuario_id: c.usuario_id,
+      id:c.id, nome: c.apelido_autor||'Vizinho', dist: '0m', txt: c.texto, usuario_id: c.usuario_id,
       foto_url:c.foto_autor_url||null,
       av: (c.apelido_autor||'V').charAt(0).toUpperCase(),
       cor: COR[Math.abs(hashStr(c.id+'')) % COR.length]
@@ -2096,7 +2098,8 @@ function render(){
     const coms = p.coms.map(c=>{
       const fotoC = urlImagemSegura(c.foto_url||fotoPerfilCache[c.usuario_id]);
       const cavHtml = fotoC ? `<img src="${htmlSeguro(fotoC)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">` : `<div class="cav" style="background:${c.cor}20;color:${c.cor}">${htmlSeguro(c.av)}</div>`;
-      return `<div class="com">${cavHtml}<div><span class="cnome">${htmlSeguro(c.nome)}</span> <span class="cdist">· ${htmlSeguro(c.dist)}</span><div class="ctxt">${htmlSeguro(c.txt)}</div></div></div>`;
+      const podeModerarComentario=c.usuario_id&&String(c.usuario_id)!==String(E.userId||'');
+      return `<div class="com">${cavHtml}<div style="min-width:0;flex:1;"><span class="cnome">${htmlSeguro(c.nome)}</span> <span class="cdist">· ${htmlSeguro(c.dist)}</span><div class="ctxt">${htmlSeguro(c.txt)}</div>${podeModerarComentario?`<div style="display:flex;gap:10px;margin-top:5px;"><button class="link-btn" onclick="denunciarConteudo('comentario','${htmlSeguro(String(c.id||''))}','${htmlSeguro(String(c.usuario_id))}')">⚑ Denunciar</button><button class="link-btn" onclick="bloquearUsuario('${htmlSeguro(String(c.usuario_id))}')">Bloquear usuário</button></div>`:''}</div></div>`;
     }).join('');
     const eMeu = p.usuario_id === E.userId;
     const fotoAutor = urlImagemSegura(fotoPerfilCache[p.usuario_id]);
@@ -2112,6 +2115,7 @@ function render(){
           <div class="srv-acoes" style="margin-top:12px;">
             ${tel?`<button class="srv-btn-wa" onclick="abrirWhatsAppAnuncio('${anuncioId}','${tel}','feed')">💬 WhatsApp</button><button class="srv-btn-tel" onclick="ligarAnuncio('${anuncioId}','${tel}','feed')">📞 Ligar</button>`:''}
           </div>
+          ${!eMeu?`<div style="display:flex;gap:14px;margin-top:10px;"><button class="link-btn" onclick="denunciarConteudo('anuncio','${anuncioId}','${htmlSeguro(String(p.usuario_id||''))}')">⚑ Denunciar anúncio</button><button class="link-btn" onclick="bloquearUsuario('${htmlSeguro(String(p.usuario_id||''))}')">Bloquear anunciante</button></div>`:''}
         </div>
       </div>`;
     }
@@ -2129,6 +2133,7 @@ function render(){
           <button class="bcom" onclick="togCom('${postId}')">💬 ${p.coms.length?p.coms.length+' com.':'Comentar'}</button>
           ${eMeu?`<button class="bia" style="border-color:#E24B4A;color:#A32D2D;margin-left:auto;" onclick="excluirPost('${postId}')">🗑️</button>`:''}
         </div>
+        ${!eMeu&&p.usuario_id?`<div style="display:flex;gap:14px;margin-top:10px;"><button class="link-btn" onclick="denunciarConteudo('post','${postId}','${htmlSeguro(String(p.usuario_id))}')">⚑ Denunciar</button><button class="link-btn" onclick="bloquearUsuario('${htmlSeguro(String(p.usuario_id))}')">Bloquear usuário</button></div>`:''}
       </div>
       ${db?`<div class="oqf ${oA?'vis':''}" id="oq${postId}">
         <div class="oqlbl">💡 O que fazer — ${db.titulo}</div>
@@ -2161,6 +2166,45 @@ async function excluirPost(id){
   E.posts = E.posts.filter(p => p.id != id);
   render();
   toast('Post excluído! 🗑️');
+}
+
+async function acaoModeracao(payload){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session?.access_token) throw new Error('Sua sessão expirou. Entre novamente.');
+  const resposta=await fetch(apiUrl('/api/posts'),{
+    method:'POST',
+    headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},
+    body:JSON.stringify(payload)
+  });
+  const resultado=await resposta.json().catch(()=>({}));
+  if(!resposta.ok) throw new Error(resultado.error||'Não foi possível concluir esta ação.');
+  return resultado;
+}
+
+async function denunciarConteudo(tipo,conteudoId,usuarioId){
+  if(!conteudoId||!usuarioId) return toast('Não foi possível identificar este conteúdo.');
+  const motivo=prompt('Conte brevemente por que este conteúdo deve ser analisado:','Conteúdo inadequado');
+  if(motivo===null) return;
+  if(motivo.trim().length<3) return toast('Descreva o motivo da denúncia.');
+  try{
+    await acaoModeracao({action:'report',content_type:tipo,content_id:conteudoId,reason:motivo.trim()});
+    toast('Denúncia enviada. Obrigado por ajudar a cuidar da comunidade.');
+  }catch(error){toast(error.message||'Não foi possível enviar a denúncia.');}
+}
+
+async function bloquearUsuario(usuarioId){
+  if(!usuarioId||String(usuarioId)===String(E.userId||'')) return;
+  if(!confirm('Bloquear este usuário? Vocês deixarão de ver o conteúdo um do outro.')) return;
+  try{
+    await acaoModeracao({action:'block',target_user_id:usuarioId});
+    E.posts=E.posts.filter(post=>String(post.usuario_id||'')!==String(usuarioId))
+      .map(post=>({...post,coms:(post.coms||[]).filter(comentario=>String(comentario.usuario_id||'')!==String(usuarioId))}));
+    anunciosVisiveisCache=anunciosVisiveisCache.filter(anuncio=>String(anuncio.usuario_id||'')!==String(usuarioId));
+    fecharPerfilServico();
+    render();
+    renderListaServicos();
+    toast('Usuário bloqueado. O conteúdo dele não aparecerá mais para você.');
+  }catch(error){toast(error.message||'Não foi possível bloquear este usuário.');}
 }
 
 function formataCEP(el){
@@ -2822,7 +2866,8 @@ function renderPerfilServico(){
     <div class="srv-profile-rating"><div class="srv-profile-rating-score">${htmlSeguro(notaResumo)}</div>${avaliacaoHtml}</div>
     <p class="srv-profile-description">${htmlSeguro(anuncio.descricao||'Entre em contato para saber mais sobre este serviço.')}</p>
     <div class="srv-tags"><span class="srv-tag">${htmlSeguro(anuncio.alcance_tipo==='cidade'?'Atende toda a cidade':(anuncio.distancia_fmt?`Atende perto de você · ${anuncio.distancia_fmt}`:'Atende sua região'))}</span></div>
-    <div class="srv-profile-actions">${telefone?`<button class="srv-btn-wa" onclick="abrirWhatsAppAnuncio('${htmlSeguro(anuncio.id)}','${telefone}','profile')">💬 Conversar no WhatsApp</button><button class="srv-btn-tel" onclick="ligarAnuncio('${htmlSeguro(anuncio.id)}','${telefone}','profile')">📞 Ligar</button>`:''}</div>`;
+    <div class="srv-profile-actions">${telefone?`<button class="srv-btn-wa" onclick="abrirWhatsAppAnuncio('${htmlSeguro(anuncio.id)}','${telefone}','profile')">💬 Conversar no WhatsApp</button><button class="srv-btn-tel" onclick="ligarAnuncio('${htmlSeguro(anuncio.id)}','${telefone}','profile')">📞 Ligar</button>`:''}</div>
+    ${!proprio?`<div style="display:flex;gap:14px;margin-top:14px;"><button class="link-btn" onclick="denunciarConteudo('anuncio','${htmlSeguro(String(anuncio.id))}','${htmlSeguro(String(anuncio.usuario_id))}')">⚑ Denunciar anúncio</button><button class="link-btn" onclick="bloquearUsuario('${htmlSeguro(String(anuncio.usuario_id))}')">Bloquear anunciante</button></div>`:''}`;
 }
 
 function selecionarNotaPrestador(nota){

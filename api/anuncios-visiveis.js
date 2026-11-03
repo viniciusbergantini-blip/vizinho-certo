@@ -54,6 +54,14 @@ module.exports = async (req, res) => {
   const anuncios = resultadoPublicos.data || [];
   const anunciosProprios = resultadoProprios.data || [];
 
+  const { data: bloqueios, error: bloqueiosError } = await sb.from('bloqueios_usuarios')
+    .select('bloqueador_id, bloqueado_id')
+    .or(`bloqueador_id.eq.${userData.user.id},bloqueado_id.eq.${userData.user.id}`);
+  if (bloqueiosError) return serverError(res, 'Visible ads blocks error:', bloqueiosError);
+  const usuariosBloqueados = new Set((bloqueios || []).map(item => String(
+    item.bloqueador_id === userData.user.id ? item.bloqueado_id : item.bloqueador_id
+  )));
+
   const proprietariosIds = [...new Set((anuncios || []).map(item => item.usuario_id).filter(Boolean))];
   let proprietarios = [];
   if (proprietariosIds.length > 0) {
@@ -69,6 +77,7 @@ module.exports = async (req, res) => {
   const visiveis = [];
 
   for (const anuncio of anuncios || []) {
+    if (usuariosBloqueados.has(String(anuncio.usuario_id))) continue;
     const resultado = avaliarVisibilidadeAnuncio({
       anuncio,
       anunciante: proprietariosPorId.get(anuncio.usuario_id),
