@@ -22,6 +22,7 @@
 <script src="/app-runtime.js"></script>
 <script src="/install-app.js"></script>
 <script src="/engagement.js"></script>
+<script src="/emergency-contacts.js"></script>
 <script defer src="https://cdn.vercel-insights.com/v1/script.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.1"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
@@ -404,7 +405,7 @@
   @keyframes panicoIdle{0%,100%{box-shadow:0 4px 16px rgba(192,57,43,.5)}50%{box-shadow:0 4px 24px rgba(192,57,43,.8)}}
   .panico-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:flex-end;justify-content:center;}
   .panico-overlay.ab{display:flex;}
-  .panico-sheet{background:#1C1C1C;border-radius:24px 24px 0 0;padding:1.5rem;width:100%;max-width:480px;animation:su .25s ease;}
+  .panico-sheet{background:#1C1C1C;border-radius:24px 24px 0 0;padding:1.5rem;padding-bottom:calc(1.5rem + env(safe-area-inset-bottom));width:100%;max-width:480px;max-height:calc(100dvh - env(safe-area-inset-top));overflow-y:auto;animation:su .25s ease;}
   .panico-topo{display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;}
   .panico-icone{width:48px;height:48px;border-radius:50%;background:#C0392B;display:flex;align-items:center;justify-content:center;font-size:22px;animation:pulseRed 1s infinite;}
   @keyframes pulseRed{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
@@ -422,6 +423,7 @@
   .num-desc{font-size:12px;color:rgba(255,255,255,.45);margin-top:1px;}
   .num-tel{font-size:18px;font-weight:500;color:#52B788;margin-left:auto;}
   .panico-fechar{width:100%;padding:12px;background:transparent;color:rgba(255,255,255,.4);border:1px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:1rem;}
+  .municipal-note{margin-top:10px;padding:11px 12px;border:1px solid rgba(255,255,255,.12);border-radius:11px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.68);font-size:11px;line-height:1.45;}
   .alerta-confirmacao{background:rgba(82,183,136,.15);border:1px solid rgba(82,183,136,.3);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:#52B788;text-align:center;margin-bottom:1rem;display:none;}
   .alerta-confirmacao.vis{display:block;}
   .foto-area{margin-bottom:12px;}
@@ -746,9 +748,9 @@
     <div class="num-item" onclick="ligar('190')"><div class="num-icone">🚔</div><div class="num-info"><div class="num-nome">Polícia Militar</div><div class="num-desc">Crimes, ameaças, situações de risco</div></div><div class="num-tel">190</div></div>
     <div class="num-item" onclick="ligar('192')"><div class="num-icone">🚑</div><div class="num-info"><div class="num-nome">SAMU</div><div class="num-desc">Emergências médicas</div></div><div class="num-tel">192</div></div>
     <div class="num-item" onclick="ligar('193')"><div class="num-icone">🚒</div><div class="num-info"><div class="num-nome">Bombeiros</div><div class="num-desc">Incêndio, resgate, acidentes</div></div><div class="num-tel">193</div></div>
-    <div class="num-item" onclick="ligar('153')"><div class="num-icone">🛡️</div><div class="num-info"><div class="num-nome">Guarda Municipal</div><div class="num-desc">Segurança urbana — Maringá</div></div><div class="num-tel">153</div></div>
     <div class="num-item" onclick="ligar('180')"><div class="num-icone">🤝</div><div class="num-info"><div class="num-nome">Central da Mulher</div><div class="num-desc">Violência doméstica — 24h gratuito</div></div><div class="num-tel">180</div></div>
     <div class="num-item" onclick="ligar('100')"><div class="num-icone">👶</div><div class="num-info"><div class="num-nome">Disque Direitos Humanos</div><div class="num-desc">Crianças, idosos, vulneráveis</div></div><div class="num-tel">100</div></div>
+    <div id="contato-municipal-panico"></div>
     <button class="panico-fechar" onclick="fecharPanico()">Fechar</button>
   </div>
 </div>
@@ -2012,12 +2014,12 @@ const OQ={
   ]},
   barulho:{titulo:'Barulho / perturbação do sossego',acoes:[
     {i:'📞',t:'<strong>190 — Polícia Militar:</strong> Para perturbações graves ou som alto após meia-noite.',tel:'190'},
-    {i:'📞',t:'<strong>153 — Guarda Municipal:</strong> Para reclamações de barulho e perturbação do sossego.',tel:'153'},
+    {i:'📞',municipal:true,tipo:'barulho'},
     {i:'🤝',t:'<strong>Tente conversar primeiro</strong> com o vizinho de forma respeitosa — muitas vezes resolve sem conflito.'}
   ]},
   seguranca:{titulo:'Segurança / suspeita',acoes:[
     {i:'📞',t:'<strong>190 — Polícia Militar:</strong> Situações em andamento ou ameaças imediatas.',tel:'190'},
-    {i:'📞',t:'<strong>153 — Guarda Municipal:</strong> Ocorrências de menor urgência no bairro.',tel:'153'},
+    {i:'📞',municipal:true,tipo:'seguranca'},
     {i:'🚫',t:'<strong>Não confronte:</strong> Registre descrição e placa se possível.'}
   ]},
   default:{titulo:'Como resolver',acoes:[
@@ -2041,6 +2043,39 @@ function detectOq(txt){
 function temPalavrão(t){return PALAVROES.some(p=>t.toLowerCase().includes(p));}
 function temAnuncio(t){return PALAVRAS_ANUNCIO.some(p=>t.toLowerCase().includes(p));}
 function buscarNoGoogle(termo){ const cidade = encodeURIComponent((E.cidade||'') + ' ' + termo); window.open('https://www.google.com/search?q='+cidade, '_blank'); }
+
+function contatoMunicipalAtual(){
+  return window.VizinhoCertoEmergencyContacts?.getMunicipalContact(E.cidade,E.uf)||null;
+}
+
+function renderContatoMunicipalPanico(){
+  const el=document.getElementById('contato-municipal-panico');
+  if(!el) return;
+  const contato=contatoMunicipalAtual();
+  const local=[E.cidade,E.uf].filter(Boolean).join('/')||'sua cidade';
+  if(!contato){
+    el.innerHTML=`<div class="municipal-note"><strong>Contato municipal não exibido</strong><br>Ainda não há um telefone oficial verificado para ${htmlSeguro(local)}. Em emergência, use os números nacionais acima. Nenhum contato de outra cidade será mostrado.</div>`;
+    return;
+  }
+  el.innerHTML=`<div class="nums-title">Contato municipal verificado</div>
+    <div class="num-item" onclick="ligar('${contato.phone}')">
+      <div class="num-icone">${contato.icon}</div>
+      <div class="num-info"><div class="num-nome">${htmlSeguro(contato.name)}</div><div class="num-desc">${htmlSeguro(contato.description)}</div></div>
+      <div class="num-tel">${htmlSeguro(contato.displayPhone||contato.phone)}</div>
+    </div>`;
+}
+
+function acoesOqContextuais(bloco){
+  return bloco.acoes.map(acao=>{
+    if(!acao.municipal) return acao;
+    const contato=contatoMunicipalAtual();
+    if(contato?.kind==='guard'){
+      const finalidade=acao.tipo==='barulho'?'reclamações de barulho e perturbação do sossego':'ocorrências municipais de menor urgência';
+      return {i:'📞',t:`<strong>${htmlSeguro(contato.phone)} — ${htmlSeguro(contato.name)}:</strong> Para ${finalidade}.`,tel:contato.phone};
+    }
+    return {i:'ℹ️',t:`<strong>Serviço municipal de segurança não verificado para ${htmlSeguro(E.cidade||'sua cidade')}.</strong> Em situação de risco ou ocorrência em andamento, use o 190.`};
+  });
+}
 
 function renderResumoVizinhanca(){
   const resumo=window.VizinhoCertoEngagement?.summarizeNeighborhood({
@@ -2137,7 +2172,7 @@ function render(){
       </div>
       ${db?`<div class="oqf ${oA?'vis':''}" id="oq${postId}">
         <div class="oqlbl">💡 O que fazer — ${db.titulo}</div>
-        ${db.acoes.map(a=>`<div class="oqi"><div class="oqic">${a.i}</div><div class="oqtx">${a.t}
+        ${acoesOqContextuais(db).map(a=>`<div class="oqi"><div class="oqic">${a.i}</div><div class="oqtx">${a.t}
           ${a.tel?`<br><button class="btntel" onclick="ligar('${a.tel}')">📞 Ligar agora</button>`:''}
           ${a.google?`<br><button class="btntel" style="background:var(--laranja);" onclick="buscarNoGoogle('${a.google}')">🔍 Buscar contato da minha cidade</button>`:''}
         </div></div>`).join('')}
@@ -3084,6 +3119,7 @@ async function anunFinalizar(){
 }
 
 function abrirPanico(){
+  renderContatoMunicipalPanico();
   document.getElementById('mpanico').classList.add('ab');
   document.getElementById('alerta-conf').classList.remove('vis');
   const btn=document.getElementById('btn-alertar');

@@ -1,10 +1,11 @@
 // Vizinho Certo — Service Worker
-const CACHE_NAME = 'vizinho-certo-static-v5';
+const CACHE_NAME = 'vizinho-certo-static-v6';
 const STATIC_ASSETS = [
   '/offline.html',
   '/app-runtime.js',
   '/install-app.js',
   '/engagement.js',
+  '/emergency-contacts.js',
   '/landing.css',
   '/landing-page.js',
   '/landing-session.js',

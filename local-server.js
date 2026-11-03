@@ -32,7 +32,7 @@ const publicStaticFiles = new Set([
   '/index.html', '/app.html', '/dashboard.html', '/saojoao.html', '/maringa.html',
   '/londrina.html', '/indaiatuba.html', '/offline.html', '/app-runtime.js',
   '/privacidade.html', '/termos.html', '/excluir-conta.html', '/legal.css',
-  '/install-app.js', '/engagement.js', '/landing-analytics.js', '/landing-page.js',
+  '/install-app.js', '/engagement.js', '/emergency-contacts.js', '/landing-analytics.js', '/landing-page.js',
   '/landing-session.js', '/sw.js', '/landing.css', '/manifest.json', '/icon.svg',
   '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png',
 ]);

@@ -18,6 +18,7 @@ const publicFiles = [
   'app-runtime.js',
   'install-app.js',
   'engagement.js',
+  'emergency-contacts.js',
   'landing-analytics.js',
   'landing-page.js',
   'landing-session.js',
