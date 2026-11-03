@@ -10,7 +10,7 @@
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#2D6A4F">
+<meta name="theme-color" content="#064430">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -34,8 +34,8 @@
     --branco:#FFFFFF; --radius:16px; --radius-sm:10px;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'DM Sans',sans-serif;background:var(--creme);color:var(--texto);min-height:100vh;padding-bottom:65px;}
-  .tela{display:none;min-height:100vh;padding-bottom:65px;}
+  body{font-family:'DM Sans',sans-serif;background:var(--creme);color:var(--texto);min-height:100vh;padding-bottom:calc(65px + env(safe-area-inset-bottom));}
+  .tela{display:none;min-height:100vh;padding-bottom:calc(65px + env(safe-area-inset-bottom));}
   .tela.ativa{display:flex;flex-direction:column;}
   #t-loading{background:var(--verde);align-items:center;justify-content:center;}
   .loading-logo{font-family:'Fraunces',serif;font-size:44px;color:var(--creme);text-align:center;}
@@ -159,7 +159,10 @@
   .rc3{padding:6px 14px;border-radius:20px;border:1.5px solid var(--borda);background:var(--branco);font-size:13px;font-weight:500;color:var(--texto-muted);cursor:pointer;transition:all .15s;}
   .rc3.ativo{background:var(--verde);color:var(--creme);border-color:var(--verde);}
   #t-feed{background:var(--creme);}
-  .fh{background:var(--verde);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;}
+  .fh{background:#064430;padding:calc(1rem + env(safe-area-inset-top)) 1.25rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .fh-brand{display:flex;align-items:center;gap:11px;min-width:0;}
+  .fh-logo{width:44px;height:44px;flex:0 0 44px;border-radius:13px;box-shadow:0 5px 14px rgba(0,0,0,.18);}
+  .fh-copy{min-width:0;}
   .fh h1{font-family:'Fraunces',serif;font-size:20px;color:var(--creme);}
   .fh p{font-size:12px;color:rgba(254,250,224,.65);margin-top:1px;}
   .fav{width:38px;height:38px;border-radius:50%;background:var(--verde-claro);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:16px;color:var(--verde);font-weight:600;border:2px solid rgba(254,250,224,.3);}
@@ -245,9 +248,9 @@
   .iaa{display:flex;gap:8px;}
   .bcop{flex:1;padding:10px;background:var(--verde);color:var(--creme);border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;}
   .bfch{padding:10px 16px;border:1.5px solid var(--borda);border-radius:var(--radius-sm);background:transparent;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--texto-muted);cursor:pointer;}
-  .fab{position:fixed;bottom:74px;right:24px;width:56px;height:56px;border-radius:50%;background:var(--laranja);color:white;border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(231,111,81,.4);display:flex;align-items:center;justify-content:center;transition:transform .2s;z-index:100;}
+  .fab{position:fixed;bottom:calc(74px + env(safe-area-inset-bottom));right:24px;width:56px;height:56px;border-radius:50%;background:var(--laranja);color:white;border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 16px rgba(231,111,81,.4);display:flex;align-items:center;justify-content:center;transition:transform .2s;z-index:100;}
   .fab:hover{transform:scale(1.08);}
-  .bnav{background:var(--branco);border-top:1px solid var(--borda);display:flex;position:fixed;bottom:0;left:0;right:0;z-index:150;}
+  .bnav{background:var(--branco);border-top:1px solid var(--borda);display:flex;position:fixed;bottom:0;left:0;right:0;z-index:150;padding-bottom:env(safe-area-inset-bottom);}
   .nitem{flex:1;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;color:var(--texto-muted);cursor:pointer;}
   .nitem.at{color:var(--verde);}
   .nitem svg{width:22px;height:22px;}
@@ -400,7 +403,7 @@
   .anun-next{flex:2;padding:12px;background:#2D6A4F;color:white;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:background .2s;}
   .anun-next:hover{background:#1B4D37;}
   .anun-next:disabled{background:var(--borda);cursor:not-allowed;}
-  .panico-fab{position:fixed;bottom:74px;left:16px;width:52px;height:52px;border-radius:50%;background:#C0392B;color:white;border:3px solid #922B21;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(192,57,43,.5);display:none;align-items:center;justify-content:center;z-index:100;animation:panicoIdle 2.5s infinite;}
+  .panico-fab{position:fixed;bottom:calc(74px + env(safe-area-inset-bottom));left:16px;width:52px;height:52px;border-radius:50%;background:#C0392B;color:white;border:3px solid #922B21;font-size:22px;cursor:pointer;box-shadow:0 4px 16px rgba(192,57,43,.5);display:none;align-items:center;justify-content:center;z-index:100;animation:panicoIdle 2.5s infinite;}
   .panico-fab.visivel{display:flex;}
   @keyframes panicoIdle{0%,100%{box-shadow:0 4px 16px rgba(192,57,43,.5)}50%{box-shadow:0 4px 24px rgba(192,57,43,.8)}}
   .panico-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:400;align-items:flex-end;justify-content:center;}
@@ -623,7 +626,7 @@
 
 <div class="tela" id="t-feed">
   <div class="fh">
-    <div><h1>Vizinho Certo</h1><p id="fsub">Carregando...</p></div>
+    <div class="fh-brand"><img class="fh-logo" src="/icon-192.png" alt="" width="44" height="44"><div class="fh-copy"><h1>Vizinho Certo</h1><p id="fsub">Carregando...</p></div></div>
     <div class="fav" id="fav">?</div>
   </div>
   <button class="home-service-entry" type="button" onclick="navTab('servicos',document.getElementById('nav-servicos'))" aria-label="Buscar serviços e prestadores próximos">

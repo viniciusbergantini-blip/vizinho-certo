@@ -1,0 +1,18 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+
+const html = fs.readFileSync(path.join(__dirname, '..', 'app.html'), 'utf8');
+
+test('cabeçalho e navegação respeitam as áreas seguras do celular', () => {
+  assert.match(html, /\.fh\{[^}]*safe-area-inset-top/);
+  assert.match(html, /\.bnav\{[^}]*safe-area-inset-bottom/);
+  assert.match(html, /\.panico-fab\{[^}]*safe-area-inset-bottom/);
+  assert.match(html, /\.fab\{[^}]*safe-area-inset-bottom/);
+});
+
+test('cabeçalho principal usa o novo ícone do Vizinho Certo', () => {
+  assert.match(html, /class="fh-logo" src="\/icon-192\.png"/);
+  assert.match(html, /meta name="theme-color" content="#064430"/);
+});
