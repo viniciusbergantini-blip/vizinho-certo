@@ -34,7 +34,7 @@ const publicStaticFiles = new Set([
   '/privacidade.html', '/termos.html', '/excluir-conta.html', '/legal.css',
   '/install-app.js', '/engagement.js', '/emergency-contacts.js', '/landing-analytics.js', '/landing-page.js',
   '/landing-session.js', '/sw.js', '/landing.css', '/manifest.json', '/icon.svg',
-  '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png',
+  '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png', '/apple-touch-icon-v2.png',
 ]);
 
 const server = http.createServer(async (req, res) => {

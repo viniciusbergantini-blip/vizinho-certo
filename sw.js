@@ -1,5 +1,5 @@
 // Vizinho Certo — Service Worker
-const CACHE_NAME = 'vizinho-certo-static-v6';
+const CACHE_NAME = 'vizinho-certo-static-v7';
 const STATIC_ASSETS = [
   '/offline.html',
   '/app-runtime.js',
@@ -13,7 +13,8 @@ const STATIC_ASSETS = [
   '/icon.svg',
   '/icon-192.png',
   '/icon-512.png',
-  '/apple-touch-icon.png'
+  '/apple-touch-icon.png',
+  '/apple-touch-icon-v2.png'
 ];
 
 self.addEventListener('install', e => {

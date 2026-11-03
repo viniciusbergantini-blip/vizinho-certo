@@ -17,3 +17,7 @@ test('cabeçalho principal mantém a marca legível sem miniatura recortada', ()
   assert.doesNotMatch(html, /class="fh-logo"/);
   assert.match(html, /meta name="theme-color" content="#064430"/);
 });
+
+test('atalho do iPhone usa o ícone novo com nome versionado', () => {
+  assert.match(html, /rel="apple-touch-icon" href="\/apple-touch-icon-v2\.png"/);
+});

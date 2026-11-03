@@ -30,6 +30,7 @@ const publicFiles = [
   'icon-192.png',
   'icon-512.png',
   'apple-touch-icon.png',
+  'apple-touch-icon-v2.png',
 ];
 const assetLinksSource = path.resolve(root, '.well-known', 'assetlinks.json');
 
