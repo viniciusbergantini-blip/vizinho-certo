@@ -1,4 +1,5 @@
 const { ICONES_ANUNCIO, TIPOS_ANUNCIO } = require('../lib/planos-anuncios');
+const { normalizarTelefoneBrasil } = require('../lib/contato');
 const {
   authenticate,
   cleanText,
@@ -61,7 +62,7 @@ async function updateAd(sb, userId, id, body, res) {
   const tipo = cleanText(body?.tipo, 60);
   const nome = cleanText(body?.nome, 120);
   const descricao = cleanText(body?.descricao, 500, { multiline: true });
-  const telefone = String(body?.telefone || '').replace(/\D/g, '').slice(0, 15);
+  const telefone = normalizarTelefoneBrasil(body?.telefone);
   if (!tipo || !nome || !descricao || !telefone) {
     return res.status(400).json({ error: 'Dados incompletos' });
   }

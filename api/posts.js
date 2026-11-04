@@ -1,5 +1,6 @@
 const { coordenadasValidas, distanciaMetros, numeroFinito } = require('../lib/localizacao');
 const { notifyNearby, notifyUsers } = require('../lib/push-notifications');
+const { pareceOfertaComercial } = require('../lib/conteudo-comercial');
 const {
   authenticate,
   cleanText,
@@ -188,6 +189,12 @@ async function createPost(req, res, sb, userId) {
   const photoUrl = safeOwnedPhotoUrl(req.body?.foto_url, userId);
   if ((!text && !photoUrl) || !POST_TYPES.has(type)) return res.status(400).json({ error: 'Publicacao invalida' });
   if (req.body?.foto_url && !photoUrl) return res.status(400).json({ error: 'Foto invalida' });
+  if (text && pareceOfertaComercial(text)) {
+    return res.status(409).json({
+      error: 'Ofertas de servicos e produtos devem ser publicadas como anuncio na aba Servicos.',
+      code: 'COMMERCIAL_CONTENT_REQUIRES_AD',
+    });
+  }
 
   const profile = await getProfile(sb, userId);
   if (!profile || !coordenadasValidas(profile)) return res.status(409).json({ error: 'Atualize seu endereco antes de publicar' });

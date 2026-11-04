@@ -682,13 +682,19 @@
       <div class="tipo-grid">
         <div class="tipo-card" onclick="selTipoAnun('🔧','Encanador',this)"><div class="tipo-card-icon">🔧</div><div class="tipo-card-label">Encanador</div></div>
         <div class="tipo-card" onclick="selTipoAnun('⚡','Eletricista',this)"><div class="tipo-card-icon">⚡</div><div class="tipo-card-label">Eletricista</div></div>
-        <div class="tipo-card" onclick="selTipoAnun('🧹','Diarista',this)"><div class="tipo-card-icon">🧹</div><div class="tipo-card-label">Diarista</div></div>
-        <div class="tipo-card" onclick="selTipoAnun('🍕','Comércio',this)"><div class="tipo-card-icon">🍕</div><div class="tipo-card-label">Comércio local</div></div>
-        <div class="tipo-card" onclick="selTipoAnun('🧵','Costureira',this)"><div class="tipo-card-icon">🧵</div><div class="tipo-card-label">Costureira</div></div>
-        <div class="tipo-card" onclick="selTipoAnun('🌿','Jardineiro',this)"><div class="tipo-card-icon">🌿</div><div class="tipo-card-label">Jardineiro</div></div>
-        <div class="tipo-card" onclick="selTipoAnun('🏗️','Pedreiro',this)"><div class="tipo-card-icon">🏗️</div><div class="tipo-card-label">Pedreiro / Pintor</div></div>
-        <div class="tipo-card" onclick="selTipoAnun('🔨','Marido de Aluguel',this)"><div class="tipo-card-icon">🔨</div><div class="tipo-card-label">Marido de Aluguel</div></div>
-        <div class="tipo-card" onclick="selTipoAnun('🛒','Anúncio',this)"><div class="tipo-card-icon">🛒</div><div class="tipo-card-label">Venda / Troca</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🧹','Limpeza e Diarista',this)"><div class="tipo-card-icon">🧹</div><div class="tipo-card-label">Limpeza e diarista</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🏗️','Pedreiro',this)"><div class="tipo-card-icon">🏗️</div><div class="tipo-card-label">Pedreiro</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🎨','Pintor',this)"><div class="tipo-card-icon">🎨</div><div class="tipo-card-label">Pintor</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🌿','Jardinagem',this)"><div class="tipo-card-icon">🌿</div><div class="tipo-card-label">Jardinagem</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🔨','Montagem e Reparos',this)"><div class="tipo-card-icon">🔨</div><div class="tipo-card-label">Montagem e reparos</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('❄️','Ar-condicionado',this)"><div class="tipo-card-icon">❄️</div><div class="tipo-card-label">Ar-condicionado</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🔌','Assistência Técnica',this)"><div class="tipo-card-icon">🔌</div><div class="tipo-card-label">Assistência técnica</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('💇','Beleza e Bem-estar',this)"><div class="tipo-card-icon">💇</div><div class="tipo-card-label">Beleza e bem-estar</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('📚','Aulas e Reforço',this)"><div class="tipo-card-icon">📚</div><div class="tipo-card-label">Aulas e reforço</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🤝','Cuidados',this)"><div class="tipo-card-icon">🤝</div><div class="tipo-card-label">Cuidados</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🍽️','Alimentação',this)"><div class="tipo-card-icon">🍽️</div><div class="tipo-card-label">Alimentação</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🚚','Transporte e Fretes',this)"><div class="tipo-card-icon">🚚</div><div class="tipo-card-label">Transporte e fretes</div></div>
+        <div class="tipo-card" onclick="selTipoAnun('🏪','Comércio Local',this)"><div class="tipo-card-icon">🏪</div><div class="tipo-card-label">Comércio local</div></div>
         <div class="tipo-card" onclick="selTipoAnun('🛠️','Outros Serviços',this)"><div class="tipo-card-icon">🛠️</div><div class="tipo-card-label">Outros Serviços</div></div>
       </div>
       <div class="anun-nav"><button class="anun-back" onclick="fecharAnun()">Cancelar</button><button class="anun-next" id="anun-n1" onclick="anunStep(2)" disabled>Continuar →</button></div>
@@ -706,9 +712,9 @@
       <div class="anun-sub">Escolha entre alcance local ou toda a sua cidade. Todos os planos aparecem no feed e na aba Serviços.</div>
       <div class="planos-grid">
         <div class="plano-card" onclick="selPlano('rua',10,990,'Plano Rua','Raio 1,5km · Feed + Serviços',this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-nome">Plano Rua · 10 dias</div><div class="plano-desc">Raio 1,5km · Feed + aba Serviços</div></div><div class="plano-preco">R$ 9,90</div></div>
-        <div class="plano-card popular" onclick="selPlano('bairro',20,1990,'Plano Bairro','Raio 3km · Feed + Serviços + destaque',this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-popular-badge">★ Mais escolhido</div><div class="plano-nome">Plano Bairro · 20 dias</div><div class="plano-desc">Raio 3km · Feed + Serviços + destaque</div></div><div class="plano-preco">R$ 19,90</div></div>
+        <div class="plano-card popular" onclick="selPlano('bairro',20,1990,'Plano Bairro','Raio 3km · Feed + Serviços + destaque',this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-popular-badge">★ Melhor custo-benefício</div><div class="plano-nome">Plano Bairro · 20 dias</div><div class="plano-desc">Raio 3km · Feed + Serviços + destaque</div></div><div class="plano-preco">R$ 19,90</div></div>
         <div class="plano-card" onclick="selPlano('regiao',30,2790,'Plano Região','Raio 5km · Feed + Serviços + destaque',this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-nome">Plano Região · 30 dias</div><div class="plano-desc">Raio 5km · Feed + Serviços + destaque</div></div><div class="plano-preco">R$ 27,90</div></div>
-        <div class="plano-card cidade" onclick="selPlano('cidade',30,3990,'Plano Cidade','Cidade inteira · destaque + topo da busca',this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-cidade-badge">🏙️ Para negócios da cidade</div><div class="plano-nome">Plano Cidade · 30 dias</div><div class="plano-desc">Ideal para restaurantes, lojas, clínicas e entregas · cidade inteira</div></div><div class="plano-preco"><span class="plano-preco-antigo">R$ 49,90</span>R$ 39,90</div></div>
+        <div class="plano-card cidade" onclick="selPlano('cidade',30,3990,'Plano Cidade','Cidade inteira · destaque + topo da busca',this)"><div class="plano-radio"></div><div class="plano-info"><div class="plano-cidade-badge">🏙️ Preço de lançamento</div><div class="plano-nome">Plano Cidade · 30 dias</div><div class="plano-desc">Ideal para restaurantes, lojas, clínicas e entregas · cidade inteira</div></div><div class="plano-preco">R$ 39,90</div></div>
       </div>
       <div class="anun-nav"><button class="anun-back" onclick="anunStep(2)">← Voltar</button><button class="anun-next" id="anun-n3" onclick="anunStep(4)" disabled>Ver resumo →</button></div>
     </div>
@@ -839,8 +845,14 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const LEGAL_VERSION = '2026-11-02';
 const apiUrl = window.VizinhoCertoRuntime.apiUrl;
 
-const VC_PLAY_STORE_MODE_KEY = 'vc_play_store_consumption_mode';
-function iniciarModoConsumoPlayStore(){
+const VC_PLAY_STORE_MODE_KEY = 'vc_play_store_billing_mode';
+const VC_PLAY_PRODUCT_IDS = Object.freeze({
+  rua:'anuncio_rua_10d',
+  bairro:'anuncio_bairro_20d',
+  regiao:'anuncio_regiao_30d',
+  cidade:'anuncio_cidade_30d'
+});
+function iniciarModoPlayStore(){
   const params=new URLSearchParams(window.location.search);
   const origemTwa=/^android-app:\/\/br\.com\.vizinhocerto\.app\/?$/i.test(document.referrer||'');
   const urlDeLancamentoPlay=params.get('vc_play_store')==='1';
@@ -851,7 +863,8 @@ function iniciarModoConsumoPlayStore(){
     return origemTwa||urlDeLancamentoPlay;
   }
 }
-const VC_PLAY_STORE_CONSUMPTION_MODE=iniciarModoConsumoPlayStore();
+const VC_PLAY_STORE_MODE=iniciarModoPlayStore();
+let googlePlayServicePromise=null;
 
 const VAPID_PUBLIC_KEY = 'BOto1nQHk0YOlsxXe38vEb8OJRvpvX_H-14FSURRIltLVnzt40m7pyh7dwWETdzhvWo8Xk_J6nOll8kQp1Jy8NY';
 
@@ -1884,10 +1897,6 @@ async function postar(){
   if(!txt && !fotoFile){ toast('Escreva algo ou adicione uma foto!'); return; }
   if(txt && temPalavrão(txt)){ toast('⚠️ Revise o texto — sem palavrões.'); return; }
   if(txt && temAnuncio(txt)){
-    if(VC_PLAY_STORE_CONSUMPTION_MODE){
-      toast('Para anunciar, consulte as opções no site do Vizinho Certo fora deste aplicativo.');
-      return;
-    }
     toast('🛒 Para anunciar use a aba Serviços!');
     setTimeout(()=>{ fecharM(); navTab('servicos', document.getElementById('nav-servicos')); abrirAnun(); }, 1500);
     return;
@@ -2042,6 +2051,11 @@ function detectOq(txt){
 }
 function temPalavrão(t){return PALAVROES.some(p=>t.toLowerCase().includes(p));}
 function temAnuncio(t){return PALAVRAS_ANUNCIO.some(p=>t.toLowerCase().includes(p));}
+function normalizarTelefoneBrasil(valor){
+  let digitos=String(valor||'').replace(/\D/g,'');
+  if((digitos.length===12||digitos.length===13)&&digitos.startsWith('55')) digitos=digitos.slice(2);
+  return /^\d{10,11}$/.test(digitos)?digitos:'';
+}
 function buscarNoGoogle(termo){ const cidade = encodeURIComponent((E.cidade||'') + ' ' + termo); window.open('https://www.google.com/search?q='+cidade, '_blank'); }
 
 function contatoMunicipalAtual(){
@@ -2381,8 +2395,10 @@ function abrirWhatsAppAnuncio(id,telefone,surface){
   trackAppEvent('ad_whatsapp_click',{source:'ads',ad_id:id,surface});
   const anuncio=[...anunciosVisiveisCache,...meusAnunciosCache].find(item=>String(item.id)===String(id));
   const nome=String(anuncio?.nome||'o serviço anunciado').trim().slice(0,120);
-  const mensagem=`Olá! Encontrei seu contato pelo Vizinho Certo e gostaria de saber mais sobre ${nome}.`;
-  window.open(`https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`,'_blank','noopener,noreferrer');
+  const numero=normalizarTelefoneBrasil(telefone);
+  if(!numero){ toast('O anunciante precisa atualizar o WhatsApp.'); return; }
+  const mensagem=`Olá! Encontrei seu anúncio no Vizinho Certo e gostaria de saber mais sobre ${nome}.`;
+  window.open(`https://wa.me/55${numero}?text=${encodeURIComponent(mensagem)}`,'_blank','noopener,noreferrer');
 }
 function ligarAnuncio(id,telefone,surface){
   trackAppEvent('ad_phone_click',{source:'ads',ad_id:id,surface});
@@ -2459,7 +2475,7 @@ function copiarIA(){navigator.clipboard.writeText(document.getElementById('iatx'
 
 const SERVICOS=[];
 let catAtiva='todos';
-const CATS=['todos','Encanador','Eletricista','Diarista','Comércio','Costureira','Jardineiro','Pedreiro','Marido de Aluguel','Anúncio','Outros Serviços'];
+const CATS=['todos','Encanador','Eletricista','Limpeza e Diarista','Pedreiro','Pintor','Jardinagem','Montagem e Reparos','Ar-condicionado','Assistência Técnica','Beleza e Bem-estar','Aulas e Reforço','Cuidados','Alimentação','Transporte e Fretes','Comércio Local','Outros Serviços'];
 let anunciosVisiveisCache=[];
 let meusAnunciosCache=[];
 let avaliacoesPrestadoresCache={};
@@ -2771,9 +2787,7 @@ async function renderServicos(recarregar=true){
     : '';
   const meusCards=meusAnunciosCache.map(s=>cardServico(s,true)).join('');
   const meusHtml=meusAnunciosCache.length?`<section class="srv-meus"><div class="srv-meus-titulo">Meus anúncios</div><div class="srv-meus-sub">Edite ou exclua o que você publicou.</div>${meusCards}</section>`:'';
-  const blocoAnuncio=VC_PLAY_STORE_CONSUMPTION_MODE
-    ? '<div class="srv-anunciar"><p><strong>É prestador ou comerciante?</strong><br>Você pode contratar anúncios no site do Vizinho Certo, fora deste aplicativo.</p></div>'
-    : '<div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — apareça para centenas de vizinhos no seu raio.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div>';
+  const blocoAnuncio='<div class="srv-anunciar"><p><strong>Você é prestador ou comerciante?</strong><br>Planos a partir de <strong>R$ 9,90</strong> — seja encontrado por clientes próximos.</p><button class="srv-btn-anunciar" onclick="abrirAnun()">Quero anunciar aqui →</button></div>';
   el.innerHTML=`<div style="padding:1rem 1rem 5rem;"><div class="srv-header"><h2>Encontre serviços no seu bairro</h2><p>Busque uma profissão, veja as avaliações e fale direto pelo WhatsApp.</p></div>${renderControleLocalizacao()}${avisoLocalizacao}${meusHtml}<div class="srv-search"><input id="srv-search-input" type="search" value="${htmlSeguro(servicoBusca)}" placeholder="Ex: eletricista, diarista, comércio..." oninput="atualizarBuscaServicos(this.value)" aria-label="Buscar serviços"><span>🔎</span></div><div class="srv-cats">${cats}</div>${blocoAnuncio}<div class="srv-grid" id="srv-grid"></div></div>`;
   renderListaServicos();
 }
@@ -2789,14 +2803,12 @@ function renderListaServicos(){
   if(filtrados.length){ grid.innerHTML=filtrados.map(s=>cardServico(s)).join(''); observarAnuncios(grid); return; }
   const temFiltro=Boolean(servicoBusca.trim()||catAtiva!=='todos');
   if(temFiltro){
-    const acaoAnunciar=VC_PLAY_STORE_CONSUMPTION_MODE?'':`<button onclick="abrirAnun()">Anunciar serviço</button>`;
+    const acaoAnunciar=`<button onclick="abrirAnun()">Anunciar serviço</button>`;
     grid.innerHTML=`<div class="feed-empty"><strong style="color:var(--texto);">Nenhum serviço encontrado</strong><br>Tente outro termo ou veja todas as categorias.<div class="feed-empty-actions"><button onclick="limparBuscaServicos()">Limpar busca</button>${acaoAnunciar}</div></div>`;
     return;
   }
-  const textoVazio=VC_PLAY_STORE_CONSUMPTION_MODE
-    ? 'Os serviços anunciados no Vizinho Certo aparecem aqui para os moradores próximos.'
-    : 'Confira seu endereço, convide um prestador conhecido ou seja o primeiro a anunciar.';
-  const acaoAnunciar=VC_PLAY_STORE_CONSUMPTION_MODE?'':`<button onclick="abrirAnun()">Anunciar serviço</button>`;
+  const textoVazio='Confira seu endereço, convide um prestador conhecido ou seja o primeiro a anunciar.';
+  const acaoAnunciar=`<button onclick="abrirAnun()">Anunciar serviço</button>`;
   grid.innerHTML=`<div class="feed-empty"><strong style="color:var(--texto);">Ainda não há serviços próximos</strong><br>${textoVazio}<div class="feed-empty-actions"><button onclick="abrirAlterarEndereco()">Revisar endereço</button>${acaoAnunciar}</div></div>`;
 }
 
@@ -2820,7 +2832,7 @@ function cardServico(s,proprio=false){
   const tipo=htmlSeguro(s.tipo);
   const descricao=htmlSeguro(s.descricao||'');
   const icone=htmlSeguro(s.icon||'🏪');
-  const telefone=String(s.telefone||'').replace(/[^0-9]/g,'');
+  const telefone=normalizarTelefoneBrasil(s.telefone);
   const status=s.status==='expirado'?'Expirado':`Ativo até ${formatarDataCurta(s.expira_em)}`;
   const metricas=s.metricas||{alcance:0,whatsapp:0,ligacoes:0};
   const alcance=s.alcance_tipo==='cidade'?'Toda a cidade':(s.distancia_fmt?`a ${htmlSeguro(s.distancia_fmt)}`:'');
@@ -2882,7 +2894,7 @@ function renderPerfilServico(){
   if(!el||!anuncio) return;
   const avaliacao=avaliacoesPrestadoresCache[String(anuncio.usuario_id)]||{media:0,quantidade:0,minha_nota:0};
   const proprio=String(anuncio.usuario_id||'')===String(E.userId||'');
-  const telefone=String(anuncio.telefone||'').replace(/[^0-9]/g,'');
+  const telefone=normalizarTelefoneBrasil(anuncio.telefone);
   const media=Number(avaliacao.media)||0;
   const quantidade=Number(avaliacao.quantidade)||0;
   const notaAtual=Number(avaliacao.minha_nota)||0;
@@ -2962,7 +2974,9 @@ function abrirEditarAnuncio(id){
   const anuncio=anunciosVisiveisCache.find(a=>String(a.id)===String(id));
   if(!anuncio||!anuncio.pode_gerenciar){ toast('Você só pode editar seus próprios anúncios.'); return; }
   const sel=document.getElementById('edit-anun-tipo');
-  sel.innerHTML=CATS.filter(c=>c!=='todos').map(c=>`<option value="${c}">${c}</option>`).join('');
+  const categoriasEdicao=CATS.filter(c=>c!=='todos');
+  if(anuncio.tipo&&!categoriasEdicao.includes(anuncio.tipo)) categoriasEdicao.push(anuncio.tipo);
+  sel.innerHTML=categoriasEdicao.map(c=>`<option value="${c}">${c}</option>`).join('');
   document.getElementById('edit-anun-id').value=anuncio.id;
   sel.value=anuncio.tipo;
   document.getElementById('edit-anun-nome').value=anuncio.nome||'';
@@ -2980,10 +2994,10 @@ async function salvarEditarAnuncio(){
   const tipo=document.getElementById('edit-anun-tipo').value;
   const nome=document.getElementById('edit-anun-nome').value.trim();
   const descricao=document.getElementById('edit-anun-desc').value.trim();
-  const telefone=document.getElementById('edit-anun-tel').value.trim();
+  const telefone=normalizarTelefoneBrasil(document.getElementById('edit-anun-tel').value);
   if(!nome){ toast('Digite o nome do negócio!'); return; }
   if(!descricao){ toast('Escreva uma descrição!'); return; }
-  if(!telefone){ toast('Digite seu telefone!'); return; }
+  if(!telefone){ toast('Digite um telefone com DDD válido.'); return; }
   const btn=document.getElementById('edit-anun-btn');
   btn.disabled=true; btn.textContent='Salvando...';
   try{
@@ -3041,17 +3055,12 @@ async function excluirAnuncio(id,fecharModal=false){
   }
 }
 
-const anunState={tipo:'',icon:'',nome:'',desc:'',tel:'',plano_id:'',plano_nome:'',beneficios:'',dias:0,preco:0,pgto:'pix'};
+const anunState={tipo:'',icon:'',nome:'',desc:'',tel:'',plano_id:'',plano_nome:'',beneficios:'',dias:0,preco:0,play_product_id:'',play_preco:'',pgto:'cartao'};
 function abrirAnun(){
-  if(VC_PLAY_STORE_CONSUMPTION_MODE){
-    toast('Para anunciar, consulte as opções no site do Vizinho Certo fora deste aplicativo.');
-    return;
-  }
   document.getElementById('manun').classList.add('ab');anunStep(1);
 }
 function fecharAnun(){document.getElementById('manun').classList.remove('ab');}
 function anunStep(n){
-  if(VC_PLAY_STORE_CONSUMPTION_MODE) return;
   document.querySelectorAll('.anun-step').forEach(s=>s.classList.remove('ab'));
   document.getElementById('as'+n).classList.add('ab');
   for(let i=1;i<=4;i++){const d=document.getElementById('ap'+i);if(d)d.classList.toggle('done',i<=n);}
@@ -3069,11 +3078,12 @@ function anunValidaDados(){
   const t=document.getElementById('anun-tel').value.trim();
   if(!n){toast('Digite o nome do negócio!');return;}
   if(!d){toast('Escreva uma descrição!');return;}
-  if(!t){toast('Digite seu telefone!');return;}
-  anunState.nome=n;anunState.desc=d;anunState.tel=t;anunStep(3);
+  const telefone=normalizarTelefoneBrasil(t);
+  if(!telefone){toast('Digite um telefone com DDD válido.');return;}
+  anunState.nome=n;anunState.desc=d;anunState.tel=telefone;anunStep(3);
 }
 function selPlano(id,dias,centavos,nome,beneficios,el){
-  anunState.plano_id=id;anunState.plano_nome=nome;anunState.beneficios=beneficios;anunState.dias=dias;anunState.preco=centavos;
+  anunState.plano_id=id;anunState.plano_nome=nome;anunState.beneficios=beneficios;anunState.dias=dias;anunState.preco=centavos;anunState.play_product_id=VC_PLAY_PRODUCT_IDS[id]||'';anunState.play_preco='';
   document.querySelectorAll('.plano-card').forEach(c=>c.classList.remove('sel'));
   el.classList.add('sel');
   document.getElementById('anun-n3').disabled=false;
@@ -3090,18 +3100,29 @@ function renderResumo(){
 function renderPgto(){
   const preco=(anunState.preco/100).toFixed(2).replace('.',',');
   const area=document.getElementById('pgto-area');
+  if(VC_PLAY_STORE_MODE){
+    area.innerHTML=`<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">▶️</div><div id="preco-play-store" style="font-weight:500;color:var(--texto);font-size:14px;">Consultando preço na Google Play...</div><div style="font-size:12px;color:var(--texto-muted);margin-top:8px;">A compra será processada com segurança pela Google Play. O anúncio será publicado somente após a confirmação.</div></div>`;
+    carregarDetalhesProdutoPlay().catch(()=>{
+      const el=document.getElementById('preco-play-store');
+      if(el) el.textContent=`Valor previsto: R$ ${preco} · preço final exibido pela Google Play`;
+    });
+    return;
+  }
   area.innerHTML=`<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">💳</div><div style="font-weight:500;color:var(--texto);font-size:14px;">Valor: R$ ${preco}</div><div style="font-size:12px;color:var(--texto-muted);margin-top:8px;">Ao clicar em Pagar, você será redirecionado para o checkout seguro da Stripe. Aceitamos cartão de crédito e débito.</div></div>`;
 }
 async function anunFinalizar(){
-  if(VC_PLAY_STORE_CONSUMPTION_MODE){
-    toast('Para anunciar, consulte as opções no site do Vizinho Certo fora deste aplicativo.');
-    return;
-  }
   const btn=document.querySelector('#as4 .anun-next');
-  btn.textContent='Abrindo pagamento...';btn.disabled=true;
+  btn.textContent=VC_PLAY_STORE_MODE?'Abrindo Google Play...':'Abrindo pagamento...';btn.disabled=true;
   try{
     const { data: { session } } = await sb.auth.getSession();
     if(!session?.access_token) throw new Error('Entre na sua conta novamente.');
+    if(VC_PLAY_STORE_MODE){
+      const resultado=await finalizarCompraGooglePlay(session.access_token);
+      fecharAnun();
+      abrirComprovanteAnuncio(resultado);
+      if(resultado.published) renderServicos();
+      return;
+    }
     const resp=await fetch(apiUrl('/api/checkout'),{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({
       nome:anunState.nome, tipo:anunState.tipo, plano_id:anunState.plano_id, dias:anunState.dias,
       icon:anunState.icon, desc:anunState.desc, tel:anunState.tel
@@ -3115,6 +3136,62 @@ async function anunFinalizar(){
   } catch(e){
     btn.disabled=false; btn.textContent='Pagar e publicar →';
     toast(e.message||'Erro ao conectar com pagamento. Tente novamente.');
+  }
+}
+
+async function obterServicoGooglePlay(){
+  if(!('getDigitalGoodsService' in window)) throw new Error('A Google Play Billing não está disponível neste aparelho.');
+  if(!googlePlayServicePromise){
+    googlePlayServicePromise=window.getDigitalGoodsService('https://play.google.com/billing').catch(error=>{
+      googlePlayServicePromise=null;
+      throw error;
+    });
+  }
+  return googlePlayServicePromise;
+}
+
+async function carregarDetalhesProdutoPlay(){
+  if(!anunState.play_product_id) throw new Error('Selecione um plano novamente.');
+  const service=await obterServicoGooglePlay();
+  const detalhes=await service.getDetails([anunState.play_product_id]);
+  const produto=detalhes.find(item=>item.itemId===anunState.play_product_id);
+  if(!produto) throw new Error('Este plano ainda não está disponível na Google Play.');
+  anunState.play_preco=new Intl.NumberFormat(navigator.language||'pt-BR',{style:'currency',currency:produto.price.currency}).format(produto.price.value);
+  const el=document.getElementById('preco-play-store');
+  if(el) el.textContent=`Valor na Google Play: ${anunState.play_preco}`;
+  return {service,produto};
+}
+
+async function finalizarCompraGooglePlay(accessToken){
+  const {service}=await carregarDetalhesProdutoPlay();
+  const paymentMethods=[{supportedMethods:'https://play.google.com/billing',data:{sku:anunState.play_product_id}}];
+  const paymentDetails={total:{label:'Total',amount:{currency:'BRL',value:'0'}}};
+  const request=new PaymentRequest(paymentMethods,paymentDetails);
+  let paymentResponse=null;
+  try{
+    paymentResponse=await request.show();
+    const purchaseToken=String(paymentResponse.details?.purchaseToken||'').trim();
+    if(!purchaseToken) throw new Error('A Google Play não retornou o comprovante da compra.');
+    const resp=await fetch(apiUrl('/api/checkout'),{
+      method:'POST',
+      headers:{'Content-Type':'application/json',Authorization:`Bearer ${accessToken}`},
+      body:JSON.stringify({
+        provider:'google_play',
+        product_id:anunState.play_product_id,
+        purchase_token:purchaseToken,
+        anuncio:{nome:anunState.nome,tipo:anunState.tipo,desc:anunState.desc,tel:anunState.tel}
+      })
+    });
+    const resultado=await resp.json();
+    if(!resp.ok||!resultado.published) throw new Error(resultado.error||'Não foi possível confirmar a compra.');
+    await paymentResponse.complete('success');
+    return resultado;
+  }catch(error){
+    if(paymentResponse){
+      try{await paymentResponse.complete('fail');}catch(_){}
+    }
+    if(error?.name==='AbortError') throw new Error('Compra cancelada. Nenhum valor foi cobrado.');
+    throw error;
   }
 }
 

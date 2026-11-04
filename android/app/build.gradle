@@ -23,7 +23,7 @@ plugins {
 def twaManifest = [
     applicationId: 'br.com.vizinhocerto.app',
     hostName: 'www.vizinhocerto.com.br', // The domain being opened in the TWA.
-    launchUrl: '/app?vc_play_store=1', // Marks the Play-distributed TWA for its consumption-only experience.
+    launchUrl: '/app?vc_play_store=1', // Marks the Play-distributed TWA so purchases use Google Play Billing.
     name: 'Vizinho Certo', // The application name.
     launcherName: 'VizinhoCerto', // The name shown on the Android Launcher.
     themeColor: '#1B4D37', // The color used for the status bar.
