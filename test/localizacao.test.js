@@ -1,5 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const {
   avaliarVisibilidadeAnuncio,
   distanciaMetros,
@@ -65,4 +67,29 @@ test('não mostra anúncio municipal em outra cidade ou UF', () => {
   const base = { usuario_id: 'a', alcance_tipo: 'cidade', cidade_alvo: 'São João da Boa Vista', uf_alvo: 'SP' };
   assert.equal(avaliarVisibilidadeAnuncio({ anuncio: base, anunciante: {}, visitante: { id: 'b', cidade: 'Maringá', uf: 'PR' } }).visivel, false);
   assert.equal(avaliarVisibilidadeAnuncio({ anuncio: base, anunciante: {}, visitante: { id: 'b', cidade: 'São João da Boa Vista', uf: 'MG' } }).visivel, false);
+});
+
+test('cadastro aceita GPS e busca por rua sem tornar CEP obrigatório', () => {
+  const app = fs.readFileSync(path.join(__dirname, '..', 'app.html'), 'utf8');
+  assert.match(app, /usarGpsCadastro\(\)/);
+  assert.match(app, /action:'address_search'/);
+  assert.match(app, /localizacaoJaConfirmada/);
+  assert.doesNotMatch(app, /if\(cep\.length!==8\)/);
+});
+
+test('geocodificacao valida o número encontrado e oferece busca reversa', () => {
+  const geocode = fs.readFileSync(path.join(__dirname, '..', 'api', 'geocode.js'), 'utf8');
+  assert.match(geocode, /confirmed_number/);
+  assert.match(geocode, /action === 'reverse'/);
+  assert.match(geocode, /proximaConsultaEm = Date\.now\(\) \+ 1100/);
+});
+
+test('busca de vizinhos usa PostGIS privado e distancia pública arredondada', () => {
+  const posts = fs.readFileSync(path.join(__dirname, '..', 'api', 'posts.js'), 'utf8');
+  const migration = fs.readFileSync(path.join(__dirname, '..', 'supabase', 'migrations', '20261104170000_add_geographic_locations.sql'), 'utf8');
+  assert.match(posts, /rpc\('vizinhos_no_raio_v2'/);
+  assert.match(posts, /arredondarDistanciaPublica/);
+  assert.match(migration, /using gist \(localizacao\)/i);
+  assert.match(migration, /revoke all on function public\.vizinhos_no_raio_v2[\s\S]*from public, anon, authenticated/i);
+  assert.match(migration, /grant execute[\s\S]*to service_role/i);
 });

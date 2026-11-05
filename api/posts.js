@@ -139,14 +139,13 @@ async function getNeighbors(req, res, sb, userId) {
   if (!profile || !coordenadasValidas(position)) return res.json({ vizinhos: [] });
 
   const radius = Math.min(Math.max(Number(profile.raio) || 150, 50), 500);
-  let query = sb
-    .from('usuarios')
-    .select('id, apelido, nome, bairro, cidade, foto_url, lat, lon')
-    .neq('id', userId)
-    .limit(1000);
-  if (profile.cidade) query = query.eq('cidade', profile.cidade);
-  if (profile.uf) query = query.eq('uf', profile.uf);
-  const { data, error } = await query;
+  const { data, error } = await sb.rpc('vizinhos_no_raio_v2', {
+    p_usuario_id: userId,
+    p_lat: Number(position.lat),
+    p_lon: Number(position.lon),
+    p_raio_m: radius,
+    p_limite: 100,
+  });
   if (error) throw error;
 
   const blockedIds = await loadBlockedIds(sb, userId);
@@ -155,12 +154,19 @@ async function getNeighbors(req, res, sb, userId) {
     apelido: user.apelido || user.nome || 'Vizinho',
     bairro: user.bairro || user.cidade || '',
     foto_url: safePhotoUrl(user.foto_url),
-    distancia_metros: distanciaMetros(position.lat, position.lon, user.lat, user.lon),
-  })).filter(user => user.distancia_metros !== null && user.distancia_metros <= radius)
-    .sort((a, b) => a.distancia_metros - b.distancia_metros)
-    .slice(0, 100);
+    // A interface recebe uma distancia arredondada para reduzir o risco de
+    // triangulacao da residencia sem prejudicar a percepcao de proximidade.
+    distancia_metros: arredondarDistanciaPublica(user.distancia_metros),
+  }));
 
   return res.json({ vizinhos: neighbors });
+}
+
+function arredondarDistanciaPublica(valor) {
+  const metros = Number(valor);
+  if (!Number.isFinite(metros) || metros < 0) return null;
+  const passo = metros < 100 ? 25 : 50;
+  return Math.max(passo, Math.round(metros / passo) * passo);
 }
 
 function aplicarLocalizacaoTemporaria(req, perfil) {

@@ -535,6 +535,17 @@
       <div id="signup-step-address" style="display:none;">
         <div class="signup-step-label">Onde fica sua vizinhança?</div>
         <div class="signup-privacy"><span>🔒</span><span><strong>Sua região, não seu endereço público</strong>Usamos esses dados somente para mostrar o que acontece perto de você. Outros usuários nunca veem seu endereço.</span></div>
+        <button type="button" class="btnp" style="margin:0 0 10px;background:#E8F5E9;color:#1B4D37;border:1px solid #2D6A4F;" onclick="usarGpsCadastro()">📍 Usar minha localização</button>
+        <button type="button" class="signup-back" style="margin:0 0 12px;" onclick="alternarBuscaEnderecoCadastro()">Não sei o CEP — buscar por rua ou bairro</button>
+        <div id="signup-address-search" style="display:none;padding:12px;border:1px solid var(--borda);border-radius:12px;margin-bottom:12px;">
+          <div style="display:grid;grid-template-columns:82px 1fr;gap:8px;">
+            <div class="ig"><label for="inp-uf">Estado</label><input id="inp-uf" maxlength="2" placeholder="SP" style="text-transform:uppercase"/></div>
+            <div class="ig"><label for="inp-cidade">Cidade</label><input id="inp-cidade" placeholder="Sua cidade"/></div>
+          </div>
+          <div class="ig"><label for="inp-rua-busca">Rua ou bairro</label><input id="inp-rua-busca" placeholder="Digite pelo menos 3 letras"/></div>
+          <button type="button" class="btnp" onclick="buscarEnderecosCadastro()">Buscar endereço</button>
+          <div id="signup-address-results" style="display:grid;gap:7px;margin-top:9px;"></div>
+        </div>
         <div class="ig"><label for="inp-cep">CEP</label><input type="tel" id="inp-cep" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" maxlength="9" oninput="registrarInteracaoCadastro();limparErroCadastro(this);formataCEP(this)"/></div>
         <div class="ig" id="cep-resultado" style="display:none;"><label for="inp-cep-addr">Rua encontrada</label><input type="text" id="inp-cep-addr" readonly style="background:#F0FBF4;color:#2D6A4F;font-weight:600;"/></div>
         <div class="ig" id="num-wrap" style="display:none;"><label for="inp-num">Número da residência</label><input type="text" id="inp-num" autocomplete="address-line2" placeholder="Ex: 142 ou 332B" oninput="registrarInteracaoCadastro();limparErroCadastro(this)" onblur="geocodificarComNumero(this.value)"/></div>
@@ -802,6 +813,14 @@
   <div class="msheet">
     <div class="mhandle"></div>
     <div class="mtitle">📍 Alterar endereço</div>
+    <button type="button" class="bpost" style="width:100%;margin-bottom:10px;" onclick="usarGpsAlterarEndereco()">Usar minha localização atual</button>
+    <button type="button" class="bcanc" style="width:100%;margin-bottom:10px;" onclick="alternarBuscaEnderecoModal()">Não sei o CEP — buscar por rua</button>
+    <div id="end-busca" style="display:none;">
+      <div style="display:grid;grid-template-columns:82px 1fr;gap:8px;"><div class="ig"><label>UF</label><input id="end-uf" maxlength="2" placeholder="SP"/></div><div class="ig"><label>Cidade</label><input id="end-cidade"/></div></div>
+      <div class="ig"><label>Rua ou bairro</label><input id="end-rua-busca"/></div>
+      <button type="button" class="bpost" style="width:100%;" onclick="buscarEnderecosModal()">Buscar</button>
+      <div id="end-resultados" style="display:grid;gap:7px;margin:9px 0;"></div>
+    </div>
     <div class="ig"><label>CEP</label><input type="tel" id="end-cep" placeholder="Ex: 87010-000" maxlength="9" oninput="formataCEPEnd(this)"/></div>
     <div class="ig" id="end-cep-resultado" style="display:none;"><label>Rua encontrada</label><input type="text" id="end-cep-addr" readonly style="background:#F0FBF4;color:#2D6A4F;font-weight:500;"/></div>
     <div class="ig" id="end-num-wrap" style="display:none;"><label>Número da sua casa</label><input type="text" id="end-num" placeholder="Ex: 142 ou 332B"/></div>
@@ -1022,6 +1041,7 @@ const PALAVRAS_ANUNCIO=['vendo ','à venda','a venda','compro e vendo','troco po
 const COR=['#5E60CE','#E76F51','#2D6A4F','#D4A017','#48CAE4'];
 const E={
   userId:null, nome:'', apelido:'', bairro:'', cidade:'', uf:'', rua:'', cep:'', lat:null, lon:null,
+  localizacaoFonte:'legacy', localizacaoPrecisao:'unknown', localizacaoAcuracia:null,
   raio:150, tipo:'problema', filtro:'tudo', abCom:new Set(), abOq:new Set(), posts:[], fotoUrl:null,
   ultimaVisita:null, resumoEventos:0
 };
@@ -1263,6 +1283,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     E.cep     = perfil.cep     || '';
     E.lat     = perfil.lat;
     E.lon     = perfil.lon;
+    E.localizacaoFonte = perfil.localizacao_fonte || 'legacy';
+    E.localizacaoPrecisao = perfil.localizacao_precisao || 'unknown';
+    E.localizacaoAcuracia = perfil.localizacao_acuracia_m ?? null;
     E.raio    = perfil.raio    || 150;
     E.fotoUrl = perfil.foto_url || null;
     document.getElementById('fsub').textContent = `${E.cidade||E.bairro||'Minha cidade'} · ${E.raio}m`;
@@ -1424,6 +1447,66 @@ async function salvarNovaSenha(){
 
 let cadastroTemp = {};
 
+function alternarBuscaEnderecoCadastro(){
+  const el=document.getElementById('signup-address-search');
+  el.style.display=el.style.display==='none'?'':'none';
+}
+
+async function buscarEnderecos(uf,cidade,rua){
+  const r=await fetch(apiUrl('/api/geocode'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'address_search',uf,cidade,rua})});
+  const d=await r.json();
+  if(!r.ok) throw new Error(d.error||'Não foi possível buscar o endereço.');
+  return d.addresses||[];
+}
+
+let enderecosBuscaCadastro=[];
+async function buscarEnderecosCadastro(){
+  const box=document.getElementById('signup-address-results');
+  box.innerHTML='Buscando…';
+  try{
+    const itens=await buscarEnderecos(document.getElementById('inp-uf').value.trim().toUpperCase(),document.getElementById('inp-cidade').value.trim(),document.getElementById('inp-rua-busca').value.trim());
+    if(!itens.length){box.innerHTML='<small>Nenhum endereço encontrado. Tente outra forma de escrever.</small>';return;}
+    enderecosBuscaCadastro=itens;
+    box.innerHTML=itens.map((item,i)=>`<button type="button" class="bcanc" style="text-align:left;" onclick="selecionarEnderecoCadastro(enderecosBuscaCadastro[${i}])">${htmlSeguro(item.rua)} — ${htmlSeguro(item.bairro||'')} · ${htmlSeguro(item.cidade)}/${htmlSeguro(item.uf)}</button>`).join('');
+  }catch(e){box.innerHTML=`<small>${htmlSeguro(e.message)}</small>`;}
+}
+
+function selecionarEnderecoCadastro(item){
+  E.rua=item.rua;E.bairro=item.bairro||item.cidade;E.cidade=item.cidade;E.uf=item.uf;E.cep=item.cep||'';
+  E.localizacaoFonte='address';E.localizacaoPrecisao='unknown';
+  const cep=document.getElementById('inp-cep');cep.value=item.cep?item.cep.slice(0,5)+'-'+item.cep.slice(5):'';
+  document.getElementById('inp-cep-addr').value=`${item.rua}, ${item.bairro||''} — ${item.cidade}/${item.uf}`;
+  document.getElementById('cep-resultado').style.display='';document.getElementById('num-wrap').style.display='';
+  document.getElementById('signup-address-search').style.display='none';document.getElementById('inp-num').focus();
+}
+
+async function usarGpsCadastro(){
+  try{
+    const pos=await obterPosicaoGps();
+    const endereco=await geocodificarReverso(pos.lat,pos.lon,pos.accuracy);
+    if(!endereco) throw new Error('Não conseguimos identificar o endereço desta posição.');
+    const a=endereco.address||{};
+    const resumo=[a.rua,a.numero,a.bairro,a.cidade,a.uf].filter(Boolean).join(', ');
+    if(!confirm(`Confirmar esta região?\n\n${resumo}\n\nSeu endereço exato não será exibido publicamente.`)) return;
+    E.rua=a.rua||'';E.bairro=a.bairro||a.cidade||'';E.cidade=a.cidade||'';E.uf=a.uf||'';E.cep=a.cep||'';
+    E.lat=pos.lat;E.lon=pos.lon;E.localizacaoFonte='gps';E.localizacaoPrecisao='gps';E.localizacaoAcuracia=pos.accuracy;
+    document.getElementById('inp-cep').value=E.cep?(E.cep.slice(0,5)+'-'+E.cep.slice(5)):'';
+    document.getElementById('inp-cep-addr').value=resumo;document.getElementById('cep-resultado').style.display='';
+    document.getElementById('num-wrap').style.display='none';
+    toast(pos.accuracy>100?'Localização confirmada, mas o GPS está pouco preciso.':'Localização confirmada! 📍');
+  }catch(e){toast(e.message||'Não conseguimos obter sua localização.');}
+}
+
+function obterPosicaoGps(){
+  if(!navigator.geolocation) return Promise.reject(new Error('Este aparelho não oferece localização.'));
+  return new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(p=>resolve({lat:Number(p.coords.latitude),lon:Number(p.coords.longitude),accuracy:Math.round(Number(p.coords.accuracy)||0)}),e=>reject(new Error(e.code===1?'Permita o acesso à localização e tente novamente.':'Não conseguimos obter o GPS agora.')),{enableHighAccuracy:true,timeout:20000,maximumAge:30000}));
+}
+
+async function geocodificarReverso(lat,lon,accuracy){
+  const r=await fetch(apiUrl('/api/geocode'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'reverse',lat,lon,accuracy})});
+  if(!r.ok)return null;return r.json();
+}
+
 async function irRaio(){
   const nome    = document.getElementById('inp-nome').value.trim();
   const apelido = nome.split(/\s+/)[0] || nome;
@@ -1436,9 +1519,9 @@ async function irRaio(){
   if(!nome){ voltarCadastroConta({track:false}); mostrarErroCadastro('Digite seu nome para continuar.','inp-nome'); return; }
   if(!email||!email.includes('@')){ voltarCadastroConta({track:false}); mostrarErroCadastro('Digite um e-mail válido.','inp-email'); return; }
   if(!senha||senha.length<8){ voltarCadastroConta({track:false}); mostrarErroCadastro('Sua senha precisa ter pelo menos 8 caracteres.','inp-senha'); return; }
-  if(cep.length!==8){ mostrarErroCadastro('Digite um CEP válido com 8 números.','inp-cep','signup-location-error'); return; }
-  if(!E.bairro){ mostrarErroCadastro('Aguarde a confirmação do CEP antes de continuar.','inp-cep','signup-location-error'); return; }
-  if(!num){ mostrarErroCadastro('Digite o número da residência para calcular sua região.','inp-num','signup-location-error'); return; }
+  const localizacaoJaConfirmada=Number.isFinite(Number(E.lat))&&Number.isFinite(Number(E.lon))&&Boolean(E.cidade)&&Boolean(E.uf);
+  if(!localizacaoJaConfirmada){ mostrarErroCadastro('Use sua localização, busque pela rua ou informe o CEP.','inp-cep','signup-location-error'); return; }
+  if(E.localizacaoFonte!=='gps'&&!num){ mostrarErroCadastro('Digite o número da residência para calcular sua região.','inp-num','signup-location-error'); return; }
   if(!consentimento){
     document.getElementById('signup-consent-wrap')?.classList.add('invalid');
     mostrarErroCadastro('Para criar a conta, aceite os Termos de Uso e a Política de Privacidade.','inp-consentimento','signup-location-error');
@@ -1456,7 +1539,9 @@ async function irRaio(){
       btn.disabled=false; btn.textContent='Criar conta e ver minha vizinhança →';
       return;
     }
-    const coordenadas = await geocodificar(E.rua, num, E.cidade, E.uf, cep);
+    const coordenadas = E.localizacaoFonte==='gps'
+      ? {lat:E.lat,lon:E.lon,precision:'gps',accuracy_m:E.localizacaoAcuracia}
+      : await geocodificar(E.rua, num, E.cidade, E.uf, cep||E.cep);
     if(!coordenadas){
       trackCadastro('signup_location_failed',{status:'not_found'});
       mostrarErroCadastro('Não conseguimos localizar esse endereço. Confira o CEP e o número.','inp-num','signup-location-error');
@@ -1464,6 +1549,7 @@ async function irRaio(){
       return;
     }
     E.lat=coordenadas.lat; E.lon=coordenadas.lon;
+    E.localizacaoPrecisao=coordenadas.precision||E.localizacaoPrecisao||'unknown';
     trackCadastro('signup_location_success');
     btn.textContent = 'Criando conta...';
     faseCadastro = 'auth';
@@ -1496,7 +1582,8 @@ async function irRaio(){
       mostrarErroCadastro('Não conseguimos confirmar a criação da conta. Tente novamente.','inp-email');
       btn.disabled=false; btn.textContent='Criar conta e ver minha vizinhança →'; return;
     }
-    cadastroTemp = { nome, apelido, email, cep, numero: num, rua: E.rua, bairro: E.bairro, cidade: E.cidade, uf: E.uf, lat: E.lat, lon: E.lon };
+    cadastroTemp = { nome, apelido, email, cep:cep||E.cep, numero:num, rua:E.rua, bairro:E.bairro, cidade:E.cidade, uf:E.uf, lat:E.lat, lon:E.lon,
+      localizacao_fonte:E.localizacaoFonte, localizacao_precisao:E.localizacaoPrecisao, localizacao_acuracia_m:E.localizacaoAcuracia };
     sessionStorage.setItem('vc_cadastro',JSON.stringify(cadastroTemp));
     trackCadastro('signup_auth_success');
     if(!authData.session){
@@ -1621,9 +1708,39 @@ function abrirAlterarEndereco(){
   document.getElementById('end-cep').value = '';
   document.getElementById('end-cep-resultado').style.display = 'none';
   document.getElementById('end-num-wrap').style.display = 'none';
+  document.getElementById('end-busca').style.display = 'none';
   endTemp = {};
 }
 function fecharAlterarEndereco(){ document.getElementById('m-endereco').classList.remove('ab'); }
+function alternarBuscaEnderecoModal(){const el=document.getElementById('end-busca');el.style.display=el.style.display==='none'?'':'none';}
+let enderecosBuscaModal=[];
+async function buscarEnderecosModal(){
+  const box=document.getElementById('end-resultados');box.innerHTML='Buscando…';
+  try{
+    const itens=await buscarEnderecos(document.getElementById('end-uf').value.trim().toUpperCase(),document.getElementById('end-cidade').value.trim(),document.getElementById('end-rua-busca').value.trim());
+    enderecosBuscaModal=itens;
+    box.innerHTML=itens.length?itens.map((item,i)=>`<button type="button" class="bcanc" style="text-align:left;" onclick="selecionarEnderecoModal(enderecosBuscaModal[${i}])">${htmlSeguro(item.rua)} — ${htmlSeguro(item.bairro||'')} · ${htmlSeguro(item.cidade)}/${htmlSeguro(item.uf)}</button>`).join(''):'<small>Nenhum endereço encontrado.</small>';
+  }catch(e){box.innerHTML=`<small>${htmlSeguro(e.message)}</small>`;}
+}
+function selecionarEnderecoModal(item){
+  endTemp={...item,fonte:'address',precisao:'unknown',acuracia:null};
+  document.getElementById('end-cep').value=item.cep?item.cep.slice(0,5)+'-'+item.cep.slice(5):'';
+  document.getElementById('end-cep-addr').value=`${item.rua}, ${item.bairro||''} — ${item.cidade}/${item.uf}`;
+  document.getElementById('end-cep-resultado').style.display='';document.getElementById('end-num-wrap').style.display='';
+  document.getElementById('end-busca').style.display='none';document.getElementById('end-num').focus();
+}
+async function usarGpsAlterarEndereco(){
+  try{
+    const pos=await obterPosicaoGps(), endereco=await geocodificarReverso(pos.lat,pos.lon,pos.accuracy);
+    if(!endereco)throw new Error('Não conseguimos identificar este endereço.');
+    const a=endereco.address||{},resumo=[a.rua,a.numero,a.bairro,a.cidade,a.uf].filter(Boolean).join(', ');
+    if(!confirm(`Confirmar esta região?\n\n${resumo}`))return;
+    endTemp={cep:a.cep||'',rua:a.rua||'',numero:a.numero||'',bairro:a.bairro||a.cidade||'',cidade:a.cidade||'',uf:a.uf||'',lat:pos.lat,lon:pos.lon,fonte:'gps',precisao:'gps',acuracia:pos.accuracy};
+    document.getElementById('end-cep-addr').value=resumo;document.getElementById('end-cep-resultado').style.display='';
+    document.getElementById('end-num-wrap').style.display='none';
+    toast('Localização confirmada. Toque em Salvar.');
+  }catch(e){toast(e.message||'Não conseguimos obter sua localização.');}
+}
 function formataCEPEnd(el){
   let v = el.value.replace(/\D/g,'');
   if(v.length>5) v = v.slice(0,5)+'-'+v.slice(5,8);
@@ -1642,7 +1759,7 @@ async function buscaCEPEnd(cep){
     if(d.erro){ resEl.style.display='none'; toast('CEP não encontrado.'); return; }
     addrEl.value = (d.logradouro?d.logradouro+', ':'')+d.bairro+' — '+d.localidade+'/'+d.uf;
     numWrap.style.display = '';
-    endTemp = { cep, rua: d.logradouro||'', bairro: d.bairro||d.localidade, cidade: d.localidade, uf: d.uf };
+    endTemp = { cep, rua: d.logradouro||'', bairro: d.bairro||d.localidade, cidade: d.localidade, uf: d.uf, fonte:'address', precisao:'postal_code', acuracia:null };
     geocodificar(d.logradouro,'',d.localidade,d.uf,cep).then(c=>{ if(c){ endTemp.lat=c.lat; endTemp.lon=c.lon; }});
   } catch(e){
     addrEl.value = 'CEP encontrado';
@@ -1652,24 +1769,27 @@ async function buscaCEPEnd(cep){
 }
 async function salvarEndereco(){
   const num = document.getElementById('end-num').value.trim();
-  if(!endTemp.cep){ toast('Digite e aguarde o CEP ser validado!'); return; }
-  if(!num){ toast('Digite o número da sua casa!'); return; }
+  if(!endTemp.cidade){ toast('Localize e confirme seu endereço primeiro.'); return; }
+  if(endTemp.fonte!=='gps'&&!num){ toast('Digite o número da sua casa!'); return; }
   const btn = document.querySelector('#m-endereco .bpost');
   btn.disabled=true; btn.textContent='Salvando...';
   try{
-    const coordenadas = await geocodificar(endTemp.rua, num, endTemp.cidade, endTemp.uf, endTemp.cep);
+    const coordenadas = endTemp.fonte==='gps'?{lat:endTemp.lat,lon:endTemp.lon,precision:'gps'}:await geocodificar(endTemp.rua,num,endTemp.cidade,endTemp.uf,endTemp.cep);
     if(!coordenadas){
       toast('Não conseguimos localizar esse endereço. Confira rua, número e CEP.');
       return;
     }
     const { error } = await sb.from('usuarios').update({
-      cep: endTemp.cep, rua: endTemp.rua, numero: num,
+      cep: endTemp.cep, rua: endTemp.rua, numero: num||endTemp.numero||'',
       bairro: endTemp.bairro, cidade: endTemp.cidade, uf: endTemp.uf,
-      lat: coordenadas.lat, lon: coordenadas.lon
+      lat: coordenadas.lat, lon: coordenadas.lon,
+      localizacao_fonte:endTemp.fonte||'address',localizacao_precisao:coordenadas.precision||endTemp.precisao||'unknown',
+      localizacao_acuracia_m:endTemp.acuracia??null,localizacao_verificada_em:new Date().toISOString()
     }).eq('id', E.userId);
     if(error) throw error;
     E.cep=endTemp.cep; E.rua=endTemp.rua; E.bairro=endTemp.bairro;
     E.cidade=endTemp.cidade; E.uf=endTemp.uf; E.lat=coordenadas.lat; E.lon=coordenadas.lon;
+    E.localizacaoFonte=endTemp.fonte||'address';E.localizacaoPrecisao=coordenadas.precision||endTemp.precisao||'unknown';E.localizacaoAcuracia=endTemp.acuracia??null;
     document.getElementById('fsub').textContent = `${E.cidade||E.bairro} · ${E.raio}m`;
     fecharAlterarEndereco();
     await carregarPosts();
@@ -2284,6 +2404,7 @@ async function buscaCEP(cep){
     addrEl.value=(logr?logr+', ':'')+bairro+(d.localidade?' — '+d.localidade+'/'+d.uf:'');
     if(numWrap) numWrap.style.display='';
     E.rua=logr; E.bairro=bairro||d.localidade; E.cidade=d.localidade; E.uf=d.uf; E.cep=cep;
+    E.localizacaoFonte='address';E.localizacaoPrecisao='postal_code';E.localizacaoAcuracia=null;
     limparErroCadastro(document.getElementById('inp-cep'));
     geocodificar(logr,'',d.localidade,d.uf,cep).then(c=>{if(c){E.lat=c.lat;E.lon=c.lon;}});
   } catch(e){
@@ -2295,7 +2416,7 @@ async function buscaCEP(cep){
 async function geocodificarComNumero(num){
   if(!num || !E.rua) return;
   const c = await geocodificar(E.rua, num, E.cidade, E.uf, E.cep);
-  if(c){ E.lat=c.lat; E.lon=c.lon; }
+  if(c){ E.lat=c.lat; E.lon=c.lon; E.localizacaoFonte='address';E.localizacaoPrecisao=c.precision||'unknown'; }
 }
 async function geocodificar(rua,numero,cidade,uf,cep){
   try{
@@ -2307,7 +2428,7 @@ async function geocodificar(rua,numero,cidade,uf,cep){
     if(!r.ok) return null;
     const d=await r.json();
     const lat=Number(d.lat), lon=Number(d.lon);
-    if(Number.isFinite(lat)&&Number.isFinite(lon)) return {lat,lon,precision:d.precision};
+    if(Number.isFinite(lat)&&Number.isFinite(lon)) return {lat,lon,precision:d.precision,confirmed_number:d.confirmed_number,address:d.address||null,accuracy_m:d.accuracy_m??null};
   } catch(e){ console.error('Falha ao localizar endereço:', e); }
   return null;
 }
@@ -2339,7 +2460,11 @@ async function irFeed(){
     email: d.email||session?.user?.email||'', cep: d.cep||E.cep||'',
     numero: d.numero||'', rua: d.rua||E.rua||'', bairro: d.bairro||E.bairro||'',
     cidade: d.cidade||E.cidade||'', uf: d.uf||E.uf||'', raio: E.raio,
-    lat: d.lat||E.lat||null, lon: d.lon||E.lon||null
+    lat: d.lat||E.lat||null, lon: d.lon||E.lon||null,
+    localizacao_fonte:d.localizacao_fonte||E.localizacaoFonte||'legacy',
+    localizacao_precisao:d.localizacao_precisao||E.localizacaoPrecisao||'unknown',
+    localizacao_acuracia_m:d.localizacao_acuracia_m??E.localizacaoAcuracia??null,
+    localizacao_verificada_em:new Date().toISOString()
   }, { onConflict: 'id' });
   if(perfilError){
     trackCadastro('profile_failed',{status:'database_error'});
