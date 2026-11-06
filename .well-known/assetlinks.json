@@ -7,7 +7,8 @@
       "namespace": "android_app",
       "package_name": "br.com.vizinhocerto.app",
       "sha256_cert_fingerprints": [
-        "A7:C9:D0:8B:2B:62:5A:1A:C7:94:31:A0:78:33:CC:C4:03:92:D3:AA:51:C4:1F:2D:FB:88:57:62:DC:D4:33:0D"
+        "A7:C9:D0:8B:2B:62:5A:1A:C7:94:31:A0:78:33:CC:C4:03:92:D3:AA:51:C4:1F:2D:FB:88:57:62:DC:D4:33:0D",
+        "AD:A8:13:96:B4:6B:C4:E4:AD:4F:E0:BB:2F:6F:BB:70:8C:B4:13:FC:1B:98:4D:79:95:C2:30:A5:0A:30:94:BD"
       ]
     }
   }
