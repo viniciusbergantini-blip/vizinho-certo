@@ -100,7 +100,12 @@ test('paginas legais publicas cobrem privacidade, termos e exclusao', () => {
     assert.match(vercel, new RegExp(`"source": "${route}", "destination": "/${file.replace('.', '\\.')}"`));
   }
   assert.match(fs.readFileSync(path.join(root, 'privacidade.html'), 'utf8'), /localiza[cç][aã]o/i);
-  assert.match(fs.readFileSync(path.join(root, 'termos.html'), 'utf8'), /conte[uú]do proibido/i);
+  const terms = fs.readFileSync(path.join(root, 'termos.html'), 'utf8');
+  assert.match(terms, /conte[uú]do proibido/i);
+  assert.match(terms, /explora[cç][aã]o e ao abuso sexual infantil/i);
+  assert.match(terms, /material de abuso sexual infantil \(CSAM\)/i);
+  assert.match(terms, /NCMEC/i);
+  assert.match(terms, /ponto de contato designado para seguran[cç]a infantil/i);
   assert.match(fs.readFileSync(path.join(root, 'excluir-conta.html'), 'utf8'), /O que ser[aá] exclu[ií]do/i);
   for (const file of ['privacidade.html', 'termos.html', 'excluir-conta.html']) {
     const html = fs.readFileSync(path.join(root, file), 'utf8');
