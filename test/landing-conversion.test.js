@@ -20,7 +20,7 @@ test('landing geral comunica valor, reduz inseguranca e mostra demonstracao hone
   const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
   assert.match(html, /Ver minha vizinhança grátis/);
   assert.match(html, /Não pedimos telefone/);
-  assert.match(html, /Eventos locais/);
+  assert.doesNotMatch(html, /Eventos locais/);
   assert.match(html, /Exemplo ilustrativo/);
   assert.match(html, /conteúdo disponível depende das publicações de cada região/);
 });
@@ -41,7 +41,7 @@ test('cadastro do app tem duas etapas e nao exige apelido', () => {
 
 test('cadastro explica valor e privacidade com controles acessiveis', () => {
   const html = fs.readFileSync(path.join(root, 'app.html'), 'utf8');
-  assert.match(html, /Avisos, ajuda, serviços e eventos locais/);
+  assert.match(html, /Avisos, ajuda e serviços locais/);
   assert.match(html, /Criar conta e ver minha vizinhança/);
   assert.match(html, /Sua região, não seu endereço público/);
   assert.match(html, /aria-label="Mostrar senha"/);

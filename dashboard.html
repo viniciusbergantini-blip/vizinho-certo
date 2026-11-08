@@ -167,15 +167,6 @@
       <div id="paid-ads-table" class="panel"><div class="empty">Carregando anúncios...</div></div>
     </section>
     <section class="section">
-      <div class="section-head"><div class="section-title">Automação de eventos — São João</div><div class="section-note">Monitor diário das fontes oficiais e da atualização da agenda.</div></div>
-      <div id="events-automation" class="panel health-panel"><div class="empty">Verificando automação...</div></div>
-    </section>
-    <section class="section">
-      <div class="section-head"><div class="section-title">Eventos aguardando aprovação</div><div class="section-note">Revise data, local e fonte antes de publicar na agenda local.</div></div>
-      <div id="events-table" class="panel"><div class="empty">Carregando sugestões...</div></div>
-      <div id="events-error" class="error"></div>
-    </section>
-    <section class="section">
       <div class="section-head"><div class="section-title">Denúncias aguardando análise</div><div class="section-note">Fila privada de posts, comentários, anúncios e perfis denunciados pelos moradores.</div></div>
       <div id="reports-table" class="panel"><div class="empty">Carregando denúncias...</div></div>
       <div id="reports-error" class="error"></div>
@@ -200,7 +191,6 @@ let activeWindow = 'today';
 let currentSession = null;
 let autoRefreshTimer = null;
 let isLoadingMetrics = false;
-let pendingEvents = [];
 let pendingReports = [];
 
 window.addEventListener('DOMContentLoaded', init);
@@ -299,7 +289,7 @@ async function loadMetrics(){
     if(!resp.ok) throw new Error(data.error || 'Erro ao carregar dashboard');
     metrics = data;
     render();
-    await Promise.all([loadPendingEvents(session), loadPendingReports(session)]);
+    await loadPendingReports(session);
   } catch(e){
     setError('dashboard-error', e.message);
     document.getElementById('status').textContent = 'Falha ao carregar';
@@ -365,7 +355,6 @@ function render(){
   renderLinks(data.links || []);
   renderAccesses(data.accesses || []);
   renderPaidAds(metrics.operations?.paid_ads);
-  renderEventsAutomation(metrics.operations?.events_automation);
 }
 
 function renderPaidAds(data){
@@ -400,24 +389,6 @@ function renderPaidAds(data){
     <td>${statusBadge(reconciliationLabel(item.conciliacao),item.conciliacao==='conciliado')}</td>
   </tr>`).join('');
   document.getElementById('paid-ads-table').innerHTML=`<table><thead><tr><th>Data</th><th>Anúncio</th><th>Valor</th><th>Pagamento</th><th>Publicação</th><th>Validade</th><th>Conferência</th></tr></thead><tbody>${rows}</tbody></table>`;
-}
-
-function renderEventsAutomation(data){
-  const el=document.getElementById('events-automation');
-  if(!data){ el.innerHTML='<div class="empty">Não foi possível verificar a automação.</div>'; return; }
-  const labels={em_dia:'Atualização em dia',parcial:'Atualização parcial',falha:'Última coleta falhou',atrasado:'Atualização atrasada',sem_execucao:'Nenhuma execução registrada'};
-  const danger=['falha','atrasado','sem_execucao'].includes(data.status);
-  const warning=data.status==='parcial';
-  const coleta=data.ultima_coleta;
-  const coletados=coleta?`${coleta.encontrados} encontrados · ${coleta.inseridos} novos · ${coleta.atualizados} atualizados`:'Histórico detalhado começa após a próxima coleta.';
-  const falhas=coleta?.falhas?.length?`${coleta.falhas.length} fonte(s) com aviso`:'Fontes sem aviso registrado';
-  el.innerHTML=`
-    <div class="health-main"><span class="health-dot${danger?' danger':warning?' warning':''}"></span><div><div class="health-title">${labels[data.status]||'Status desconhecido'}</div><div class="health-description">${escapeHtml(data.programacao)}<br>${data.ultima_execucao_em?`Última atualização: ${formatDate(data.ultima_execucao_em)}`:'Sem horário disponível'}</div></div></div>
-    <div class="health-details">
-      <div class="health-detail"><span>Próximos eventos</span><strong>${data.proximos_eventos||0}</strong></div>
-      <div class="health-detail"><span>Resultado da coleta</span><strong>${escapeHtml(coletados)}</strong></div>
-      <div class="health-detail"><span>Fontes</span><strong>${escapeHtml(falhas)}</strong></div>
-    </div>`;
 }
 
 function paymentLabel(status){ return ({pago:'Debitado',nao_pago:'Não pago',nao_encontrado:'Não encontrado',nao_verificado:'Não verificado'})[status]||status; }
@@ -554,51 +525,6 @@ function formatNumber(value){
 
 function formatPercent(value){
   return Number(value||0).toLocaleString('pt-BR',{maximumFractionDigits:1});
-}
-
-async function loadPendingEvents(session=currentSession){
-  setError('events-error','');
-  try{
-    if(!session?.access_token) return;
-    const resp=await fetch('/api/eventos-admin',{headers:{Authorization:`Bearer ${session.access_token}`}});
-    const data=await resp.json();
-    if(!resp.ok) throw new Error(data.error||'Erro ao carregar eventos');
-    pendingEvents=data.eventos||[];
-    renderPendingEvents();
-  }catch(error){
-    pendingEvents=[];
-    document.getElementById('events-table').innerHTML='<div class="empty">Não foi possível carregar a fila.</div>';
-    setError('events-error',error.message);
-  }
-}
-
-function renderPendingEvents(){
-  const el=document.getElementById('events-table');
-  if(!pendingEvents.length){
-    el.innerHTML='<div class="empty">Nenhum evento aguardando aprovação.</div>';
-    return;
-  }
-  const rows=pendingEvents.map(item=>{
-    const fonte=safeExternalUrl(item.fonte_url);
-    return `<tr><td><strong>${escapeHtml(item.titulo)}</strong><div class="event-detail">${escapeHtml(item.descricao||'Sem descrição')}</div></td><td>${formatDate(item.inicio_em)}<div class="event-detail">${escapeHtml(item.categoria)}</div></td><td>${escapeHtml(item.local_nome)}<div class="event-detail">${escapeHtml([item.bairro,item.cidade,item.uf].filter(Boolean).join(' · '))}</div></td><td>${fonte?`<a href="${escapeHtml(fonte)}" target="_blank" rel="noopener">Abrir fonte</a>`:'Sem link'}</td><td><div class="moderation-actions"><button class="moderation-btn approve" onclick="moderateEvent('${escapeHtml(item.id)}','aprovado')">Aprovar</button><button class="moderation-btn reject" onclick="moderateEvent('${escapeHtml(item.id)}','rejeitado')">Rejeitar</button></div></td></tr>`;
-  }).join('');
-  el.innerHTML=`<table><thead><tr><th>Evento</th><th>Quando</th><th>Local</th><th>Fonte</th><th>Ação</th></tr></thead><tbody>${rows}</tbody></table>`;
-}
-
-async function moderateEvent(id,status){
-  const item=pendingEvents.find(evento=>evento.id===id);
-  const acao=status==='aprovado'?'aprovar':'rejeitar';
-  if(!item||!window.confirm(`Deseja ${acao} “${item.titulo}”?`)) return;
-  setError('events-error','');
-  try{
-    const session=await getActiveSession();
-    if(!session) throw new Error('Sessão expirada.');
-    const resp=await fetch('/api/eventos-admin',{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({id,status})});
-    const data=await resp.json();
-    if(!resp.ok) throw new Error(data.error||'Erro ao moderar evento');
-    pendingEvents=pendingEvents.filter(evento=>evento.id!==id);
-    renderPendingEvents();
-  }catch(error){ setError('events-error',error.message); }
 }
 
 async function loadPendingReports(session=currentSession){

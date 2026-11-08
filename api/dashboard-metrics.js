@@ -1,7 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const { buildWindow } = require('../lib/analytics-dashboard');
 const {
-  buildEventsAutomationOverview,
   buildPaidAdsOverview,
 } = require('../lib/dashboard-operations');
 const { enforceRateLimit, noStore, serverError } = require('../lib/api-security');
@@ -37,10 +36,9 @@ module.exports = async (req, res) => {
   const lastMonthStart = new Date(todayStart);
   lastMonthStart.setDate(lastMonthStart.getDate() - 29);
 
-  const [{ events, error }, paidAds, eventsAutomation] = await Promise.all([
+  const [{ events, error }, paidAds] = await Promise.all([
     fetchAnalyticsEvents(sb),
     fetchPaidAdsOverview(sb, now),
-    fetchEventsAutomationOverview(sb, now),
   ]);
 
   if (error) {
@@ -57,7 +55,6 @@ module.exports = async (req, res) => {
     },
     operations: {
       paid_ads: paidAds,
-      events_automation: eventsAutomation,
     },
   });
 };
@@ -161,47 +158,4 @@ async function fetchStripeCheckoutSessions(stripe) {
   }
 
   return sessoes;
-}
-
-async function fetchEventsAutomationOverview(sb, now) {
-  const [coletasResultado, atualizacaoResultado, proximosResultado] = await Promise.all([
-    sb
-      .from('eventos_coletas')
-      .select('status, encontrados, inseridos, atualizados, preservados, calendario, noticias, falhas, erro, executado_em')
-      .eq('cidade', 'São João da Boa Vista')
-      .eq('uf', 'SP')
-      .order('executado_em', { ascending: false })
-      .limit(10),
-    sb
-      .from('eventos')
-      .select('atualizado_em')
-      .eq('cidade', 'São João da Boa Vista')
-      .eq('uf', 'SP')
-      .eq('fonte_tipo', 'oficial')
-      .order('atualizado_em', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    sb
-      .from('eventos')
-      .select('id', { count: 'exact', head: true })
-      .eq('cidade', 'São João da Boa Vista')
-      .eq('uf', 'SP')
-      .eq('status', 'aprovado')
-      .gte('inicio_em', now.toISOString()),
-  ]);
-
-  const tabelaAindaNaoCriada = coletasResultado.error?.code === 'PGRST205'
-    || /eventos_coletas/i.test(coletasResultado.error?.message || '');
-  if (coletasResultado.error && !tabelaAindaNaoCriada) {
-    console.error('Dashboard events collection history error:', coletasResultado.error);
-  }
-  if (atualizacaoResultado.error) console.error('Dashboard events latest update error:', atualizacaoResultado.error);
-  if (proximosResultado.error) console.error('Dashboard upcoming events count error:', proximosResultado.error);
-
-  return buildEventsAutomationOverview({
-    coletas: coletasResultado.error ? [] : (coletasResultado.data || []),
-    ultimaAtualizacaoEvento: atualizacaoResultado.data?.atualizado_em || null,
-    proximosEventos: proximosResultado.count || 0,
-    agora: now,
-  });
 }

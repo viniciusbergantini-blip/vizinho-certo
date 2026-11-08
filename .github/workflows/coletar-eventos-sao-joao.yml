@@ -1,8 +1,6 @@
 name: Coletar eventos de São João da Boa Vista
 
 on:
-  schedule:
-    - cron: '0 9 * * *'
   workflow_dispatch:
 
 permissions:
@@ -15,6 +13,7 @@ concurrency:
 
 jobs:
   coletar:
+    if: ${{ false }} # Recurso de eventos encerrado.
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
