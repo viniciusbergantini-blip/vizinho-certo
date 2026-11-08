@@ -452,6 +452,8 @@
   @media(min-width:480px){.tela{max-width:420px;margin:0 auto}body{background:#E8E0CC}.fab{right:calc(50% - 210px + 24px)}.panico-fab{left:calc(50% - 210px + 16px)!important;right:auto!important}}
   .link-btn{appearance:none;border:0;background:transparent;padding:2px 0;color:#7A4036;font:600 12px Arial,sans-serif;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
   .link-btn:hover,.link-btn:focus-visible{color:#A32D2D;outline-offset:3px}
+.sheet-back{display:block;background:transparent;border:0;color:var(--verde);font:500 15px 'DM Sans',sans-serif;padding:12px 16px;cursor:pointer;text-align:left;}
+.sheet-back[hidden]{display:none;} .panico-sheet .sheet-back{color:#fff;} .fav{border:0;font:inherit;cursor:pointer;} .bpost:disabled{opacity:.65;cursor:wait;}
 </style>
 </head>
 <body>
@@ -462,7 +464,7 @@
 </div>
 
 <div class="tela ativa" id="t-loading">
-  <div class="loading-logo">Vizinho<br><span>Certo</span></div>
+  <div class="loading-logo"><img src="/icon-512.png?v=2" alt="Vizinho Certo" width="112" height="112" style="border-radius:24px"></div>
   <div class="loading-dots"><div class="ld"></div><div class="ld"></div><div class="ld"></div></div>
 </div>
 
@@ -599,13 +601,14 @@
 <div class="tela" id="t-feed">
   <div class="fh">
     <div><h1>Vizinho Certo</h1><p id="fsub">Carregando...</p></div>
-    <div class="fav" id="fav">?</div>
+    <button type="button" class="fav" id="fav" onclick="navTab('perfil',document.getElementById('nav-perfil'))" aria-label="Abrir meu perfil">?</button>
   </div>
   <button class="home-service-entry" type="button" onclick="navTab('servicos',document.getElementById('nav-servicos'))" aria-label="Buscar serviços e prestadores próximos">
     <span class="home-service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg></span>
     <span class="home-service-copy"><strong>Precisa de um serviço no bairro?</strong><small>Encontre profissionais e comércios perto de você</small></span>
     <span class="home-service-arrow" aria-hidden="true">›</span>
   </button>
+  <button type="button" id="app-back" class="sheet-back" hidden onclick="voltarApp()">← Voltar ao feed</button>
   <div class="ft" id="feed-tabs">
     <div class="ftab ativo" onclick="filtrar('tudo',this)">Tudo</div>
     <div class="ftab" onclick="filtrar('problema',this)">🚧 Problemas</div>
@@ -741,7 +744,7 @@
         <span>Enviando foto...</span>
       </div>
     </div>
-    <div class="mac"><button class="bcanc" onclick="fecharM()">Cancelar</button><button class="bpost" onclick="postar()">Publicar →</button></div>
+    <div class="mac"><button class="bcanc" onclick="fecharM()">Cancelar</button><button id="post-submit" class="bpost" onclick="postar()">Publicar →</button></div>
   </div>
 </div>
 
@@ -1953,58 +1956,37 @@ function getApoiosLocais(){ try{ return JSON.parse(localStorage.getItem('vc_apoi
 function salvarApoioLocal(id){ const a=getApoiosLocais(); if(!a.includes(id)){ a.push(id); localStorage.setItem('vc_apoios', JSON.stringify(a)); } }
 function removerApoioLocal(id){ const a=getApoiosLocais().filter(x=>x!==id); localStorage.setItem('vc_apoios', JSON.stringify(a)); }
 
+let publicandoPost=false;
 async function postar(){
-  const txt = document.getElementById('ptxt').value.trim();
-  if(!txt && !fotoFile){ toast('Escreva algo ou adicione uma foto!'); return; }
-  if(txt && temPalavrão(txt)){ toast('⚠️ Revise o texto — sem palavrões.'); return; }
-  if(txt && temAnuncio(txt)){
-    toast('🛒 Para anunciar use a aba Serviços!');
-    setTimeout(()=>{ fecharM(); navTab('servicos', document.getElementById('nav-servicos')); abrirAnun(); }, 1500);
-    return;
-  }
-  if(!E.userId){ toast('Você precisa estar logado!'); return; }
-  const eraPrimeiroPost=!E.posts.some(p=>p.usuario_id===E.userId);
-  const btn = document.querySelector('.bpost');
-  btn.disabled=true; btn.textContent='Publicando...';
-  let uploadedUrl = null;
-  if(fotoFile){
-    document.getElementById('foto-loading').style.display='flex';
-    try{ uploadedUrl = await uploadFoto(fotoFile); }
-    catch(e){ toast('Erro ao enviar foto: ' + e.message); document.getElementById('foto-loading').style.display='none'; btn.disabled=false; btn.textContent='Publicar →'; return; }
-    document.getElementById('foto-loading').style.display='none';
-  }
-  const {data:{session}}=await sb.auth.getSession();
-  let data=null,error=null;
+  if(publicandoPost) return;
+  const txt=document.getElementById('ptxt').value.trim();
+  if(!txt&&!fotoFile){toast('Escreva algo ou adicione uma foto!');return;}
+  if(txt&&temPalavrão(txt)){toast('⚠️ Revise o texto — sem palavrões.');return;}
+  if(txt&&temAnuncio(txt)){toast('🛒 Para anunciar use a aba Serviços!');return;}
+  if(!E.userId){toast('Você precisa estar logado!');return;}
+  publicandoPost=true;
+  const btn=document.getElementById('post-submit');
+  const tipoPublicacao=tipoAt;
+  const primeira=!E.posts.some(p=>p.usuario_id===E.userId);
+  btn.disabled=true;btn.textContent='Enviando foto e publicação...';
   try{
+    if(fotoFile&&!fotoUrl){
+      document.getElementById('foto-loading').style.display='flex';
+      fotoUrl=await uploadFoto(fotoFile);
+    }
+    const {data:{session}}=await sb.auth.getSession();
     if(!session?.access_token) throw new Error('Sua sessão expirou. Entre novamente.');
-    const resposta=await fetch(apiUrl('/api/posts'),{
-      method:'POST',
-      headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},
-      body:JSON.stringify({action:'create',tipo:tipoAt,texto:txt||'',foto_url:uploadedUrl})
-    });
+    const resposta=await fetch(apiUrl('/api/posts'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token},body:JSON.stringify({action:'create',tipo:tipoPublicacao,texto:txt,foto_url:fotoUrl})});
     const resultado=await resposta.json();
     if(!resposta.ok) throw new Error(resultado.error||'Erro ao publicar');
-    data=resultado.post;
-  }catch(e){error=e;}
-  btn.disabled=false; btn.textContent='Publicar →';
-  if(error){ toast('Erro ao publicar: ' + error.message); return; }
-  fecharM();
-  E.filtro='tudo';
-  document.querySelectorAll('.ftab').forEach((t,i)=>t.classList.toggle('ativo',i===0));
-  E.posts.unshift({
-    id: data.id, nome: E.apelido, dist:'0m', tipo:tipoAt,
-    txt: txt||'', ap:0, apd:false, av: E.apelido.charAt(0).toUpperCase(),
-    cor: COR[Math.abs(hashStr(data.id+'')) % COR.length],
-    foto_url: uploadedUrl, usuario_id: E.userId, criado_em:data.criado_em||new Date().toISOString(), coms:[]
-  });
-  render();
-  toast('Publicado! 🎉');
-  if(eraPrimeiroPost && !localStorage.getItem('vc_first_post_tracked')){
-    localStorage.setItem('vc_first_post_tracked','1');
-    trackAppEvent('first_post_created',{source:'composer'});
-  }
+    const data=resultado.post;
+    E.posts=E.posts.filter(p=>p.id!==data.id);
+    E.posts.unshift({id:data.id,nome:E.apelido,dist:'0m',tipo:tipoPublicacao,txt,ap:0,apd:false,av:E.apelido.charAt(0).toUpperCase(),cor:COR[Math.abs(hashStr(data.id+''))%COR.length],foto_url:fotoUrl,usuario_id:E.userId,criado_em:data.criado_em||new Date().toISOString(),coms:[]});
+    publicandoPost=false;fecharM();render();toast('Publicado! 🎉');
+    if(primeira&&!localStorage.getItem('vc_first_post_tracked')){localStorage.setItem('vc_first_post_tracked','1');trackAppEvent('first_post_created',{source:'composer'});}
+  }catch(error){toast('Erro ao publicar: '+error.message);}
+  finally{publicandoPost=false;btn.disabled=false;btn.textContent='Publicar →';document.getElementById('foto-loading').style.display='none';}
 }
-
 async function apoiar(id){
   const p = E.posts.find(x=>x.id===id); if(!p) return;
   const anterior=p.apd;
@@ -2472,21 +2454,41 @@ function ligarAnuncio(id,telefone,surface){
 const EXTENSOES_IMAGEM=Object.freeze({'image/jpeg':'jpg','image/png':'png','image/webp':'webp'});
 let fotoFile = null, fotoUrl = null;
 function previewFoto(input){
+  if(publicandoPost) return;
   const file = input.files[0]; if(!file) return;
   if(file.size > 5*1024*1024){ toast('Foto muito grande! Máximo 5MB.'); input.value=''; return; }
   if(!extensaoImagemSegura(file)){ toast('Use uma imagem JPG, PNG ou WebP.'); input.value=''; return; }
-  fotoFile = file;
+  fotoFile = file; fotoUrl=null;
   const reader = new FileReader();
   reader.onload = e => { document.getElementById('foto-img').src = e.target.result; document.getElementById('foto-preview').style.display = ''; };
   reader.readAsDataURL(file);
 }
 function removerFoto(){
+  if(publicandoPost) return;
   fotoFile=null; fotoUrl=null;
   document.getElementById('foto-input').value='';
   document.getElementById('foto-preview').style.display='none';
   document.getElementById('foto-img').src='';
 }
+async function prepararFotoPublicacao(file){
+  if(file.size<500*1024) return file;
+  const url=URL.createObjectURL(file);
+  try{
+    const img=new Image();
+    await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('Não foi possível ler a foto.'));img.src=url;});
+    const escala=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight));
+    const canvas=document.createElement('canvas');
+    canvas.width=Math.max(1,Math.round(img.naturalWidth*escala));canvas.height=Math.max(1,Math.round(img.naturalHeight*escala));
+    const ctx=canvas.getContext('2d');
+    if(!ctx) return file;
+    ctx.drawImage(img,0,0,canvas.width,canvas.height);
+    const blob=await new Promise(resolve=>canvas.toBlob(resolve,file.type,.82));
+    return blob&&blob.size<file.size?new File([blob],file.name,{type:blob.type}):file;
+  }finally{URL.revokeObjectURL(url);}
+}
+
 async function uploadFoto(file){
+  file=await prepararFotoPublicacao(file);
   const ext=extensaoImagemSegura(file);
   if(!ext) throw new Error('Formato de imagem não permitido.');
   const nome=crypto.randomUUID?crypto.randomUUID():`${Date.now()}_${Math.random().toString(36).slice(2)}`;
@@ -2517,7 +2519,7 @@ function verFotoPost(id){
 
 let tipoAt='problema';
 function abrirM(){document.getElementById('mpost').classList.add('ab');}
-function fecharM(){ document.getElementById('mpost').classList.remove('ab'); document.getElementById('ptxt').value=''; removerFoto(); }
+function fecharM(){ if(publicandoPost){toast('Aguarde a publicação terminar.');return;} document.getElementById('mpost').classList.remove('ab'); document.getElementById('ptxt').value=''; removerFoto(); }
 function selTipo(t,el){tipoAt=t;document.querySelectorAll('.tbtn').forEach(b=>b.classList.remove('at'));el.classList.add('at');}
 
 async function abrirIA(id){
@@ -2550,6 +2552,7 @@ let anunciosLocationStatus='precise';
 let servicoBusca='';
 
 function navTab(tab,el){
+  document.getElementById('app-back').hidden=tab==='feed';
   const feedEl = document.getElementById('feed');
   const feedVisivel = feedEl.style.display === '' || feedEl.style.display === 'block';
   if(tab === 'feed' && feedVisivel) {
@@ -3128,28 +3131,21 @@ function fecharPanico(){document.getElementById('mpanico').classList.remove('ab'
 async function enviarAlerta(){
   const btn=document.getElementById('btn-alertar');
   if(btn.disabled) return;
-  btn.disabled=true;btn.innerHTML='⏳ Enviando alerta...';
-  if(E.userId){
-    try{
-      const {data:{session}}=await sb.auth.getSession();
-      if(!session?.access_token) throw new Error('Sua sessão expirou.');
-      const resposta=await fetch(apiUrl('/api/posts'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({action:'panic'})});
-      const resultado=await resposta.json();
-      if(!resposta.ok) throw new Error(resultado.error||'Não foi possível enviar o alerta');
-    }catch(error){
-      btn.disabled=false;btn.innerHTML='📣 Alertar todos os vizinhos do raio';
-      toast(error.message);return;
-    }
-  }
-  setTimeout(()=>{
-    const vc=Math.floor(3+(E.raio/100));
-    document.getElementById('alerta-count').textContent=vc;
+  btn.disabled=true;btn.textContent='Enviando alerta...';
+  try{
+    const {data:{session}}=await sb.auth.getSession();
+    if(!session?.access_token) throw new Error('Entre na sua conta para enviar o alerta.');
+    const resposta=await fetch(apiUrl('/api/posts'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token},body:JSON.stringify({action:'panic'})});
+    const resultado=await resposta.json();
+    if(!resposta.ok) throw new Error(resultado.error||'Não foi possível enviar o alerta');
+    const total=Number(resultado.notified_users)||0;
+    const mensagem=total>0?'Alerta publicado. Notificação enviada para '+total+' vizinho(s).':'Alerta publicado no feed. Nenhum vizinho recebeu notificação push neste envio.';
+    document.getElementById('alerta-conf').textContent=mensagem+' A entrega ou leitura não é garantida. Em emergência, ligue para o serviço responsável.';
     document.getElementById('alerta-conf').classList.add('vis');
-    btn.classList.add('enviado');btn.innerHTML='✓ Alerta enviado para '+vc+' vizinhos!';
+    btn.classList.add('enviado');btn.textContent='✓ Alerta publicado';
     carregarPosts();
-  },1200);
+  }catch(error){btn.disabled=false;btn.textContent='📣 Alertar todos os vizinhos do raio';toast(error.message);}
 }
-
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('vis');setTimeout(()=>t.classList.remove('vis'),2500);}
 
 async function confirmarPublicacaoAnuncio(sessionId){
@@ -3207,6 +3203,22 @@ async function verificarRetornoPagamento(){
     window.history.replaceState({},'',window.location.pathname);
     setTimeout(()=>toast('Pagamento cancelado. Tente novamente quando quiser.'),500);
   }
+}
+
+// Controles de retorno acessíveis, inclusive nas folhas abertas sobre o app.
+const fecharFolhas={mpost:fecharM,'m-endereco':fecharAlterarEndereco,manun:fecharAnun,'medit-anun':fecharEditarAnuncio,mpanico:fecharPanico,mia:fecharIA,'m-perfil-servico':fecharPerfilServico};
+Object.entries(fecharFolhas).forEach(([id,fechar])=>{
+  const overlay=document.getElementById(id);
+  if(!overlay) return;
+  const voltar=document.createElement('button');
+  voltar.type='button';voltar.className='sheet-back';voltar.textContent='← Voltar';voltar.setAttribute('aria-label','Voltar');
+  voltar.onclick=fechar;overlay.firstElementChild.prepend(voltar);
+  overlay.addEventListener('click',event=>{if(event.target===overlay)fechar();});
+});
+function voltarApp(){
+  const aberta=Object.keys(fecharFolhas).reverse().find(id=>document.getElementById(id)?.classList.contains('ab'));
+  if(aberta){fecharFolhas[aberta]();return;}
+  navTab('feed',document.getElementById('nav-feed'));
 }
 </script>
 </body>

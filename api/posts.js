@@ -354,11 +354,16 @@ async function createPanic(req, res, sb, userId) {
   }).select('id').single();
   if (error) throw error;
 
-  notifyNearby(sb, profile, {
-    title: '🆘 ALERTA DE EMERGÊNCIA!',
-    body: `${name} acionou o botão de pânico nas proximidades.`,
-  }, { excludeUserId: userId }).catch(error => console.error('Panic notification error:', error));
-  return res.status(201).json({ post_id: data.id });
+  let notifications = { notified_users: 0 };
+  try {
+    notifications = await notifyNearby(sb, profile, {
+      title: '🆘 ALERTA DE EMERGÊNCIA!',
+      body: `${name} acionou o botão de pânico nas proximidades.`,
+    }, { excludeUserId: userId });
+  } catch (error) {
+    console.error('Panic notification error:', error);
+  }
+  return res.status(201).json({ post_id: data.id, notified_users: notifications.notified_users || 0 });
 }
 
 async function blockUser(req, res, sb, userId) {

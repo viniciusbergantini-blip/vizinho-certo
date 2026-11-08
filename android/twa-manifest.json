@@ -20,8 +20,8 @@
     "path": "./vizinhocerto-upload.keystore",
     "alias": "vizinhocerto-upload"
   },
-  "appVersionName": "1.0.4",
-  "appVersionCode": 8,
+  "appVersionName": "1.0.5",
+  "appVersionCode": 9,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://www.vizinhocerto.com.br/manifest.json",
