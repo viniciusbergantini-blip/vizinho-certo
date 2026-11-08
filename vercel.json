@@ -31,6 +31,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/api/moderacao-admin", "destination": "/api/dashboard-metrics?rota=moderacao" },
     { "source": "/api/anuncio-update", "destination": "/api/anuncio?action=update" },
     { "source": "/api/anuncio-delete", "destination": "/api/anuncio?action=delete" },
     { "source": "/api/eventos-admin", "destination": "/api/eventos?rota=admin" },

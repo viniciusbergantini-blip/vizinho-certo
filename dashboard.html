@@ -64,6 +64,7 @@
   .moderation-btn{border:0;border-radius:7px;padding:7px 10px;color:white;cursor:pointer;font-weight:700;font-size:12px;}
   .moderation-btn.approve{background:var(--verde);}
   .moderation-btn.reject{background:var(--laranja);}
+  .moderation-btn.review{background:#475569;}
   .event-detail{font-size:12px;color:var(--muted);line-height:1.45;max-width:360px;}
   .operations-summary{grid-template-columns:repeat(5,minmax(140px,1fr));margin-bottom:10px;}
   .operations-alert{padding:11px 14px;border-radius:8px;background:#FFF7ED;border:1px solid #FDBA74;color:#9A3412;font-size:13px;line-height:1.45;margin-bottom:10px;}
@@ -174,6 +175,11 @@
       <div id="events-table" class="panel"><div class="empty">Carregando sugestões...</div></div>
       <div id="events-error" class="error"></div>
     </section>
+    <section class="section">
+      <div class="section-head"><div class="section-title">Denúncias aguardando análise</div><div class="section-note">Fila privada de posts, comentários, anúncios e perfis denunciados pelos moradores.</div></div>
+      <div id="reports-table" class="panel"><div class="empty">Carregando denúncias...</div></div>
+      <div id="reports-error" class="error"></div>
+    </section>
     <div id="dashboard-error" class="error"></div>
   </section>
 </main>
@@ -195,6 +201,7 @@ let currentSession = null;
 let autoRefreshTimer = null;
 let isLoadingMetrics = false;
 let pendingEvents = [];
+let pendingReports = [];
 
 window.addEventListener('DOMContentLoaded', init);
 sb.auth.onAuthStateChange((event, session) => {
@@ -292,7 +299,7 @@ async function loadMetrics(){
     if(!resp.ok) throw new Error(data.error || 'Erro ao carregar dashboard');
     metrics = data;
     render();
-    await loadPendingEvents(session);
+    await Promise.all([loadPendingEvents(session), loadPendingReports(session)]);
   } catch(e){
     setError('dashboard-error', e.message);
     document.getElementById('status').textContent = 'Falha ao carregar';
@@ -592,6 +599,60 @@ async function moderateEvent(id,status){
     pendingEvents=pendingEvents.filter(evento=>evento.id!==id);
     renderPendingEvents();
   }catch(error){ setError('events-error',error.message); }
+}
+
+async function loadPendingReports(session=currentSession){
+  setError('reports-error','');
+  try{
+    if(!session?.access_token) return;
+    const resp=await fetch('/api/moderacao-admin',{headers:{Authorization:`Bearer ${session.access_token}`}});
+    const data=await resp.json();
+    if(!resp.ok) throw new Error(data.error||'Erro ao carregar denúncias');
+    pendingReports=data.denuncias||[];
+    renderPendingReports();
+  }catch(error){
+    pendingReports=[];
+    document.getElementById('reports-table').innerHTML='<div class="empty">Não foi possível carregar a fila.</div>';
+    setError('reports-error',error.message);
+  }
+}
+
+function reportContentText(report){
+  const item=report.conteudo||{};
+  return item.texto||item.descricao||item.nome||item.apelido||'O conteúdo já não está disponível.';
+}
+
+function renderPendingReports(){
+  const el=document.getElementById('reports-table');
+  if(!pendingReports.length){
+    el.innerHTML='<div class="empty">Nenhuma denúncia aguardando análise.</div>';
+    return;
+  }
+  const rows=pendingReports.map(report=>{
+    const profile=report.tipo_conteudo==='perfil';
+    const removeButton=profile?'':`<button class="moderation-btn reject" onclick="moderateReport('${escapeHtml(report.id)}','remove')">Remover conteúdo</button>`;
+    return `<tr><td><span class="badge">${escapeHtml(report.tipo_conteudo)}</span><div class="event-detail">${formatDate(report.criado_em)}</div></td><td><strong>${escapeHtml(report.motivo)}</strong><div class="event-detail">${escapeHtml(reportContentText(report))}</div></td><td><div class="moderation-actions">${removeButton}<button class="moderation-btn review" onclick="moderateReport('${escapeHtml(report.id)}','review')">${profile?'Perfil revisado':'Manter'}</button><button class="moderation-btn approve" onclick="moderateReport('${escapeHtml(report.id)}','discard')">Descartar denúncia</button></div></td></tr>`;
+  }).join('');
+  el.innerHTML=`<table><thead><tr><th>Tipo</th><th>Denúncia e conteúdo</th><th>Decisão</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+async function moderateReport(id,action){
+  const report=pendingReports.find(item=>item.id===id);
+  if(!report) return;
+  const labels={remove:'remover o conteúdo denunciado',review:'concluir a revisão',discard:'descartar a denúncia'};
+  if(!window.confirm(`Deseja ${labels[action]}?`)) return;
+  const note=window.prompt('Observação interna opcional (não será exibida aos usuários):','');
+  if(note===null) return;
+  setError('reports-error','');
+  try{
+    const session=await getActiveSession();
+    if(!session) throw new Error('Sessão expirada.');
+    const resp=await fetch('/api/moderacao-admin',{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({id,action,note})});
+    const data=await resp.json();
+    if(!resp.ok) throw new Error(data.error||'Erro ao moderar denúncia');
+    pendingReports=pendingReports.filter(item=>item.id!==id);
+    renderPendingReports();
+  }catch(error){ setError('reports-error',error.message); }
 }
 
 function metric(label, value, hint){
