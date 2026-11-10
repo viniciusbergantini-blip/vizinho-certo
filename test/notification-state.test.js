@@ -8,7 +8,7 @@ const code=html.slice(html.indexOf('let registroPushEmAndamento='),html.indexOf(
 
 function setup({storage=new Map(),subscribed=false,registered=false,permission='default'}={}){
   const nodes=new Map(),calls=[],history=[],controls={failStatus:false,failRegister:false};
-  const counts={subscribes:0,unsubscribes:0};
+  const counts={subscribes:0,unsubscribes:0,permissionRequests:0};
   const node=id=>{if(!nodes.has(id)){
     let value='';const el={disabled:false,checked:false};
     Object.defineProperty(el,'textContent',{get:()=>value,set:v=>{value=v;history.push({id,value:v});}});nodes.set(id,el);
@@ -16,7 +16,7 @@ function setup({storage=new Map(),subscribed=false,registered=false,permission='
   const makeSub=()=>({toJSON:()=>({endpoint:'test'}),unsubscribe:async()=>{counts.unsubscribes++;sub=null;return true;}});
   let sub=subscribed?makeSub():null;
   const reg={pushManager:{getSubscription:async()=>sub,subscribe:async()=>{counts.subscribes++;return sub=makeSub();}}};
-  const notification={permission,requestPermission:async()=>notification.permission='granted'};
+  const notification={permission,requestPermission:async()=>{counts.permissionRequests++;return notification.permission='granted';}};
   const context={E:{userId:'reader'},VC_PLAY_STORE_MODE:true,Notification:notification,
     window:{Notification:notification,PushManager:function(){},location:{search:'?vc_android_notifications=0'}},
     navigator:{userAgent:'Android',serviceWorker:{register:async()=>reg,ready:Promise.resolve(reg),getRegistration:async()=>reg}},
@@ -102,4 +102,41 @@ test('falha de cadastro não mostra sucesso e permite nova tentativa',async()=>{
   assert.equal(f.node('push-toggle').disabled,false);
   f.controls.failRegister=false;await f.context.acaoNotificacaoPerfil();
   assert.equal(f.node('push-toggle').textContent,'Desativar notificações');
+});
+
+test('convite aparece após login sem solicitar permissão automaticamente',()=>{
+  const f=setup();f.context.oferecerNotificacoesPosLogin();
+  assert.equal(f.node('notification-welcome').hidden,false);
+  assert.equal(f.counts.permissionRequests,0);assert.equal(f.calls.length,0);
+  f.context.E.userId=null;f.context.oferecerNotificacoesPosLogin();
+  assert.equal(f.node('notification-welcome').hidden,true);
+});
+
+test('Agora não mantém acesso e não insiste ao entrar novamente',()=>{
+  const f=setup();f.context.adiarNotificacoesEntrada();
+  const next=setup({storage:f.storage});next.context.oferecerNotificacoesPosLogin();
+  assert.equal(next.node('notification-welcome').hidden,true);
+  assert.equal(next.context.E.userId,'reader');assert.equal(next.calls.length,0);
+});
+
+test('clique após login pede permissão no gesto e só conclui após cadastro aceito',async()=>{
+  const f=setup();const pending=f.context.ativarNotificacoesEntrada(f.node('notification-welcome-enable'));
+  assert.equal(f.counts.permissionRequests,1);
+  assert.notEqual(f.storage.get('vc_push_offer_seen_reader'),'1');
+  await pending;
+  assert.equal(f.storage.get('vc_push_registered_reader'),'1');
+  assert.equal(f.storage.get('vc_push_offer_seen_reader'),'1');
+  assert.equal(f.node('notification-welcome').hidden,true);
+});
+
+test('convite respeita permissão recusada, desativação explícita e falha de cadastro',async()=>{
+  const denied=setup({permission:'denied'});denied.context.oferecerNotificacoesPosLogin();
+  assert.equal(denied.node('notification-welcome').hidden,true);
+  const off=setup({storage:new Map([['vc_push_disabled_reader','1']])});off.context.oferecerNotificacoesPosLogin();
+  assert.equal(off.node('notification-welcome').hidden,true);
+  const failed=setup();failed.controls.failRegister=true;
+  await failed.context.ativarNotificacoesEntrada(failed.node('notification-welcome-enable'));
+  assert.notEqual(failed.storage.get('vc_push_offer_seen_reader'),'1');
+  assert.match(failed.node('notification-welcome-status').textContent,/Não foi possível/);
+  assert.equal(failed.node('notification-welcome-enable').disabled,false);
 });

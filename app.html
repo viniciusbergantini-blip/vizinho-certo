@@ -603,6 +603,13 @@
     <div><h1>Vizinho Certo</h1><p id="fsub">Carregando...</p></div>
     <button type="button" class="fav" id="fav" onclick="navTab('perfil',document.getElementById('nav-perfil'))" aria-label="Abrir meu perfil">?</button>
   </div>
+  <section id="notification-welcome" class="profile-help-card" style="margin:12px 16px;" hidden aria-labelledby="notification-welcome-title">
+    <div id="notification-welcome-title" class="vc-install-profile-title">Receber avisos da sua vizinhança?</div>
+    <p class="vc-install-profile-copy">Ative as notificações para acompanhar pedidos de ajuda, SOS e novas publicações perto de você.</p>
+    <p id="notification-welcome-status" class="vc-install-profile-copy" role="status">Ao tocar em ativar, permita as notificações na confirmação do aparelho.</p>
+    <button type="button" id="notification-welcome-enable" class="vc-install-button" onclick="ativarNotificacoesEntrada(this)">Ativar notificações</button>
+    <button type="button" class="vc-install-button vc-install-profile" onclick="adiarNotificacoesEntrada()">Agora não</button>
+  </section>
   <button class="home-service-entry" type="button" onclick="navTab('servicos',document.getElementById('nav-servicos'))" aria-label="Buscar serviços e prestadores próximos">
     <span class="home-service-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg></span>
     <span class="home-service-copy"><strong>Precisa de um serviço no bairro?</strong><small>Encontre profissionais e comércios perto de você</small></span>
@@ -1095,6 +1102,7 @@ function lembrarCadastroNotificacoes(enabled){
   localStorage.setItem(chaveCadastroNotificacoes(),enabled?'1':'0');
   localStorage.setItem(chaveCadastroNotificacoes()+'_daily',resumoAutomaticoAtivo?'1':'0');
   notificacoesRegistradas=enabled;
+  if(enabled===true){const offer=document.getElementById('notification-welcome');if(offer)offer.hidden=true;}
 }
 function notificacoesAndroid(){return VC_PLAY_STORE_MODE&&/Android/i.test(navigator.userAgent||'');}
 function atualizarEstadoNotificacoes({enabled=notificacoesRegistradas,checking=false,detail=''}={}){
@@ -1241,6 +1249,39 @@ document.addEventListener('visibilitychange',()=>{
   if(!document.hidden&&E.userId&&document.getElementById('push-toggle')) sincronizarNotificacoesConcedidas();
 });
 
+function chaveConviteNotificacoes(){return 'vc_push_offer_seen_'+(E.userId||'guest');}
+function oferecerNotificacoesPosLogin(){
+  const card=document.getElementById('notification-welcome');
+  if(!card) return;
+  const presentation=window.VizinhoCertoInstall?.getNotificationPresentation();
+  const unavailable=!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)
+    ||presentation?.status==='install_required'||presentation?.status==='unsupported';
+  card.hidden=!E.userId||unavailable||Notification.permission==='denied'||notificacoesRegistradas===true
+    ||localStorage.getItem(chaveCadastroNotificacoes())==='1'||notificacoesDesativadasPeloUsuario()
+    ||localStorage.getItem(chaveConviteNotificacoes())==='1';
+}
+function adiarNotificacoesEntrada(){
+  localStorage.setItem(chaveConviteNotificacoes(),'1');
+  const card=document.getElementById('notification-welcome');if(card)card.hidden=true;
+}
+async function ativarNotificacoesEntrada(button){
+  if(button.disabled) return;
+  const userId=E.userId;
+  button.disabled=true;
+  try{
+    // Keep the browser permission request inside this explicit click, after login has finished.
+    const activated=await registrarNotificacoes({solicitarPermissao:true});
+    if(E.userId!==userId) return;
+    if(activated){adiarNotificacoesEntrada();toast('Notificações ativadas neste aparelho.');}
+    else{
+      const status=document.getElementById('notification-welcome-status');
+      if(status) status.textContent=Notification.permission==='denied'
+        ?'A permissão está bloqueada. Permita notificações nas configurações do aplicativo no celular. Você pode continuar usando o app.'
+        :'Não foi possível concluir agora. Tente novamente ou ative depois no Perfil.';
+    }
+  }finally{button.disabled=false;}
+}
+
 function atualizarEstadoRede(){
   document.getElementById('offline-banner')?.classList.toggle('vis',!navigator.onLine);
 }
@@ -1272,6 +1313,7 @@ function concluirOnboarding(){
   fecharOnboarding();
 }
 function agendarOnboarding(){
+  oferecerNotificacoesPosLogin();
   if(localStorage.getItem('vc_onboarding_seen_v1')) return;
   setTimeout(()=>abrirOnboarding({automatico:true}),600);
 }
@@ -2670,6 +2712,8 @@ let anunciosLocationStatus='precise';
 let servicoBusca='';
 
 function navTab(tab,el){
+  const offer=document.getElementById('notification-welcome');
+  if(tab==='feed') oferecerNotificacoesPosLogin();else if(offer)offer.hidden=true;
   document.getElementById('app-back').hidden=tab==='feed';
   const feedEl = document.getElementById('feed');
   const feedVisivel = feedEl.style.display === '' || feedEl.style.display === 'block';

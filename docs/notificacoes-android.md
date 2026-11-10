@@ -72,3 +72,11 @@ Pacote: `android/VizinhoCerto-1.0.8-v12-Notificacoes.aab`. Assinatura: `android/
 Restaurada a abertura direta do aplicativo. Notificações padrão para SOS, publicações e avisos. Removidos os testes e o som especial. Correções na consulta e na persistência da ativação de notificações.
 </pt-BR>
 ```
+
+### Convite após cadastro ou login
+
+Após entrar no feed pelos fluxos existentes de cadastro, login e sessão restaurada, `agendarOnboarding()` também oferece um cartão de ativação de notificações. O cartão tem **Ativar notificações** e **Agora não**. A chamada a `Notification.requestPermission()` acontece no clique explícito, depois da autenticação, preservando o gesto exigido pelos navegadores. Nenhuma permissão é solicitada automaticamente ao renderizar a tela.
+
+O cartão não aparece para quem já ativou, desativou explicitamente, recusou a permissão no sistema ou dispensou o convite naquele aparelho/conta. Também não aparece quando é necessário instalar primeiro no iPhone ou não há suporte. Recusar ou adiar não bloqueia cadastro/login nem inscreve o usuário. Falha no registro permite nova tentativa e não informa sucesso. A opção de resumo automático continua separada.
+
+A inclusão é web e não exige gerar outro AAB além do 1.0.8 já preparado. Não tratar consentimento como confirmação de entrega: permissões do Android e condições do aparelho continuam necessárias. Validação: 143 testes Node e build público.
