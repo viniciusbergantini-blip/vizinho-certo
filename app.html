@@ -19,7 +19,7 @@
 <title>Vizinho Certo</title>
 <link rel="icon" type="image/svg+xml" href="/icon.svg">
 <link rel="manifest" href="/manifest.json">
-<script src="/app-runtime.js"></script>
+<script src="/app-runtime.js?v=20261110-auth1"></script>
 <script src="/install-app.js"></script>
 <script src="/engagement.js"></script>
 <script src="/emergency-contacts.js"></script>
@@ -810,6 +810,15 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const LEGAL_VERSION = '2026-11-02';
 const apiUrl = window.VizinhoCertoRuntime.apiUrl;
+const apiAutenticada=window.VizinhoCertoRuntime.createAuthenticatedFetch(sb,{
+  onInvalidSession:async userId=>{
+    if(userId && E.userId && userId!==E.userId) return;
+    await sb.auth.signOut({scope:'local'}).catch(()=>{});
+    E.userId=null;E.posts=[];resumoAutomaticoAtivo=false;
+    fecharPanico();irTela('t-bv');mostrarLogin();
+    alert('Sua sessão expirou. Entre novamente para continuar. O envio não foi realizado.');
+  }
+});
 
 const VC_PLAY_STORE_MODE_KEY = 'vc_play_store_billing_mode';
 const VC_PLAY_PRODUCT_IDS = Object.freeze({
@@ -1078,9 +1087,7 @@ let registroPushEmAndamento=null;
 let resumoAutomaticoAtivo=false;
 function notificacoesAndroid(){ return VC_PLAY_STORE_MODE && /Android/i.test(navigator.userAgent||''); }
 async function pushApi(action,sub,extra={}){
-  const {data:{session}}=await sb.auth.getSession();
-  if(!session?.access_token) throw new Error('Entre na sua conta para continuar.');
-  const response=await fetch(apiUrl('/api/posts'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({action,subscription:sub.toJSON(),...extra})});
+  const response=await apiAutenticada('/api/posts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,subscription:sub.toJSON(),...extra})});
   const data=await response.json();
   if(!response.ok) throw new Error(data.error||'Não foi possível salvar as notificações.');
   return data;
@@ -3195,9 +3202,7 @@ async function enviarAlerta(){
   if(btn.disabled) return;
   btn.disabled=true;btn.textContent='Enviando alerta...';
   try{
-    const {data:{session}}=await sb.auth.getSession();
-    if(!session?.access_token) throw new Error('Entre na sua conta para enviar o alerta.');
-    const resposta=await fetch(apiUrl('/api/posts'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token},body:JSON.stringify({action:'panic'})});
+    const resposta=await apiAutenticada('/api/posts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'panic'})});
     const resultado=await resposta.json();
     if(!resposta.ok) throw new Error(resultado.error||'Não foi possível enviar o alerta');
     const total=Number(resultado.notified_users)||0;

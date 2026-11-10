@@ -17,3 +17,7 @@ Não é necessário novo AAB para estas mudanças: o Android 1.0.5 (9) já carre
 
 Validação: `npm run check:notifications`, `npm test`, `npm run build`.
 Teste real: Perfil → Testar notificação; depois outra conta próxima publica/comenta. SOS só em teste combinado. Ativar/desativar resumo e reabrir para confirmar persistência. Nunca assumir que aceitação push comprova recebimento.
+
+## Sessão inválida ao testar SOS
+
+O teste do usuário retornou `Sessao invalida`, e não houve novo registro de SOS. O Android estava exibindo uma conta local, mas a autenticação da API recusou a operação antes de publicar/enviar. A partir deste ajuste, SOS e operações de notificação usam uma chamada autenticada que renova o token após um 401 e repete uma única vez. Não repete erros de rede, pois uma requisição incerta poderia já ter sido processada. Se a renovação falha, pede login e avisa que não enviou. Troca de conta cancela a tentativa. Falhas temporárias do serviço de autenticação retornam 503 para evitar tratar indisponibilidade como sessão expirada. O runtime tem URL versionada para impedir que um script antigo em cache impeça a abertura do app atualizado.
