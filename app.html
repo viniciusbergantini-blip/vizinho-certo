@@ -1074,17 +1074,34 @@ ptrStyle.textContent = '@keyframes ptr-rotate { from { transform: rotate(0deg); 
 document.head.appendChild(ptrStyle);
 
 // ── PUSH NOTIFICATIONS ──
+let registroPushEmAndamento=null;
+let resumoAutomaticoAtivo=false;
+function notificacoesAndroid(){ return VC_PLAY_STORE_MODE && /Android/i.test(navigator.userAgent||''); }
+async function pushApi(action,sub,extra={}){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session?.access_token) throw new Error('Entre na sua conta para continuar.');
+  const response=await fetch(apiUrl('/api/posts'),{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({action,subscription:sub.toJSON(),...extra})});
+  const data=await response.json();
+  if(!response.ok) throw new Error(data.error||'Não foi possível salvar as notificações.');
+  return data;
+}
 async function registrarNotificacoes({solicitarPermissao=false}={}) {
+  if(registroPushEmAndamento) return registroPushEmAndamento;
+  registroPushEmAndamento=registrarNotificacoesAgora({solicitarPermissao});
+  try{return await registroPushEmAndamento;}finally{registroPushEmAndamento=null;}
+}
+async function registrarNotificacoesAgora({solicitarPermissao=false}={}) {
   if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return false;
   try {
-    const reg = await navigator.serviceWorker.register('/sw.js');
-    await navigator.serviceWorker.ready;
+    if(!E.userId) return false;
     if (Notification.permission === 'denied') return false;
     if (Notification.permission === 'default') {
       if(!solicitarPermissao) return false;
       const perm = await Notification.requestPermission();
       if (perm !== 'granted') return false;
     }
+    await navigator.serviceWorker.register('/sw.js');
+    const reg=await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
     if (!sub) {
       sub = await reg.pushManager.subscribe({
@@ -1092,12 +1109,12 @@ async function registrarNotificacoes({solicitarPermissao=false}={}) {
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
       });
     }
-    if (E.userId) {
-      await sb.from('push_tokens').upsert({
-        usuario_id: E.userId,
-        token: JSON.stringify(sub)
-      }, { onConflict: 'usuario_id,token' });
-    }
+    const saved=await pushApi('push-register',sub,{platform:notificacoesAndroid()?'android':'web'});
+    resumoAutomaticoAtivo=saved.automaticas===true;
+    const checkbox=document.getElementById('push-daily-enabled');
+    if(checkbox) checkbox.checked=resumoAutomaticoAtivo;
+    const status=document.getElementById('push-status');
+    if(status) status.textContent='Notificações cadastradas neste aparelho. Use o teste para conferir a chegada.';
     if(!localStorage.getItem('vc_notifications_tracked')){
       localStorage.setItem('vc_notifications_tracked','1');
       trackAppEvent('notifications_enabled',{source:'profile',status:'granted'});
@@ -1105,8 +1122,33 @@ async function registrarNotificacoes({solicitarPermissao=false}={}) {
     return true;
   } catch(e) {
     console.log('Push não disponível:', e.message);
+    const status=document.getElementById('push-status');
+    if(status) status.textContent='Não foi possível cadastrar: '+e.message;
     return false;
   }
+}
+
+async function testarNotificacao(botao){
+  if(botao) botao.disabled=true;
+  try{
+    if(!await registrarNotificacoes({solicitarPermissao:true})) throw new Error('Permita as notificações deste aparelho e tente novamente.');
+    const reg=await navigator.serviceWorker.ready;
+    await pushApi('push-test',await reg.pushManager.getSubscription());
+    toast('Teste enviado. Confira a notificação na barra do celular.');
+  }catch(e){toast(e.message);}finally{if(botao) botao.disabled=false;}
+}
+
+async function alterarResumoAutomatico(input){
+  const enabled=input.checked;
+  input.disabled=true;
+  try{
+    if(!await registrarNotificacoes({solicitarPermissao:enabled})) throw new Error('Ative as notificações primeiro.');
+    const reg=await navigator.serviceWorker.ready;
+    const saved=await pushApi('push-preferences',await reg.pushManager.getSubscription(),{enabled});
+    resumoAutomaticoAtivo=saved.automaticas===true;
+    input.checked=resumoAutomaticoAtivo;
+    toast(enabled?'Resumo diário ativado.':'Resumo diário desativado.');
+  }catch(e){input.checked=resumoAutomaticoAtivo;toast(e.message);}finally{input.disabled=false;}
 }
 
 function sincronizarNotificacoesConcedidas(){
@@ -1635,6 +1677,14 @@ async function uploadFotoPerfil(input){
 
 async function sair(){
   if(!confirm('Deseja sair da sua conta?')) return;
+  try{
+    const reg=await navigator.serviceWorker?.getRegistration('/');
+    const sub=await reg?.pushManager.getSubscription();
+    if(sub){
+      try{await pushApi('push-unregister',sub);}finally{await sub.unsubscribe();}
+    }
+  }catch(e){console.log('Remoção da inscrição:',e.message);}
+  resumoAutomaticoAtivo=false;
   await sb.auth.signOut();
   E.userId=null; E.nome=''; E.posts=[]; E.ultimaVisita=null; usuarioVisitaAtual=null; localizacaoGpsSessao=null;
   irTela('t-bv');
@@ -2610,6 +2660,14 @@ function navTab(tab,el){
         <div class="profile-help-status">${htmlSeguro(notificacao.label)}</div>
         <div class="vc-install-profile-copy">${htmlSeguro(notificacao.copy)}</div>
         ${notificacao.action?`<button type="button" class="vc-install-button vc-install-profile" onclick="acaoNotificacaoPerfil()">${htmlSeguro(notificacao.action)}</button>`:''}
+        <p id="push-status" class="vc-install-profile-copy">Ative e use o teste para conferir se os avisos chegam neste aparelho.</p>
+        <button type="button" class="vc-install-button vc-install-profile" onclick="testarNotificacao(this)">🔔 Testar notificação neste aparelho</button>
+        ${notificacoesAndroid()?`<label style="display:flex;gap:10px;align-items:center;margin-top:16px;font-size:14px;"><input type="checkbox" id="push-daily-enabled" ${resumoAutomaticoAtivo?'checked':''} onchange="alterarResumoAutomatico(this)"> Receber resumo diário da vizinhança</label><p class="vc-install-profile-copy">Por volta das 19h, quando houver novas publicações no seu raio. No máximo um resumo por dia. Você pode desativar aqui.</p>`:''}
+      </div>
+      <div class="profile-help-card">
+        <div class="vc-install-profile-title">Convide quem mora perto</div>
+        <div class="vc-install-profile-copy">Compartilhe o Vizinho Certo para fortalecer a sua vizinhança.</div>
+        <button type="button" class="vc-install-button vc-install-profile" onclick="compartilharApp()">📤 Compartilhar com vizinhos e amigos</button>
       </div>
       <div class="profile-help-card neutral">
         <div class="vc-install-profile-title">Precisa de uma ajuda rápida?</div>
@@ -2627,6 +2685,7 @@ function navTab(tab,el){
       <button style="width:100%;margin-top:10px;padding:12px;background:transparent;border:1.5px solid #E24B4A;border-radius:10px;color:#A32D2D;font-size:14px;cursor:pointer;font-family:DM Sans,sans-serif;" onclick="sair()">Sair da conta</button>
     </div>`;
     window.VizinhoCertoInstall?.refresh();
+    sincronizarNotificacoesConcedidas();
   }
 }
 
@@ -2661,10 +2720,13 @@ function abrirMeusServicos(){
   setTimeout(()=>document.querySelector('.srv-meus')?.scrollIntoView({behavior:'smooth',block:'start'}),200);
 }
 
-function compartilharApp(){
+async function compartilharApp(){
   const texto='Oi! Estou usando o Vizinho Certo — um app pra conectar vizinhos da mesma rua. Entra aí: https://vizinhocerto.com.br';
-  if(navigator.share){navigator.share({title:'Vizinho Certo',text:texto,url:'https://vizinhocerto.com.br'});}
-  else{navigator.clipboard.writeText('https://vizinhocerto.com.br').then(()=>toast('Link copiado! 📋'));}
+  try{
+    if(navigator.share){await navigator.share({title:'Vizinho Certo',text:texto,url:'https://vizinhocerto.com.br'});}
+    else if(navigator.clipboard){await navigator.clipboard.writeText('https://vizinhocerto.com.br');toast('Link copiado! 📋');}
+    else{prompt('Copie o link e envie para seus vizinhos e amigos:','https://vizinhocerto.com.br');}
+  }catch(e){if(e.name!=='AbortError') toast('Não foi possível compartilhar. Copie o endereço vizinhocerto.com.br.');}
 }
 
 async function carregarVizinhos(){

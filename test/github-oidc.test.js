@@ -80,3 +80,14 @@ test('recusa assinatura adulterada', async () => {
     /Assinatura OIDC inválida/,
   );
 });
+
+test('identidade do resumo Android é aceita apenas na audiência e workflow próprios', async () => {
+  limparCacheJwksParaTeste();
+  const audience='vizinho-certo-notificacoes';
+  const workflowRef=`${REPOSITORY}/.github/workflows/notificacoes-android.yml@refs/heads/main`;
+  const cenario=criarCenarioToken({aud:audience,workflow_ref:workflowRef});
+  const options={agora:cenario.agora,fetchImpl:fetchJwks(cenario.jwk),audience,workflowRef};
+  assert.equal((await verificarTokenGitHubActions(cenario.token,options)).aud,audience);
+  await assert.rejects(verificarTokenGitHubActions(cenario.token,{...options,workflowRef:WORKFLOW_REF}),/Workflow/);
+  await assert.rejects(verificarTokenGitHubActions(cenario.token,{...options,audience:AUDIENCE}),/Audiência/);
+});

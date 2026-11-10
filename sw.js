@@ -1,5 +1,5 @@
 // Vizinho Certo — Service Worker
-const CACHE_NAME = 'vizinho-certo-static-v9';
+const CACHE_NAME = 'vizinho-certo-static-v10';
 const STATIC_ASSETS = [
   '/offline.html',
   '/app-runtime.js',
@@ -71,11 +71,14 @@ self.addEventListener('push', e => {
     badge: '/icon-192.png',
     vibrate: [200, 100, 200],
     data: { url: data.url || '/app' },
+    ...(data.tag ? { tag: data.tag } : {}),
     actions: [
       { action: 'open', title: 'Ver agora' },
       { action: 'close', title: 'Fechar' }
     ]
   };
+
+  if (data.expiresAt && Date.now() > data.expiresAt) return;
 
   e.waitUntil(
     self.registration.showNotification(data.title || 'Vizinho Certo 🏘️', options)

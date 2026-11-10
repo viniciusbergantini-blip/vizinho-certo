@@ -19,6 +19,9 @@ module.exports = async (req, res) => {
   noStore(res);
 
   try {
+    if (req.query?.rota === 'notificacoes-diarias') {
+      return await require('../lib/notification-digest').handleDigest(req, res);
+    }
     const sb = serviceClient();
     const auth = await authenticate(req, res, sb);
     if (!auth) return;
@@ -41,6 +44,7 @@ module.exports = async (req, res) => {
     if (!enforceRateLimit(req, res, 'posts', { limit: 60, windowMs: 60_000 }, auth.user.id)) return;
 
     const action = cleanText(req.body?.action, 30);
+    if (action.startsWith('push-')) return await require('../lib/notification-handler')(req, res, sb, auth.user.id);
     if (action === 'create') return createPost(req, res, sb, auth.user.id);
     if (action === 'comment') return createComment(req, res, sb, auth.user.id);
     if (action === 'support') return updateSupport(req, res, sb, auth.user.id);
@@ -224,9 +228,10 @@ async function createPost(req, res, sb, userId) {
     .select('id, usuario_id, apelido_autor, tipo, texto, foto_url, apoios, criado_em').single();
   if (error) throw error;
 
-  notifyNearby(sb, profile, {
+  await notifyNearby(sb, profile, {
     title: '📢 Nova publicação na sua rua!',
     body: text.slice(0, 80) || 'Um vizinho publicou uma nova foto.',
+    tag: `post-${data.id}`,
   }, { excludeUserId: userId }).catch(error => console.error('Post notification error:', error));
   return res.status(201).json({ post: data });
 }
@@ -263,9 +268,10 @@ async function createComment(req, res, sb, userId) {
   if (error) throw error;
 
   if (postResult.data.usuario_id && postResult.data.usuario_id !== userId) {
-    notifyUsers(sb, [postResult.data.usuario_id], {
+    await notifyUsers(sb, [postResult.data.usuario_id], {
       title: `💬 ${comment.apelido_autor} comentou no seu post`,
       body: text.slice(0, 80),
+      tag: `comment-${data.id}`,
     }).catch(error => console.error('Comment notification error:', error));
   }
   return res.status(201).json({ comment: data });
@@ -359,6 +365,7 @@ async function createPanic(req, res, sb, userId) {
     notifications = await notifyNearby(sb, profile, {
       title: '🆘 ALERTA DE EMERGÊNCIA!',
       body: `${name} acionou o botão de pânico nas proximidades.`,
+      tag: `sos-${data.id}`,
     }, { excludeUserId: userId });
   } catch (error) {
     console.error('Panic notification error:', error);
