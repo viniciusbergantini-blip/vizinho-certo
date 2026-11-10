@@ -1105,6 +1105,21 @@ function lembrarCadastroNotificacoes(enabled){
   if(enabled===true){const offer=document.getElementById('notification-welcome');if(offer)offer.hidden=true;}
 }
 function notificacoesAndroid(){return VC_PLAY_STORE_MODE&&/Android/i.test(navigator.userAgent||'');}
+function idInstalacaoNotificacoes(){
+  const key='vc_push_installation_v1';
+  let id=localStorage.getItem(key);
+  if(!id){
+    const rng=window.crypto;
+    if(rng.randomUUID) id=rng.randomUUID();
+    else{
+      const bytes=rng.getRandomValues(new Uint8Array(16));bytes[6]=(bytes[6]&15)|64;bytes[8]=(bytes[8]&63)|128;
+      const h=Array.from(bytes,x=>x.toString(16).padStart(2,'0')).join('');
+      id=h.slice(0,8)+'-'+h.slice(8,12)+'-'+h.slice(12,16)+'-'+h.slice(16,20)+'-'+h.slice(20);
+    }
+    localStorage.setItem(key,id);
+  }
+  return id;
+}
 function atualizarEstadoNotificacoes({enabled=notificacoesRegistradas,checking=false,detail=''}={}){
   notificacoesRegistradas=enabled;
   const blocked='Notification' in window&&Notification.permission==='denied';
@@ -1121,7 +1136,7 @@ function atualizarEstadoNotificacoes({enabled=notificacoesRegistradas,checking=f
   if(daily){daily.checked=resumoAutomaticoAtivo;daily.disabled=checking||enabled!==true||blocked;}
 }
 async function pushApi(action,sub,extra={}){
-  const response=await apiAutenticada('/api/posts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,subscription:sub.toJSON(),...extra})});
+  const response=await apiAutenticada('/api/posts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,installation_id:idInstalacaoNotificacoes(),subscription:sub?sub.toJSON():null,platform:notificacoesAndroid()?'android':'web',...extra})});
   const data=await response.json();
   if(!response.ok) throw new Error(data.error||'Não foi possível salvar as notificações.');
   return data;
@@ -1180,24 +1195,46 @@ async function consultarEstadoNotificacoes(){
     if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)){
       atualizarEstadoNotificacoes({detail:'Este navegador não oferece notificações. Abra pelo ícone do aplicativo.'});return;
     }
-    // Viewing the profile is read-only: never subscribe, revoke or change saved preferences here.
+    // Preference belongs to the installation, even if its delivery subscription has rotated.
     const reg=await navigator.serviceWorker.getRegistration('/');
     const sub=await reg?.pushManager.getSubscription();
     if(E.userId!==userId||alterandoNotificacoes) return;
-    if(!sub){
-      resumoAutomaticoAtivo=false;
-      lembrarCadastroNotificacoes(false);
-      atualizarEstadoNotificacoes({enabled:false});return;
-    }
-    const saved=await pushApi('push-status',sub);
+    let saved=await pushApi('push-status',sub);
     if(E.userId!==userId||alterandoNotificacoes) return;
+    if(saved.legacy&&sub) saved=await pushApi('push-register',sub);
+    if(E.userId!==userId||alterandoNotificacoes) return;
+    const enabled=saved.enabled===true||saved.registered===true;
     resumoAutomaticoAtivo=saved.automaticas===true;
-    lembrarCadastroNotificacoes(saved.registered===true);
+    lembrarCadastroNotificacoes(enabled);
     atualizarEstadoNotificacoes();
+    if(enabled&&!saved.registered){
+      atualizarEstadoNotificacoes({enabled:true,checking:true,detail:'Reconectando o recebimento sem alterar suas preferências…'});
+      try{
+        const recovered=await reconectarNotificacoes(reg,sub);
+        if(E.userId!==userId||alterandoNotificacoes) return;
+        resumoAutomaticoAtivo=recovered.automaticas===true;
+        lembrarCadastroNotificacoes(recovered.enabled===true||recovered.registered===true);
+        atualizarEstadoNotificacoes();
+      }catch(e){
+        if(E.userId===userId) atualizarEstadoNotificacoes({enabled:true,detail:'Sua escolha está salva. Não foi possível reconectar os avisos agora. Confira a conexão e a permissão do celular.'});
+      }
+    }
   }catch(e){
     if(E.userId!==userId) return;
     atualizarEstadoNotificacoes({detail:'Não foi possível conferir agora. Sua escolha não foi alterada. Tente novamente quando a conexão voltar.'});
   }
+}
+async function reconectarNotificacoes(reg,sub){
+  if(notificacoesDesativadasPeloUsuario()||Notification.permission==='denied') throw new Error('Recebimento não autorizado.');
+  if(!reg){await navigator.serviceWorker.register('/sw.js');reg=await navigator.serviceWorker.ready;}
+  if(!sub){
+    let granted=Notification.permission==='granted';
+    const options={userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)};
+    if(!granted&&reg.pushManager.permissionState) granted=await reg.pushManager.permissionState(options)==='granted';
+    if(!granted) throw new Error('Permissão pendente.');
+    sub=await reg.pushManager.subscribe(options);
+  }
+  return pushApi('push-recover',sub);
 }
 async function alterarResumoAutomatico(input){
   const enabled=input.checked;
@@ -1206,7 +1243,6 @@ async function alterarResumoAutomatico(input){
     if(notificacoesRegistradas!==true||notificacoesDesativadasPeloUsuario()) throw new Error('Ative as notificações primeiro.');
     const reg=await navigator.serviceWorker.getRegistration('/');
     const sub=await reg?.pushManager.getSubscription();
-    if(!sub) throw new Error('Ative as notificações neste aparelho primeiro.');
     const saved=await pushApi('push-preferences',sub,{enabled});
     resumoAutomaticoAtivo=saved.automaticas===true;
     lembrarCadastroNotificacoes(true);
@@ -1227,7 +1263,7 @@ async function acaoNotificacaoPerfil(){
       localStorage.setItem(chaveNotificacoesDesativadas(),'1');
       const reg=await navigator.serviceWorker.getRegistration('/');
       const sub=await reg?.pushManager.getSubscription();
-      if(sub) await pushApi('push-unregister',sub);
+      await pushApi('push-unregister',sub);
       // Keep browser/system permission intact; disabling only removes this device from our sends.
       resumoAutomaticoAtivo=false;
       lembrarCadastroNotificacoes(false);

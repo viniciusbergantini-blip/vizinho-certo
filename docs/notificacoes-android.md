@@ -80,3 +80,13 @@ Após entrar no feed pelos fluxos existentes de cadastro, login e sessão restau
 O cartão não aparece para quem já ativou, desativou explicitamente, recusou a permissão no sistema ou dispensou o convite naquele aparelho/conta. Também não aparece quando é necessário instalar primeiro no iPhone ou não há suporte. Recusar ou adiar não bloqueia cadastro/login nem inscreve o usuário. Falha no registro permite nova tentativa e não informa sucesso. A opção de resumo automático continua separada.
 
 A inclusão é web e não exige gerar outro AAB além do 1.0.8 já preparado. Não tratar consentimento como confirmação de entrega: permissões do Android e condições do aparelho continuam necessárias. Validação: 143 testes Node e build público.
+
+### Persistência por instalação, independente da inscrição push
+
+O usuário confirmou abertura normal na 1.0.8, mas ativação/resumo sumiam ao fechar e reabrir. A consulta de produção mostrou diversas inscrições Android com endpoints diferentes na mesma conta e escolhas de resumo ainda salvas nas inscrições antigas. A interface tratava inscrição ausente/nova como configuração desativada.
+
+A preferência agora fica em `push_installation_settings`, identificada por usuário autenticado + UUID estável da instalação (`vc_push_installation_v1` em localStorage). `push_tokens.installation_id` associa o endereço de entrega atual. A função `configure_push_installation` é SECURITY INVOKER, só executável pelo service_role, e serializa registro, rotação, desativação e resumo com bloqueio da linha de preferências. Uma rotação atualiza uma única linha de token e mantém as escolhas. Recuperação não reativa preferência desativada.
+
+`push-status` funciona mesmo sem inscrição atual e diferencia intenção habilitada de transporte conectado. Com intenção previamente salva e permissão push já concedida, o app recupera a inscrição sem nova solicitação. Falha de conexão não apaga ativação/resumo. As rotas antigas continuam compatíveis. A migração de inscrição legada presente preserva a preferência existente; onde não há inscrição atual associável, ativar uma vez e escolher o resumo grava a nova identidade estável.
+
+Validação: 153 testes Node, incluindo fechar/reabrir sem assinatura, rotação, falha de reconexão, identidade persistente e rejeição de recuperação após desativar. Transação real em produção com registro → resumo true → rotação → desativar → recuperação recusada foi executada e revertida com ROLLBACK, sem enviar notificações. Confirmados RLS e ausência de acesso/execução anon/authenticated. Não exige novo AAB; falta confirmação no celular após ativar uma vez sob o novo formato.
