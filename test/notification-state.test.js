@@ -14,7 +14,8 @@ function setup({storage=new Map(),subscribed=false,registered=false,enabled=regi
     let value='';const el={disabled:false,checked:false};
     Object.defineProperty(el,'textContent',{get:()=>value,set:v=>{value=v;history.push({id,value:v});}});nodes.set(id,el);
   }return nodes.get(id);};
-  const makeSub=()=>({toJSON:()=>({endpoint:'test'}),unsubscribe:async()=>{counts.unsubscribes++;sub=null;return true;}});
+  let subscriptionSequence=0;
+  const makeSub=()=>{const endpoint='test-'+(++subscriptionSequence);return {toJSON:()=>({endpoint}),unsubscribe:async()=>{counts.unsubscribes++;sub=null;return true;}};};
   let sub=subscribed?makeSub():null;
   const reg={pushManager:{getSubscription:async()=>sub,subscribe:async()=>{counts.subscribes++;return sub=makeSub();},permissionState:async()=>controls.pushPermission||notification.permission}};
   const notification={permission,requestPermission:async()=>{counts.permissionRequests++;return notification.permission='granted';}};
@@ -31,13 +32,14 @@ function setup({storage=new Map(),subscribed=false,registered=false,enabled=regi
     calls.push(action);
     if(action==='push-status'){
       if(controls.failStatus)throw new Error('network');
-      return {enabled:server.enabled,registered:server.registered&&Boolean(sub),automaticas:server.automaticas};
+      return {enabled:server.enabled,registered:server.registered&&Boolean(sub),automaticas:server.automaticas,renew_subscription:server.renew_subscription===true&&!server.registered};
     }
     if(action==='push-register'){
       if(controls.failRegister)throw new Error('network');
       server.registered=true;server.enabled=true;return {...server};
     }
     if(action==='push-recover'){
+      controls.recoveredEndpoint=subscription?.toJSON().endpoint;
       if(controls.failRecover)throw new Error('network');
       if(server.enabled)server.registered=true;
       return {...server};
@@ -187,4 +189,23 @@ test('recuperação usa permissão push existente sem abrir nova solicitação',
 test('identificação da instalação é estável entre sessões e independente do token',()=>{
   const first=setup();const id=first.context.idInstalacaoNotificacoes();
   const next=setup({storage:first.storage});assert.equal(next.context.idInstalacaoNotificacoes(),id);
+});
+
+test('endereço rejeitado pelo provedor é substituído, sem repetir pedido de permissão ou apagar resumo',async()=>{
+  const f=setup({subscribed:true,permission:'granted',server:{enabled:true,registered:false,automaticas:true,renew_subscription:true}});
+  await f.context.sincronizarNotificacoesConcedidas();
+  assert.equal(f.counts.unsubscribes,1);assert.equal(f.counts.subscribes,1);
+  assert.equal(f.controls.recoveredEndpoint,'test-2');assert.equal(f.counts.permissionRequests,0);
+  assert.equal(f.node('push-daily-enabled').checked,true);
+  await f.context.sincronizarNotificacoesConcedidas();
+  assert.equal(f.counts.unsubscribes,1);assert.equal(f.counts.subscribes,1);
+});
+
+test('renovação não remove endereço quando permissão está bloqueada ou pendente',async()=>{
+  for(const permission of ['denied','default']){
+    const f=setup({subscribed:true,permission,server:{enabled:true,registered:false,automaticas:true,renew_subscription:true}});
+    await f.context.sincronizarNotificacoesConcedidas();
+    assert.equal(f.counts.unsubscribes,0);assert.equal(f.counts.subscribes,0);assert.equal(f.counts.permissionRequests,0);
+    assert.equal(f.node('push-daily-enabled').checked,true);
+  }
 });

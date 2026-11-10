@@ -12,10 +12,19 @@ test('status sem assinatura conserva preferência de instalação e indica recon
     const q={select:()=>q,eq:(k,v)=>{filters.push([table,k,v]);return q;},maybeSingle:async()=>({data:table==='push_installation_settings'?{enabled:true,automaticas:true}:null})};return q;
   }};
   const res=response();await handler({body:{action:'push-status',installation_id:installation,subscription:null}},res,sb,'owner');
-  assert.deepEqual(res.body,{enabled:true,registered:false,automaticas:true,needs_reconnect:true});
+  assert.deepEqual(res.body,{enabled:true,registered:false,automaticas:true,needs_reconnect:true,renew_subscription:false});
   for(const table of ['push_installation_settings','push_tokens']){
     assert.ok(filters.some(([t,k,v])=>t===table&&k==='usuario_id'&&v==='owner'));
     assert.ok(filters.some(([t,k,v])=>t===table&&k==='installation_id'&&v===installation));
+  }
+});
+
+test('endereço local sem cadastro de entrega exige renovação, preservando consentimento',async()=>{
+  for(const enabled of [true,false]){
+    const sb={from:table=>{const q={select:()=>q,eq:()=>q,maybeSingle:async()=>({data:table==='push_installation_settings'?{enabled,automaticas:true}:null})};return q;}};
+    const res=response();await handler({body:{action:'push-status',installation_id:installation,subscription:sub}},res,sb,'owner');
+    assert.equal(res.body.renew_subscription,enabled);assert.equal(res.body.registered,false);
+    assert.equal(res.body.enabled,enabled);assert.equal(res.body.automaticas,true);
   }
 });
 

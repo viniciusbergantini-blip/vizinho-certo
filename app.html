@@ -1210,7 +1210,7 @@ async function consultarEstadoNotificacoes(){
     if(enabled&&!saved.registered){
       atualizarEstadoNotificacoes({enabled:true,checking:true,detail:'Reconectando o recebimento sem alterar suas preferências…'});
       try{
-        const recovered=await reconectarNotificacoes(reg,sub);
+        const recovered=await reconectarNotificacoes(reg,sub,{renew:saved.renew_subscription===true});
         if(E.userId!==userId||alterandoNotificacoes) return;
         resumoAutomaticoAtivo=recovered.automaticas===true;
         lembrarCadastroNotificacoes(recovered.enabled===true||recovered.registered===true);
@@ -1224,9 +1224,19 @@ async function consultarEstadoNotificacoes(){
     atualizarEstadoNotificacoes({detail:'Não foi possível conferir agora. Sua escolha não foi alterada. Tente novamente quando a conexão voltar.'});
   }
 }
-async function reconectarNotificacoes(reg,sub){
+async function reconectarNotificacoes(reg,sub,{renew=false}={}){
   if(notificacoesDesativadasPeloUsuario()||Notification.permission==='denied') throw new Error('Recebimento não autorizado.');
   if(!reg){await navigator.serviceWorker.register('/sw.js');reg=await navigator.serviceWorker.ready;}
+  // A provider-rejected subscription can still be returned by getSubscription().
+  // Replace that delivery address; keep the installation's saved preferences.
+  if(renew&&sub){
+    let granted=Notification.permission==='granted';
+    const options={userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)};
+    if(!granted&&reg.pushManager.permissionState) granted=await reg.pushManager.permissionState(options)==='granted';
+    if(!granted) throw new Error('Permissão pendente.');
+    await sub.unsubscribe();
+    sub=null;
+  }
   if(!sub){
     let granted=Notification.permission==='granted';
     const options={userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)};
@@ -1282,7 +1292,7 @@ async function acaoNotificacaoPerfil(){
   }
 }
 document.addEventListener('visibilitychange',()=>{
-  if(!document.hidden&&E.userId&&document.getElementById('push-toggle')) sincronizarNotificacoesConcedidas();
+  if(!document.hidden&&E.userId) sincronizarNotificacoesConcedidas();
 });
 
 function chaveConviteNotificacoes(){return 'vc_push_offer_seen_'+(E.userId||'guest');}
