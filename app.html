@@ -11,6 +11,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#064430">
+<script>
+  (() => {
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+    let timer;
+
+    function atualizarTema() {
+      clearTimeout(timer);
+      const agora = new Date();
+      const hora = agora.getHours();
+      const escuro = hora >= 19 || hora < 6;
+      document.documentElement.dataset.theme = escuro ? 'dark' : 'light';
+      themeColor.content = escuro ? '#142821' : '#064430';
+
+      const proximaTroca = new Date(agora);
+      if (hora >= 19) proximaTroca.setDate(proximaTroca.getDate() + 1);
+      proximaTroca.setHours(escuro ? 6 : 19, 0, 0, 0);
+      timer = setTimeout(atualizarTema, Math.min(proximaTroca - agora, 60_000));
+    }
+
+    atualizarTema();
+    window.addEventListener('pageshow', atualizarTema);
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) atualizarTema();
+    });
+  })();
+</script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -32,6 +58,8 @@
     --laranja:#E76F51; --creme:#FEFAE0; --creme-escuro:#F0E9D2;
     --texto:#1B1B1B; --texto-muted:#6B6B6B; --borda:#D9D0BE;
     --branco:#FFFFFF; --radius:16px; --radius-sm:10px;
+    --verde-painel:#2D6A4F; --texto-painel:#FEFAE0; --texto-verde-forte:#1B4D37;
+    --verde-suave:#E8F5E9; --verde-destaque:#FBFFF8;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'DM Sans',sans-serif;background:var(--creme);color:var(--texto);min-height:100vh;padding-bottom:calc(65px + env(safe-area-inset-bottom));}
@@ -454,6 +482,38 @@
   .link-btn:hover,.link-btn:focus-visible{color:#A32D2D;outline-offset:3px}
 .sheet-back{display:block;background:transparent;border:0;color:var(--verde);font:500 15px 'DM Sans',sans-serif;padding:12px 16px;cursor:pointer;text-align:left;}
 .sheet-back[hidden]{display:none;} .panico-sheet .sheet-back{color:#fff;} .fav{border:0;font:inherit;cursor:pointer;} .bpost:disabled{opacity:.65;cursor:wait;}
+  :root[data-theme="dark"] {
+    color-scheme:dark;
+    --creme:#141b17;
+    --creme-escuro:#242f28;
+    --branco:#1e2822;
+    --texto:#edf4ef;
+    --texto-muted:#b6c6bc;
+    --borda:#405247;
+    --verde:#a0dbb6;
+    --verde-bg:#233b2e;
+    --verde-painel:#23583e;
+    --texto-verde-forte:var(--verde);
+    --verde-suave:#233b2e;
+    --verde-destaque:#233b2e;
+  }
+  [data-theme="dark"] body{background:var(--creme);}
+  [data-theme="dark"] :is(#t-loading,.rh,.btnp,.rc3.ativo,.bapoiar.ap,.btntel,.cenv,.bpost,.bcop,.srv-btn-tel,.srv-owner-edit,.feed-empty-actions button:first-child){background:#23583e;color:#f1faf3;}
+  [data-theme="dark"] :is(.loading-logo,.logo,.auth-intro h1,.rh h2,.fh h1){color:#f1faf3;}
+  [data-theme="dark"] .fav{color:#123d2c;}
+  [data-theme="dark"] #t-bv{background:linear-gradient(155deg,#10241b,#1a3829);}
+  [data-theme="dark"] #t-bv :is(.card,.ig input){background:var(--branco);border-color:var(--borda);}
+  [data-theme="dark"] #t-bv :is(.ig label,.campaign-form-note,.signup-consent){color:var(--texto-muted);}
+  [data-theme="dark"] :is(.campaign-form-note,.signup-consent,.onboarding-list li,.activity-back,.activity-metric,.activity-item,.activity-item button,.activity-empty,.feed-empty-actions button:last-child){background:var(--branco);border-color:var(--borda);}
+  [data-theme="dark"] :is(.auth-time,.signup-privacy,.login-account-notice,.boq,.oqf,.srv-meus,.profile-help-card:not(.neutral),.foto-btn:hover){background:var(--verde-bg);border-color:var(--borda);color:var(--verde);}
+  [data-theme="dark"] :is(.signup-error,.signup-consent.invalid,.t-pr,.srv-owner-delete){background:#432822;color:#ffc2b6;}
+  [data-theme="dark"] :is(.t-av,.srv-rating-star.at){background:#433820;color:#f9df93;}
+  [data-theme="dark"] .t-in{background:#263c51;color:#bbdcff;}
+  [data-theme="dark"] .vc-install-profile-title{color:var(--verde);}
+  [data-theme="dark"] .vc-install-profile-copy{color:var(--texto-muted);}
+  [data-theme="dark"] .vc-install-button:disabled{background:var(--verde-bg);color:var(--verde);}
+  [data-theme="dark"] .link-btn{color:#ffc2b6;}
+  [data-theme="dark"] :is(.plano-preco,.resumo-row span:last-child,.pgto-btn.sel,.srv-cat:not(.at)){color:var(--verde);}
 </style>
 </head>
 <body>
@@ -565,15 +625,15 @@
 </div>
 
 <div class="tela" id="t-confirmar">
-  <div style="background:var(--verde);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;position:relative;overflow:hidden;">
+  <div style="background:var(--verde-painel);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;position:relative;overflow:hidden;">
     <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(82,183,136,0.15);top:-80px;right:-100px;"></div>
     <div style="position:relative;z-index:1;width:100%;max-width:380px;text-align:center;">
       <div style="font-size:64px;margin-bottom:1.5rem;">📬</div>
-      <div style="font-family:'Fraunces',serif;font-size:28px;color:var(--creme);margin-bottom:12px;">Confirme seu email</div>
-      <div style="font-size:15px;color:rgba(254,250,224,0.75);line-height:1.6;margin-bottom:2rem;">Enviamos um link de confirmação para <strong id="conf-email" style="color:var(--creme);">seu email</strong>.</div>
+      <div style="font-family:'Fraunces',serif;font-size:28px;color:var(--texto-painel);margin-bottom:12px;">Confirme seu email</div>
+      <div style="font-size:15px;color:rgba(254,250,224,0.75);line-height:1.6;margin-bottom:2rem;">Enviamos um link de confirmação para <strong id="conf-email" style="color:var(--texto-painel);">seu email</strong>.</div>
       <div style="background:rgba(255,255,255,0.1);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.5rem;">
         <div style="font-size:13px;color:rgba(254,250,224,0.6);margin-bottom:8px;">Não recebeu o email?</div>
-        <button onclick="reenviarEmail()" style="background:transparent;border:1.5px solid rgba(254,250,224,0.4);color:var(--creme);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">Reenviar email →</button>
+        <button onclick="reenviarEmail()" style="background:transparent;border:1.5px solid rgba(254,250,224,0.4);color:var(--texto-painel);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">Reenviar email →</button>
       </div>
       <div onclick="mostrarLoginDireto()" style="font-size:13px;color:rgba(254,250,224,0.5);cursor:pointer;text-decoration:underline;">Já confirmei, quero entrar</div>
     </div>
@@ -581,12 +641,12 @@
 </div>
 
 <div class="tela" id="t-nova-senha">
-  <div style="background:var(--verde);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;position:relative;overflow:hidden;">
+  <div style="background:var(--verde-painel);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem;position:relative;overflow:hidden;">
     <div style="position:absolute;width:400px;height:400px;border-radius:50%;background:rgba(82,183,136,0.15);top:-80px;right:-100px;"></div>
     <div style="position:relative;z-index:1;width:100%;max-width:380px;">
       <div style="text-align:center;margin-bottom:2rem;">
         <div style="font-size:64px;margin-bottom:1rem;">🔐</div>
-        <div style="font-family:'Fraunces',serif;font-size:28px;color:var(--creme);margin-bottom:8px;">Nova senha</div>
+        <div style="font-family:'Fraunces',serif;font-size:28px;color:var(--texto-painel);margin-bottom:8px;">Nova senha</div>
         <div style="font-size:14px;color:rgba(254,250,224,0.7);">Digite sua nova senha abaixo.</div>
       </div>
       <div class="card">
@@ -2089,7 +2149,7 @@ function renderControleLocalizacao(){
     ? 'GPS ativo só nesta sessão. Publicações e alertas continuam ligados à região do cadastro.'
     : 'Opcional. Use o GPS para ajustar distâncias de publicações, vizinhos e serviços. A cidade e o raio cadastrados continuam valendo.';
   return `<div style="margin:12px 0;padding:12px;border:1px solid var(--borda);border-radius:12px;background:var(--branco);">
-    <button type="button" onclick="alternarLocalizacaoGps()" ${solicitandoLocalizacaoGps?'disabled':''} style="width:100%;padding:10px 12px;border:1px solid #2D6A4F;border-radius:9px;background:${gpsAtivo?'#E8F5E9':'#fff'};color:#1B4D37;font:500 13px 'DM Sans',sans-serif;cursor:pointer;">
+    <button type="button" onclick="alternarLocalizacaoGps()" ${solicitandoLocalizacaoGps?'disabled':''} style="width:100%;padding:10px 12px;border:1px solid var(--verde);border-radius:9px;background:${gpsAtivo?'var(--verde-suave)':'var(--branco)'};color:var(--texto-verde-forte);font:500 13px 'DM Sans',sans-serif;cursor:pointer;">
       ${solicitandoLocalizacaoGps?'Obtendo localização…':texto}
     </button>
     <div style="margin-top:7px;color:var(--texto-muted);font-size:11px;line-height:1.45;">${explicacao} A posição não é gravada no perfil.</div>
@@ -2441,7 +2501,7 @@ function render(){
       const tel=(p.telefone||'').replace(/[^0-9]/g,'');
       const anuncioId=htmlSeguro(String(p.anuncio_id||''));
       return `<div class="pc" id="pc${postId}" data-ad-id="${anuncioId}" data-ad-surface="feed">
-        <div class="pm" style="border:1.5px solid var(--verde-claro);background:#FBFFF8;">
+        <div class="pm" style="border:1.5px solid var(--verde-claro);background:var(--verde-destaque);">
           <div class="ph">${avatarHtml}<div><div class="pnome">${htmlSeguro(p.nome)}</div><div class="pdist">${p.dist ? 'a '+htmlSeguro(p.dist)+' de você' : ''}${p.tempo ? ' · '+htmlSeguro(p.tempo) : ''}</div></div><span class="ptag t-in">Patrocinado</span></div>
           <div class="ptxt">${htmlSeguro(p.txt)}</div>
           <div class="srv-tags" style="margin-top:10px;"><span class="srv-tag">${htmlSeguro(p.categoria||'Serviço')}</span>${p.destaque?'<span class="srv-tag">★ Em destaque</span>':''}</div>
@@ -2876,7 +2936,7 @@ function navTab(tab,el){
         <div style="padding:14px 16px;display:flex;justify-content:space-between;font-size:14px;"><span style="color:var(--texto-muted);">Posts publicados</span><span style="font-weight:500;">${E.posts.filter(p=>p.usuario_id===E.userId).length}</span></div>
       </div>
       <button onclick="alterarRaio()" style="width:100%;margin-top:1rem;padding:12px;background:#2D6A4F;color:white;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">🎯 Alterar raio de vizinhança</button>
-      <button onclick="abrirAlterarEndereco()" style="width:100%;margin-top:10px;padding:12px;background:var(--branco);color:#2D6A4F;border:1.5px solid #2D6A4F;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">📍 Alterar endereço</button>
+      <button onclick="abrirAlterarEndereco()" style="width:100%;margin-top:10px;padding:12px;background:var(--branco);color:var(--verde);border:1.5px solid var(--verde);border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">📍 Alterar endereço</button>
       <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:16px;font-size:12px;"><a href="/privacidade" target="_blank" rel="noopener" style="color:var(--verde);">Privacidade</a><a href="/termos" target="_blank" rel="noopener" style="color:var(--verde);">Termos</a><a href="/excluir-conta" target="_blank" rel="noopener" style="color:var(--verde);">Excluir conta</a></div>
       <button style="width:100%;margin-top:10px;padding:12px;background:transparent;border:1.5px solid #E24B4A;border-radius:10px;color:#A32D2D;font-size:14px;cursor:pointer;font-family:DM Sans,sans-serif;" onclick="sair()">Sair da conta</button>
     </div>`;
@@ -3436,7 +3496,7 @@ function abrirComprovanteAnuncio(resultado){
     <div style="font-size:56px;margin-bottom:1rem;">${publicado?'🎉':'⏳'}</div>
     <div style="font-family:Fraunces,serif;font-size:22px;color:var(--verde);margin-bottom:8px;">${publicado?'Anúncio publicado!':'Publicação em processamento'}</div>
     <div style="font-size:14px;color:var(--texto-muted);line-height:1.6;margin-bottom:1.5rem;">${publicado?'Seu anúncio já está no ar na aba Serviços para os vizinhos no seu raio.':(pago?'Recebemos a confirmação do pagamento. A publicação ainda está processando; atualize a aba Serviços em instantes.':'A Stripe ainda está confirmando o pagamento. Assim que confirmar, seu anúncio será publicado automaticamente.')}</div>
-    <div style="background:var(--verde-bg);border-radius:12px;padding:1rem;margin-bottom:1.5rem;font-size:13px;color:#1B4D37;line-height:1.8;">
+    <div style="background:var(--verde-bg);border-radius:12px;padding:1rem;margin-bottom:1.5rem;font-size:13px;color:var(--texto-verde-forte);line-height:1.8;">
       <div>${pago?'✅':'⏳'} Pagamento confirmado</div>
       <div>${publicado?'✅':'⏳'} Anúncio na aba Serviços</div>
       <div>✅ Comprovante enviado por email</div>
