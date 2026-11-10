@@ -1135,13 +1135,13 @@ async function registrarNotificacoesAgora({solicitarPermissao=false}={}) {
   }
 }
 
-async function testarNotificacao(botao){
+async function testarNotificacao(botao,{sos=false}={}){
   if(botao) botao.disabled=true;
   try{
     if(!await registrarNotificacoes({solicitarPermissao:true})) throw new Error('Permita as notificações deste aparelho e tente novamente.');
     const reg=await navigator.serviceWorker.ready;
-    await pushApi('push-test',await reg.pushManager.getSubscription());
-    toast('Teste enviado. Confira a notificação na barra do celular.');
+    await pushApi(sos?'push-test-sos':'push-test',await reg.pushManager.getSubscription());
+    toast(sos?'Teste SOS enviado só para este aparelho. Confira o som.':'Teste enviado. Confira a notificação na barra do celular.');
   }catch(e){toast(e.message);}finally{if(botao) botao.disabled=false;}
 }
 
@@ -2669,6 +2669,7 @@ function navTab(tab,el){
         ${notificacao.action?`<button type="button" class="vc-install-button vc-install-profile" onclick="acaoNotificacaoPerfil()">${htmlSeguro(notificacao.action)}</button>`:''}
         <p id="push-status" class="vc-install-profile-copy">Ative e use o teste para conferir se os avisos chegam neste aparelho.</p>
         <button type="button" class="vc-install-button vc-install-profile" onclick="testarNotificacao(this)">🔔 Testar notificação neste aparelho</button>
+        ${notificacoesAndroid()?`<button type="button" class="vc-install-button vc-install-profile" onclick="testarNotificacao(this,{sos:true})">🆘 Testar som do SOS só neste aparelho</button><p class="vc-install-profile-copy">O som exclusivo exige o app Android na versão 1.0.6 ou mais recente. Este teste não alerta os vizinhos.</p>`:''}
         ${notificacoesAndroid()?`<label style="display:flex;gap:10px;align-items:center;margin-top:16px;font-size:14px;"><input type="checkbox" id="push-daily-enabled" ${resumoAutomaticoAtivo?'checked':''} onchange="alterarResumoAutomatico(this)"> Receber resumo diário da vizinhança</label><p class="vc-install-profile-copy">Por volta das 19h, quando houver novas publicações no seu raio. No máximo um resumo por dia. Você pode desativar aqui.</p>`:''}
       </div>
       <div class="profile-help-card">

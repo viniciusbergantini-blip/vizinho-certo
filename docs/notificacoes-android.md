@@ -21,3 +21,21 @@ Teste real: Perfil → Testar notificação; depois outra conta próxima publica
 ## Sessão inválida ao testar SOS
 
 O teste do usuário retornou `Sessao invalida`, e não houve novo registro de SOS. O Android estava exibindo uma conta local, mas a autenticação da API recusou a operação antes de publicar/enviar. A partir deste ajuste, SOS e operações de notificação usam uma chamada autenticada que renova o token após um 401 e repete uma única vez. Não repete erros de rede, pois uma requisição incerta poderia já ter sido processada. Se a renovação falha, pede login e avisa que não enviou. Troca de conta cancela a tentativa. Falhas temporárias do serviço de autenticação retornam 503 para evitar tratar indisponibilidade como sessão expirada. O runtime tem URL versionada para impedir que um script antigo em cache impeça a abertura do app atualizado.
+
+## Som exclusivo de SOS — Android 1.0.6 (10)
+
+O usuário confirmou chegada de SOS e publicação após a correção de sessão. O som diferenciado é uma alteração nativa e exige instalar o novo AAB pelo teste interno.
+
+`DelegationService` reconhece somente os títulos exatos de SOS e de teste pessoal produzidos pelo backend. Avisos comuns continuam no tratamento original do Android Browser Helper. SOS usa o canal estável `vc_sos_v1` / **Alertas SOS**, importância alta, toque original `res/raw/sos_alert.wav` (2,15s, três pares de bipes) e vibração distinta. A URI usa nome do recurso para sobreviver à atualização. O canal preserva escolhas do usuário; não contorna silencioso ou Não Perturbe. Android 7 usa som/vibração por notificação. O gerador reproduzível é `scripts/generate-sos-sound.js`.
+
+No Perfil do Android há **Testar som do SOS só neste aparelho**. A API valida sessão, procura a inscrição desse usuário/aparelho e envia exclusivamente para ela. Não grava um SOS, não altera o feed e não seleciona vizinhos. iPhone não recebe som personalizado por esta implementação.
+
+Pacote: `android/VizinhoCerto-1.0.6-v10-Som-SOS.aab`. Assinatura interativa: `android/assinar-versao-1.0.6.ps1`, saída `VizinhoCerto-1.0.6-v10-Som-SOS-signed.aab`. Não armazenar senha. Notas para a versão:
+
+```
+<pt-BR>
+Som e vibração exclusivos para alertas SOS no Android. Novo teste de som no perfil, enviado somente para o próprio aparelho. Melhorias nas notificações e na recuperação de sessão.
+</pt-BR>
+```
+
+Validação: `gradlew.bat testDebugUnitTest bundleRelease` (3 testes Java), testes Node (130), build público. Não havia aparelho conectado por USB: confirmação auditiva final fica para o Android do usuário atualizado para 1.0.6 (10), aberto pelo ícone do app. Testar primeiro notificação comum e depois som SOS, sem alertar a vizinhança.
