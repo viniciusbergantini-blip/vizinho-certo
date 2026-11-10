@@ -110,8 +110,8 @@ test('push define urgência e expiração curta para SOS e remove inscrição ex
     process:{env:{VAPID_SUBJECT:'test',VAPID_PUBLIC_KEY:'p',VAPID_PRIVATE_KEY:'s'}},require:n=>n==='web-push'?{
       setVapidDetails:()=>{},sendNotification:async(sub,payload,opts)=>{options.push(opts);if(sub.endpoint==='expired')throw {statusCode:410};}
     }:require('../lib/localizacao')});
-  const token=endpoint=>({usuario_id:'u',token:JSON.stringify({endpoint,keys:{p256dh:'p',auth:'a'}})});
-  const db={from:()=>({delete:()=>({in:async(k,t)=>{removed.push(...t);return {};}})})};
+  const token=endpoint=>({id:endpoint,usuario_id:'u',token:JSON.stringify({endpoint,keys:{p256dh:'p',auth:'a'}})});
+  const db={from:()=>({delete:()=>({in:async(k,t)=>{assert.equal(k,'id');removed.push(...t);return {};}})})};
   const result=await module.exports.sendTokens(db,[token('ok'),token('expired')],{title:'🆘 Test'});
   assert.equal(result.sent,1);assert.equal(removed.length,1);assert.equal(options[0].TTL,600);assert.equal(options[0].urgency,'high');
 });

@@ -49,9 +49,9 @@ test('diagnóstico distingue aceite do provedor de falha sem expor inscrição o
       return {statusCode:201};
     }}:require('../lib/localizacao'),
   });
-  const tokens=['accepted','expired'].map((suffix,i)=>({usuario_id:'reader',installation_id:'device-'+i,
+  const tokens=['accepted','expired'].map((suffix,i)=>({id:suffix,usuario_id:'reader',installation_id:'device-'+i,
     token:JSON.stringify({endpoint:'https://fcm.googleapis.com/private-'+suffix,keys:{p256dh:'SECRET',auth:'SECRET'}})}));
-  const result=await module.exports.sendTokens({from:()=>({delete:()=>({in:async(_,values)=>removed.push(...values)})})},tokens,
+  const result=await module.exports.sendTokens({from:()=>({delete:()=>({in:async(field,values)=>{assert.equal(field,'id');removed.push(...values);return {};}})})},tokens,
     {title:'Private title',body:'Private body',tag:'post-example'});
   assert.equal(result.sent,1);assert.equal(result.failed,1);assert.equal(removed.length,1);
   const records=logs.map(entry=>JSON.parse(entry[1]));
