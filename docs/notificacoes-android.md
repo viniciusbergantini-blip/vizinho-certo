@@ -39,3 +39,19 @@ Som e vibração exclusivos para alertas SOS no Android. Novo teste de som no pe
 ```
 
 Validação: `gradlew.bat testDebugUnitTest bundleRelease` (3 testes Java), testes Node (130), build público. Não havia aparelho conectado por USB: confirmação auditiva final fica para o Android do usuário atualizado para 1.0.6 (10), aberto pelo ícone do app. Testar primeiro notificação comum e depois som SOS, sem alertar a vizinhança.
+
+## Permissão Android e controle de ativação — 1.0.7 (11)
+
+O usuário confirmou que **Permitir notificações** estava bloqueado nas configurações do Vizinho Certo, embora o cadastro push fosse aceito. Por isso os testes não apareciam no Android. Não presumir que `Notification.permission` no navegador comprova a permissão nativa.
+
+A nova entrada `NotificationPermissionActivity` solicita `POST_NOTIFICATIONS` no Android 13+ antes de abrir a TWA, uma vez se a permissão ainda não foi concedida. Recusa não gera insistência em toda abertura. O Perfil tem um atalho explícito **Conferir permissão do Android**, via intent associado somente ao pacote, para solicitar novamente ou abrir as configurações do app. No retorno, a tela Android relança a TWA com uma indicação atual de permissão; a página mostra **Notificações bloqueadas no Android** e impede testes enquanto a indicação está bloqueada. Em versões anteriores, orientar a conferir a permissão manualmente. A indicação reflete o estado na última abertura pelo app; mudanças feitas por fora das telas do app exigem reabri-lo ou usar esse atalho.
+
+O estado de cadastro agora é atualizado na própria interface após a confirmação do servidor. O botão alterna **Ativar notificações** / **Desativar notificações**. Desativar remove o token do backend, tenta encerrar a inscrição local, desmarca o resumo e persiste a escolha por conta/aparelho (`vc_push_disabled_<userId>`). Sincronização, reabrir Perfil e testar não reativam a escolha. O texto de teste informa que o serviço aceitou o envio, sem alegar confirmação de exibição no celular.
+
+Pacote: `android/VizinhoCerto-1.0.7-v11-Permissoes.aab`. Assinatura: `android/assinar-versao-1.0.7.ps1`; saída `VizinhoCerto-1.0.7-v11-Permissoes-signed.aab`. Testes Node: 137; testes Java: 6. Verificar no aparelho após atualização pelo teste interno: permitir no prompt, ativar no Perfil, conferir botão Desativar, testar comum/SOS, desativar e reabrir para confirmar persistência.
+
+```
+<pt-BR>
+Pedido de permissão para notificações no Android e atalho para revisar a autorização do aparelho. Controle de ativar e desativar com estado visível no perfil. Melhorias nos testes de notificação e manutenção do som exclusivo de SOS.
+</pt-BR>
+```

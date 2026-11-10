@@ -1085,6 +1085,31 @@ document.head.appendChild(ptrStyle);
 // ── PUSH NOTIFICATIONS ──
 let registroPushEmAndamento=null;
 let resumoAutomaticoAtivo=false;
+let notificacoesRegistradas=false;
+let alterandoNotificacoes=false;
+function chaveNotificacoesDesativadas(){return 'vc_push_disabled_'+(E.userId||'guest');}
+function notificacoesDesativadasPeloUsuario(){return localStorage.getItem(chaveNotificacoesDesativadas())==='1';}
+function permissaoAndroidBloqueada(){
+  if(!notificacoesAndroid()) return false;
+  try{
+    const value=new URLSearchParams(window.location.search).get('vc_android_notifications');
+    if(value==='0'||value==='1') sessionStorage.setItem('vc_android_notifications',value);
+    return sessionStorage.getItem('vc_android_notifications')==='0';
+  }catch(_){return false;}
+}
+function atualizarEstadoNotificacoes({enabled=false,checking=false,detail=''}={}){
+  notificacoesRegistradas=enabled;
+  const androidBlocked=permissaoAndroidBloqueada();
+  const label=document.getElementById('push-state-label');
+  const button=document.getElementById('push-toggle');
+  const status=document.getElementById('push-status');
+  if(label) label.textContent=checking?'Verificando notificações…':androidBlocked?'Notificações bloqueadas no Android':enabled?'Notificações ativadas neste aparelho':'Notificações desativadas neste aparelho';
+  if(button){button.disabled=checking;button.textContent=checking?'Verificando…':enabled?'Desativar notificações':'Ativar notificações';}
+  if(status) status.textContent=androidBlocked?'A permissão do aplicativo está bloqueada. Toque em “Conferir permissão do Android” para permitir.':detail||(enabled?'Cadastro de envio ativo. Use o teste para conferir a chegada.':'Ative para receber os avisos. Sua escolha será mantida neste aparelho.');
+  for(const id of ['push-test-normal','push-test-sos','push-daily-enabled']){
+    const el=document.getElementById(id);if(el) el.disabled=checking||!enabled||androidBlocked;
+  }
+}
 function notificacoesAndroid(){ return VC_PLAY_STORE_MODE && /Android/i.test(navigator.userAgent||''); }
 async function pushApi(action,sub,extra={}){
   const response=await apiAutenticada('/api/posts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,subscription:sub.toJSON(),...extra})});
@@ -1093,15 +1118,16 @@ async function pushApi(action,sub,extra={}){
   return data;
 }
 async function registrarNotificacoes({solicitarPermissao=false}={}) {
+  if(notificacoesDesativadasPeloUsuario()&&!solicitarPermissao){atualizarEstadoNotificacoes();return false;}
   if(registroPushEmAndamento) return registroPushEmAndamento;
   registroPushEmAndamento=registrarNotificacoesAgora({solicitarPermissao});
   try{return await registroPushEmAndamento;}finally{registroPushEmAndamento=null;}
 }
 async function registrarNotificacoesAgora({solicitarPermissao=false}={}) {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return false;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {atualizarEstadoNotificacoes({detail:'Este navegador não oferece notificações. Abra pelo ícone do aplicativo.'});return false;}
   try {
     if(!E.userId) return false;
-    if (Notification.permission === 'denied') return false;
+    if (Notification.permission === 'denied') {atualizarEstadoNotificacoes({detail:'A permissão está bloqueada. Permita notificações nas configurações do aparelho.'});return false;}
     if (Notification.permission === 'default') {
       if(!solicitarPermissao) return false;
       const perm = await Notification.requestPermission();
@@ -1117,11 +1143,11 @@ async function registrarNotificacoesAgora({solicitarPermissao=false}={}) {
       });
     }
     const saved=await pushApi('push-register',sub,{platform:notificacoesAndroid()?'android':'web'});
+    if(solicitarPermissao) localStorage.removeItem(chaveNotificacoesDesativadas());
     resumoAutomaticoAtivo=saved.automaticas===true;
     const checkbox=document.getElementById('push-daily-enabled');
     if(checkbox) checkbox.checked=resumoAutomaticoAtivo;
-    const status=document.getElementById('push-status');
-    if(status) status.textContent='Notificações cadastradas neste aparelho. Use o teste para conferir a chegada.';
+    atualizarEstadoNotificacoes({enabled:true,detail:notificacoesAndroid()?'Cadastro de envio ativo. O Android também precisa permitir as notificações do Vizinho Certo.':'Cadastro de envio ativo. Use o teste para conferir a chegada.'});
     if(!localStorage.getItem('vc_notifications_tracked')){
       localStorage.setItem('vc_notifications_tracked','1');
       trackAppEvent('notifications_enabled',{source:'profile',status:'granted'});
@@ -1129,8 +1155,7 @@ async function registrarNotificacoesAgora({solicitarPermissao=false}={}) {
     return true;
   } catch(e) {
     console.log('Push não disponível:', e.message);
-    const status=document.getElementById('push-status');
-    if(status) status.textContent='Não foi possível cadastrar: '+e.message;
+    atualizarEstadoNotificacoes({detail:'Não foi possível ativar: '+e.message});
     return false;
   }
 }
@@ -1138,11 +1163,15 @@ async function registrarNotificacoesAgora({solicitarPermissao=false}={}) {
 async function testarNotificacao(botao,{sos=false}={}){
   if(botao) botao.disabled=true;
   try{
-    if(!await registrarNotificacoes({solicitarPermissao:true})) throw new Error('Permita as notificações deste aparelho e tente novamente.');
+    if(permissaoAndroidBloqueada()) throw new Error('Permita notificações no Android antes de testar.');
+    if(notificacoesDesativadasPeloUsuario()||!notificacoesRegistradas) throw new Error('Ative as notificações antes de testar.');
+    if(!await registrarNotificacoes()) throw new Error('Permita as notificações deste aparelho e tente novamente.');
     const reg=await navigator.serviceWorker.ready;
     await pushApi(sos?'push-test-sos':'push-test',await reg.pushManager.getSubscription());
-    toast(sos?'Teste SOS enviado só para este aparelho. Confira o som.':'Teste enviado. Confira a notificação na barra do celular.');
-  }catch(e){toast(e.message);}finally{if(botao) botao.disabled=false;}
+    const status=document.getElementById('push-status');
+    if(status) status.textContent='O serviço aceitou o envio do teste. Isso ainda não confirma que o celular exibiu o aviso.'+(notificacoesAndroid()?' Se não apareceu, confira Configurações → Aplicativos → Vizinho Certo → Notificações.':'');
+    toast('Teste enviado. Confira a barra de notificações do celular.');
+  }catch(e){toast(e.message);}finally{if(botao) botao.disabled=!notificacoesRegistradas||permissaoAndroidBloqueada();}
 }
 
 async function alterarResumoAutomatico(input){
@@ -1159,10 +1188,16 @@ async function alterarResumoAutomatico(input){
 }
 
 function sincronizarNotificacoesConcedidas(){
-  if('Notification' in window && Notification.permission==='granted') registrarNotificacoes();
+  if(alterandoNotificacoes) return;
+  if(notificacoesDesativadasPeloUsuario()){atualizarEstadoNotificacoes();return;}
+  if('Notification' in window && Notification.permission==='granted'){
+    atualizarEstadoNotificacoes({checking:true});
+    registrarNotificacoes();
+  }else atualizarEstadoNotificacoes();
 }
 
 async function acaoNotificacaoPerfil(){
+  if(alterandoNotificacoes) return;
   const presentation=window.VizinhoCertoInstall?.getNotificationPresentation();
   if(!presentation) return;
   if(presentation.status==='install_required'){
@@ -1173,12 +1208,38 @@ async function acaoNotificacaoPerfil(){
     alert('As notificações foram bloqueadas. Abra as configurações do navegador ou do celular, procure o Vizinho Certo e permita notificações.');
     return;
   }
-  if(presentation.status==='available'){
-    const ativou=await registrarNotificacoes({solicitarPermissao:true});
-    toast(ativou?'Notificações ativadas! 🔔':'A permissão não foi ativada.');
-    navTab('perfil',document.getElementById('nav-perfil'));
+  alterandoNotificacoes=true;
+  const wasEnabled=notificacoesRegistradas;
+  atualizarEstadoNotificacoes({enabled:wasEnabled,checking:true});
+  try{
+    if(wasEnabled){
+      localStorage.setItem(chaveNotificacoesDesativadas(),'1');
+      if(registroPushEmAndamento) await registroPushEmAndamento;
+      localStorage.setItem(chaveNotificacoesDesativadas(),'1');
+      const reg=await navigator.serviceWorker.getRegistration('/');
+      const sub=await reg?.pushManager.getSubscription();
+      if(sub){
+        await pushApi('push-unregister',sub);
+        try{await sub.unsubscribe();}catch(e){console.log('Inscrição removida do envio; limpeza local pendente.');}
+      }
+      resumoAutomaticoAtivo=false;
+      const checkbox=document.getElementById('push-daily-enabled');if(checkbox)checkbox.checked=false;
+      atualizarEstadoNotificacoes();toast('Notificações desativadas neste aparelho.');
+    }else{
+      const ativou=await registrarNotificacoes({solicitarPermissao:true});
+      if(!ativou) atualizarEstadoNotificacoes({detail:'Não foi possível ativar. Confira a permissão de notificações do aparelho.'});
+      toast(ativou?'Notificações ativadas neste aparelho.':'A permissão não foi ativada.');
+    }
+  }catch(e){
+    if(wasEnabled) localStorage.removeItem(chaveNotificacoesDesativadas());
+    atualizarEstadoNotificacoes({enabled:wasEnabled,detail:e.message});toast(e.message);
   }
+  finally{alterandoNotificacoes=false;}
 }
+
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden&&E.userId&&document.getElementById('push-toggle')) sincronizarNotificacoesConcedidas();
+});
 
 function atualizarEstadoRede(){
   document.getElementById('offline-banner')?.classList.toggle('vis',!navigator.onLine);
@@ -2664,12 +2725,13 @@ function navTab(tab,el){
       </div>
       <div class="profile-help-card neutral">
         <div class="vc-install-profile-title">🔔 Avisos da vizinhança</div>
-        <div class="profile-help-status">${htmlSeguro(notificacao.label)}</div>
+        <div id="push-state-label" class="profile-help-status">Verificando notificações…</div>
         <div class="vc-install-profile-copy">${htmlSeguro(notificacao.copy)}</div>
-        ${notificacao.action?`<button type="button" class="vc-install-button vc-install-profile" onclick="acaoNotificacaoPerfil()">${htmlSeguro(notificacao.action)}</button>`:''}
+        <button id="push-toggle" type="button" class="vc-install-button vc-install-profile" onclick="acaoNotificacaoPerfil()" disabled>Verificando…</button>
         <p id="push-status" class="vc-install-profile-copy">Ative e use o teste para conferir se os avisos chegam neste aparelho.</p>
-        <button type="button" class="vc-install-button vc-install-profile" onclick="testarNotificacao(this)">🔔 Testar notificação neste aparelho</button>
-        ${notificacoesAndroid()?`<button type="button" class="vc-install-button vc-install-profile" onclick="testarNotificacao(this,{sos:true})">🆘 Testar som do SOS só neste aparelho</button><p class="vc-install-profile-copy">O som exclusivo exige o app Android na versão 1.0.6 ou mais recente. Este teste não alerta os vizinhos.</p>`:''}
+        ${notificacoesAndroid()?`<a class="vc-install-button vc-install-profile" style="display:block;box-sizing:border-box;text-align:center;text-decoration:none;" href="intent://notificacoes#Intent;scheme=vizinhocerto;package=br.com.vizinhocerto.app;S.browser_fallback_url=https%3A%2F%2Fwww.vizinhocerto.com.br%2Fapp%3Fvc_android_permission_help%3D1;end">Conferir permissão do Android</a><p class="vc-install-profile-copy">Na versão 1.0.7, o botão abre a permissão do próprio aplicativo. Em versões anteriores, confira Configurações → Aplicativos → Vizinho Certo → Notificações.</p>`:''}
+        <button id="push-test-normal" type="button" class="vc-install-button vc-install-profile" onclick="testarNotificacao(this)" disabled>🔔 Testar notificação neste aparelho</button>
+        ${notificacoesAndroid()?`<button id="push-test-sos" type="button" class="vc-install-button vc-install-profile" onclick="testarNotificacao(this,{sos:true})" disabled>🆘 Testar som do SOS só neste aparelho</button><p class="vc-install-profile-copy">O som exclusivo exige o app Android na versão 1.0.6 ou mais recente. Este teste não alerta os vizinhos.</p>`:''}
         ${notificacoesAndroid()?`<label style="display:flex;gap:10px;align-items:center;margin-top:16px;font-size:14px;"><input type="checkbox" id="push-daily-enabled" ${resumoAutomaticoAtivo?'checked':''} onchange="alterarResumoAutomatico(this)"> Receber resumo diário da vizinhança</label><p class="vc-install-profile-copy">Por volta das 19h, quando houver novas publicações no seu raio. No máximo um resumo por dia. Você pode desativar aqui.</p>`:''}
       </div>
       <div class="profile-help-card">
