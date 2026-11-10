@@ -1095,6 +1095,7 @@ let consultaPushEmAndamento=null;
 let resumoAutomaticoAtivo=false;
 let notificacoesRegistradas=null;
 let alterandoNotificacoes=false;
+let recebimentoPushPendente=false;
 function chaveNotificacoesDesativadas(){return 'vc_push_disabled_'+(E.userId||'guest');}
 function chaveCadastroNotificacoes(){return 'vc_push_registered_'+(E.userId||'guest');}
 function notificacoesDesativadasPeloUsuario(){return localStorage.getItem(chaveNotificacoesDesativadas())==='1';}
@@ -1126,7 +1127,9 @@ function atualizarEstadoNotificacoes({enabled=notificacoesRegistradas,checking=f
   const label=document.getElementById('push-state-label');
   const button=document.getElementById('push-toggle');
   const status=document.getElementById('push-status');
-  if(label) label.textContent=blocked?'Notificações bloqueadas pelo sistema':enabled===true?'Notificações ativadas neste aparelho':checking?'Verificando notificações…':enabled===false?'Notificações desativadas neste aparelho':'Estado ainda não confirmado';
+  if(label) label.textContent=blocked?'Notificações bloqueadas pelo sistema':enabled===true&&recebimentoPushPendente?'Notificações salvas · recebimento pendente':enabled===true?'Notificações ativadas neste aparelho':checking?'Verificando notificações…':enabled===false?'Notificações desativadas neste aparelho':'Estado ainda não confirmado';
+  const retry=document.getElementById('push-reconnect');
+  if(retry){retry.hidden=enabled!==true||!recebimentoPushPendente;retry.disabled=checking||alterandoNotificacoes;}
   if(button){
     button.disabled=checking||alterandoNotificacoes;
     button.textContent=checking&&enabled!==true?'Verificando…':enabled===true?'Desativar notificações':'Ativar notificações';
@@ -1148,6 +1151,7 @@ async function registrarNotificacoes({solicitarPermissao=false}={}){
   try{return await registroPushEmAndamento;}finally{registroPushEmAndamento=null;}
 }
 async function registrarNotificacoesAgora({solicitarPermissao=false}={}){
+  let stage='permission';
   try{
     if(!E.userId) throw new Error('Entre na sua conta para continuar.');
     if(!('serviceWorker' in navigator)||!('PushManager' in window)||!('Notification' in window)) throw new Error('Abra pelo ícone do aplicativo para ativar notificações.');
@@ -1157,14 +1161,23 @@ async function registrarNotificacoesAgora({solicitarPermissao=false}={}){
       if(await Notification.requestPermission()!=='granted') throw new Error('A permissão não foi concedida.');
     }
     const userId=E.userId;
+    stage='service_worker';
     await navigator.serviceWorker.register('/sw.js');
     const reg=await navigator.serviceWorker.ready;
     let sub=await reg.pushManager.getSubscription();
+    if(sub&&solicitarPermissao){
+      stage='status';
+      const current=await pushApi('push-status',sub);
+      if(current.renew_subscription){stage='unsubscribe';await sub.unsubscribe();sub=null;}
+    }
+    stage='subscribe';
     if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
+    stage='save';
     const saved=await pushApi('push-register',sub,{platform:notificacoesAndroid()?'android':'web'});
     if(E.userId!==userId) return false;
     localStorage.removeItem(chaveNotificacoesDesativadas());
     resumoAutomaticoAtivo=saved.automaticas===true;
+    recebimentoPushPendente=false;
     lembrarCadastroNotificacoes(true);
     atualizarEstadoNotificacoes({enabled:true});
     if(!localStorage.getItem('vc_notifications_tracked')){
@@ -1173,6 +1186,7 @@ async function registrarNotificacoesAgora({solicitarPermissao=false}={}){
     }
     return true;
   }catch(e){
+    relatarFalhaRecebimento(stage,e);
     atualizarEstadoNotificacoes({detail:'Não foi possível concluir: '+e.message+' Sua configuração anterior foi mantida.'});
     return false;
   }
@@ -1204,6 +1218,7 @@ async function consultarEstadoNotificacoes(){
     if(saved.legacy&&sub) saved=await pushApi('push-register',sub);
     if(E.userId!==userId||alterandoNotificacoes) return;
     const enabled=saved.enabled===true||saved.registered===true;
+    recebimentoPushPendente=enabled&&!saved.registered;
     resumoAutomaticoAtivo=saved.automaticas===true;
     lembrarCadastroNotificacoes(enabled);
     atualizarEstadoNotificacoes();
@@ -1213,10 +1228,11 @@ async function consultarEstadoNotificacoes(){
         const recovered=await reconectarNotificacoes(reg,sub,{renew:saved.renew_subscription===true});
         if(E.userId!==userId||alterandoNotificacoes) return;
         resumoAutomaticoAtivo=recovered.automaticas===true;
+        recebimentoPushPendente=recovered.enabled===true&&recovered.registered!==true;
         lembrarCadastroNotificacoes(recovered.enabled===true||recovered.registered===true);
         atualizarEstadoNotificacoes();
       }catch(e){
-        if(E.userId===userId) atualizarEstadoNotificacoes({enabled:true,detail:'Sua escolha está salva. Não foi possível reconectar os avisos agora. Confira a conexão e a permissão do celular.'});
+        if(E.userId===userId) atualizarEstadoNotificacoes({enabled:true,detail:'Sua escolha está salva, mas o recebimento não foi reconectado. Toque em Reconectar notificações. '+e.message});
       }
     }
   }catch(e){
@@ -1225,6 +1241,8 @@ async function consultarEstadoNotificacoes(){
   }
 }
 async function reconectarNotificacoes(reg,sub,{renew=false}={}){
+  let stage='permission';
+  try{
   if(notificacoesDesativadasPeloUsuario()||Notification.permission==='denied') throw new Error('Recebimento não autorizado.');
   if(!reg){await navigator.serviceWorker.register('/sw.js');reg=await navigator.serviceWorker.ready;}
   // A provider-rejected subscription can still be returned by getSubscription().
@@ -1234,6 +1252,7 @@ async function reconectarNotificacoes(reg,sub,{renew=false}={}){
     const options={userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)};
     if(!granted&&reg.pushManager.permissionState) granted=await reg.pushManager.permissionState(options)==='granted';
     if(!granted) throw new Error('Permissão pendente.');
+    stage='unsubscribe';
     await sub.unsubscribe();
     sub=null;
   }
@@ -1242,9 +1261,27 @@ async function reconectarNotificacoes(reg,sub,{renew=false}={}){
     const options={userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)};
     if(!granted&&reg.pushManager.permissionState) granted=await reg.pushManager.permissionState(options)==='granted';
     if(!granted) throw new Error('Permissão pendente.');
+    stage='subscribe';
     sub=await reg.pushManager.subscribe(options);
   }
-  return pushApi('push-recover',sub);
+  stage='save';
+  return await pushApi('push-recover',sub);
+  }catch(e){relatarFalhaRecebimento(stage,e);throw e;}
+}
+function relatarFalhaRecebimento(stage,error){
+  // Diagnostic contains no subscription keys, endpoint, message or account credentials.
+  pushApi('push-recovery-report',null,{stage,error_name:error?.name||'Error',permission:Notification.permission}).catch(()=>{});
+}
+async function reconectarAvisosPerfil(){
+  if(alterandoNotificacoes) return;
+  alterandoNotificacoes=true;
+  atualizarEstadoNotificacoes({checking:true});
+  try{
+    if(await registrarNotificacoes({solicitarPermissao:true})) toast('Recebimento reconectado neste aparelho.');
+  }finally{
+    alterandoNotificacoes=false;
+    atualizarEstadoNotificacoes({detail:document.getElementById('push-status')?.textContent||''});
+  }
 }
 async function alterarResumoAutomatico(input){
   const enabled=input.checked;
@@ -2818,6 +2855,7 @@ function navTab(tab,el){
         <div id="push-state-label" class="profile-help-status">Verificando notificações…</div>
         <div class="vc-install-profile-copy">Um único padrão de notificação para SOS, publicações e avisos.</div>
         <button id="push-toggle" type="button" class="vc-install-button vc-install-profile" onclick="acaoNotificacaoPerfil()" disabled>Verificando…</button>
+        <button id="push-reconnect" type="button" class="vc-install-button vc-install-profile" onclick="reconectarAvisosPerfil()" hidden>Reconectar notificações</button>
         <p id="push-status" class="vc-install-profile-copy">Conferindo o cadastro deste aparelho…</p>
         ${notificacoesAndroid()?`<p class="vc-install-profile-copy">Permissão do celular: Configurações → Aplicativos → Vizinho Certo → Notificações.</p>`:''}
         ${notificacoesAndroid()?`<label style="display:flex;gap:10px;align-items:center;margin-top:16px;font-size:14px;"><input type="checkbox" id="push-daily-enabled" ${resumoAutomaticoAtivo?'checked':''} onchange="alterarResumoAutomatico(this)"> Receber resumo diário da vizinhança</label><p class="vc-install-profile-copy">Por volta das 19h, quando houver novas publicações no seu raio. No máximo um resumo por dia. Você pode desativar aqui.</p>`:''}

@@ -209,3 +209,18 @@ test('renovação não remove endereço quando permissão está bloqueada ou pen
     assert.equal(f.node('push-daily-enabled').checked,true);
   }
 });
+
+test('falha automática oferece reconexão pelo clique, com permissão e resumo preservados',async()=>{
+  const f=setup({subscribed:true,permission:'default',server:{enabled:true,registered:false,automaticas:true,renew_subscription:true}});
+  await f.context.sincronizarNotificacoesConcedidas();
+  assert.match(f.node('push-state-label').textContent,/recebimento pendente/);
+  assert.equal(f.node('push-reconnect').hidden,false);assert.equal(f.counts.permissionRequests,0);
+  const retry=f.context.reconectarAvisosPerfil();
+  assert.equal(f.counts.permissionRequests,1);
+  await retry;
+  assert.equal(f.counts.unsubscribes,1);assert.equal(f.counts.subscribes,1);
+  assert.equal(f.server.automaticas,true);assert.equal(f.node('push-daily-enabled').checked,true);
+  assert.equal(f.node('push-reconnect').hidden,true);
+  assert.match(f.node('push-state-label').textContent,/ativadas/);
+  assert.equal(f.node('push-toggle').textContent,'Desativar notificações');
+});
