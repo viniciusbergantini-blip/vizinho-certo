@@ -61,23 +61,28 @@ test('inscrição valida serviço push e normaliza serialização sem permitir e
   assert.throws(()=>normalizeSubscription({...sub,endpoint:'https://fcm.googleapis.com.evil.test/test'}));
 });
 
-test('teste sonoro SOS envia só para a inscrição Android autenticada sem criar alerta no feed', async () => {
-  const sub={endpoint:'https://fcm.googleapis.com/fcm/send/own-device',keys:{p256dh:'a'.repeat(87),auth:'b'.repeat(22)}};
-  const token=normalizeSubscription(sub),filters=[],deliveries=[];
-  const q={select:()=>q,eq:(k,v)=>{filters.push([k,v]);return q;},maybeSingle:async()=>({data:{id:'own',token,plataforma:'android'}})};
-  const db={from:table=>{assert.equal(table,'push_tokens');return q;}};
-  const module={exports:{}};
-  vm.runInNewContext(fs.readFileSync(path.join(root,'lib/notification-handler.js'),'utf8'),{module,URL,JSON,require:()=>({
-    sendTokens:async(sb,tokens,payload)=>{deliveries.push({tokens,payload});return {sent:1};}
-  })});
-  let body;const res={json:b=>{body=b;},status:()=>res};
-  await module.exports({body:{action:'push-test-sos',subscription:sub}},res,db,'reader');
+test('estado do cadastro consulta somente a inscrição do usuário sem alterar tokens',async()=>{
+  const handler=require('../lib/notification-handler');
+  const sub={endpoint:'https://fcm.googleapis.com/fcm/send/test',keys:{p256dh:'a'.repeat(87),auth:'b'.repeat(22)}};
+  const filters=[];
+  const query={select:()=>query,eq:(k,v)=>{filters.push([k,v]);return query;},maybeSingle:async()=>({data:{id:'own',automaticas:true}})};
+  let body;const res={json:x=>{body=x;},status:()=>res};
+  await handler({body:{action:'push-status',subscription:sub}},res,{from:()=>query},'reader');
+  assert.deepEqual(body,{registered:true,automaticas:true});
   assert.ok(filters.some(([k,v])=>k==='usuario_id'&&v==='reader'));
-  assert.ok(filters.some(([k,v])=>k==='token'&&v===token));
-  assert.equal(deliveries.length,1);assert.equal(deliveries[0].tokens.length,1);
-  assert.equal(deliveries[0].tokens[0].usuario_id,'reader');
-  assert.equal(deliveries[0].payload.title,'🆘 Teste de som do SOS');assert.equal(body.sent,1);
+  assert.ok(filters.some(([k,v])=>k==='token'&&v===normalizeSubscription(sub)));
 });
+
+test('antigos testes de notificação não enviam nada',async()=>{
+  const handler=require('../lib/notification-handler');
+  const sub={endpoint:'https://fcm.googleapis.com/fcm/send/test',keys:{p256dh:'a'.repeat(87),auth:'b'.repeat(22)}};
+  for(const action of ['push-test','push-test-sos']){
+    let status;const res={status:x=>{status=x;return res;},json:()=>{}};
+    await handler({body:{action,subscription:sub}},res,{from:()=>assert.fail('must not query or send')},'reader');
+    assert.equal(status,410);
+  }
+});
+
 
 for (const scenario of ['create','comment']) test(`${scenario} aguarda envio antes da resposta, sem depender de SOS`, async () => {
   let finish, sentResponse=false, sending=false;

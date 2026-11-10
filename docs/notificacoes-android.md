@@ -55,3 +55,20 @@ Pacote: `android/VizinhoCerto-1.0.7-v11-Permissoes.aab`. Assinatura: `android/as
 Pedido de permissão para notificações no Android e atalho para revisar a autorização do aparelho. Controle de ativar e desativar com estado visível no perfil. Melhorias nos testes de notificação e manutenção do som exclusivo de SOS.
 </pt-BR>
 ```
+
+## Versão atual: simplificação — 1.0.8 (12)
+
+Esta seção substitui os fluxos de som especial e permissão das versões 1.0.6/1.0.7 descritos acima. O usuário pediu um único padrão para todos os avisos e a retirada dos testes após problemas com abertura e ativação.
+
+- `LauncherActivity`, `DelegationService` e `AndroidManifest.xml` foram restaurados ao estado de `c06f9ff` (base estável Android 1.0.5). A abertura volta diretamente à TWA, sem atividade intermediária de permissão e sem indicação de permissão na URL.
+- Removidos som, canal especial, código de permissão personalizado, seus botões/atalhos e os dois testes de notificação do Perfil. Os endpoints de teste antigos retornam 410 sem enviar. SOS, comentários, publicações e resumo passam pelo serviço padrão de notificações do Android Browser Helper.
+- Abrir Perfil agora consulta `push-status` com a inscrição do aparelho, sem fazer subscribe, upsert ou remoção de tokens. A resposta sempre é restrita ao usuário autenticado. Falha de rede preserva a última configuração conhecida e avisa que a consulta falhou; não é interpretada como desativação. O parâmetro antigo `vc_android_notifications=0` não é mais lido.
+- Desativar é uma ação explícita que remove a inscrição do backend e mantém a permissão e a inscrição do navegador. A preferência por conta/aparelho impede reativação silenciosa. Reativar exige ação do usuário. O resumo diário continua opcional e restrito às inscrições Android autorizadas.
+
+Pacote: `android/VizinhoCerto-1.0.8-v12-Notificacoes.aab`. Assinatura: `android/assinar-versao-1.0.8.ps1`. Saída: `VizinhoCerto-1.0.8-v12-Notificacoes-signed.aab`. Para validar, atualizar pelo teste interno, abrir pelo botão da Play Store, conferir entrada direta, ativar e reabrir Perfil. Um segundo usuário próximo publica para validar recebimento real. Não enviar SOS automático para validar.
+
+```
+<pt-BR>
+Restaurada a abertura direta do aplicativo. Notificações padrão para SOS, publicações e avisos. Removidos os testes e o som especial. Correções na consulta e na persistência da ativação de notificações.
+</pt-BR>
+```

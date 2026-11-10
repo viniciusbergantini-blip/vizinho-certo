@@ -19,7 +19,6 @@ import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import androidx.core.app.NotificationManagerCompat;
 
 
 
@@ -50,13 +49,6 @@ public class LauncherActivity
 
         
 
-        Uri.Builder launch = uri.buildUpon().clearQuery();
-        for (String key : uri.getQueryParameterNames()) {
-            if (!"vc_android_notifications".equals(key)) {
-                for (String value : uri.getQueryParameters(key)) launch.appendQueryParameter(key, value);
-            }
-        }
-        return launch.appendQueryParameter("vc_android_notifications",
-                NotificationManagerCompat.from(this).areNotificationsEnabled() ? "1" : "0").build();
+        return uri;
     }
 }
