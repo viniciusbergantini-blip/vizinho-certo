@@ -37,3 +37,25 @@ test('notificações excluem coordenadas ausentes e contam pessoas, não aparelh
   const result=await module.exports.notifyNearby(sb,{lat:1,lon:1,raio:500},{title:'Test'});
   assert.deepEqual(deliveries.sort(), ['a','b']); assert.equal(result.sent,2); assert.equal(result.notified_users,1);
 });
+
+test('diagnóstico distingue aceite do provedor de falha sem expor inscrição ou conteúdo', async () => {
+  const logs=[], removed=[];
+  const module={exports:{}};
+  vm.runInNewContext(fs.readFileSync(path.join(root,'lib/push-notifications.js'),'utf8'),{
+    module,process:{env:{VAPID_SUBJECT:'test',VAPID_PUBLIC_KEY:'p',VAPID_PRIVATE_KEY:'s'}},
+    console:{info:(...args)=>logs.push(args),error:(...args)=>logs.push(args)},
+    require:name=>name==='web-push'?{setVapidDetails:()=>{},sendNotification:async sub=>{
+      if(sub.endpoint.includes('expired'))throw {statusCode:410};
+      return {statusCode:201};
+    }}:require('../lib/localizacao'),
+  });
+  const tokens=['accepted','expired'].map((suffix,i)=>({usuario_id:'reader',installation_id:'device-'+i,
+    token:JSON.stringify({endpoint:'https://fcm.googleapis.com/private-'+suffix,keys:{p256dh:'SECRET',auth:'SECRET'}})}));
+  const result=await module.exports.sendTokens({from:()=>({delete:()=>({in:async(_,values)=>removed.push(...values)})})},tokens,
+    {title:'Private title',body:'Private body',tag:'post-example'});
+  assert.equal(result.sent,1);assert.equal(result.failed,1);assert.equal(removed.length,1);
+  const records=logs.map(entry=>JSON.parse(entry[1]));
+  assert.ok(records.some(row=>row.installation_id==='device-0'&&row.result==='accepted'&&row.status===201));
+  assert.ok(records.some(row=>row.installation_id==='device-1'&&row.result==='failed'&&row.status===410));
+  assert.doesNotMatch(JSON.stringify(logs),/SECRET|fcm\.googleapis|Private title|Private body/);
+});
