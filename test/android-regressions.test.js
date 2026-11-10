@@ -33,7 +33,7 @@ test('notificações excluem coordenadas ausentes e contam pessoas, não aparelh
   const tokens=[{usuario_id:'near',token:JSON.stringify({endpoint:'a',keys:{p256dh:'p',auth:'a'}})}, {usuario_id:'near',token:JSON.stringify({endpoint:'b',keys:{p256dh:'p',auth:'a'}})}, {usuario_id:'missing',token:JSON.stringify({endpoint:'c',keys:{p256dh:'p',auth:'a'}})}];
   const sb={from:table=>table==='push_tokens'?{select:async()=>({data:tokens})}:{select:()=>({in:async()=>({data:[{id:'near',lat:1,lon:1},{id:'missing',lat:null,lon:null}]})})}};
   const module={exports:{}};
-  vm.runInNewContext(fs.readFileSync(path.join(root,'lib/push-notifications.js'),'utf8'),{module,process:{env:{VAPID_SUBJECT:'test',VAPID_PUBLIC_KEY:'p',VAPID_PRIVATE_KEY:'s'}},require:name=>name==='web-push'?{setVapidDetails:()=>{},sendNotification:async s=>{deliveries.push(s.endpoint);}}:require('../lib/localizacao')});
+  vm.runInNewContext(fs.readFileSync(path.join(root,'lib/push-notifications.js'),'utf8'),{module,process:{env:{VAPID_SUBJECT:'test',VAPID_PUBLIC_KEY:'p',VAPID_PRIVATE_KEY:'s'}},require:name=>name==='web-push'?{setVapidDetails:()=>{},sendNotification:async s=>{deliveries.push(s.endpoint);}}:name==='./push-receipt'?require('../lib/push-receipt'):require('../lib/localizacao')});
   const result=await module.exports.notifyNearby(sb,{lat:1,lon:1,raio:500},{title:'Test'});
   assert.deepEqual(deliveries.sort(), ['a','b']); assert.equal(result.sent,2); assert.equal(result.notified_users,1);
 });
@@ -47,7 +47,7 @@ test('diagnóstico distingue aceite do provedor de falha sem expor inscrição o
     require:name=>name==='web-push'?{setVapidDetails:()=>{},sendNotification:async sub=>{
       if(sub.endpoint.includes('expired'))throw {statusCode:410};
       return {statusCode:201};
-    }}:require('../lib/localizacao'),
+    }}:name==='./push-receipt'?require('../lib/push-receipt'):require('../lib/localizacao'),
   });
   const tokens=['accepted','expired'].map((suffix,i)=>({id:suffix,usuario_id:'reader',installation_id:'device-'+i,
     token:JSON.stringify({endpoint:'https://fcm.googleapis.com/private-'+suffix,keys:{p256dh:'SECRET',auth:'SECRET'}})}));

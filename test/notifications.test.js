@@ -109,7 +109,7 @@ test('push define urgência e expiração curta para SOS e remove inscrição ex
   vm.runInNewContext(fs.readFileSync(path.join(root,'lib/push-notifications.js'),'utf8'),{module,Date,Set,JSON,Promise,console,
     process:{env:{VAPID_SUBJECT:'test',VAPID_PUBLIC_KEY:'p',VAPID_PRIVATE_KEY:'s'}},require:n=>n==='web-push'?{
       setVapidDetails:()=>{},sendNotification:async(sub,payload,opts)=>{options.push(opts);if(sub.endpoint==='expired')throw {statusCode:410};}
-    }:require('../lib/localizacao')});
+    }:n==='./push-receipt'?require('../lib/push-receipt'):require('../lib/localizacao')});
   const token=endpoint=>({id:endpoint,usuario_id:'u',token:JSON.stringify({endpoint,keys:{p256dh:'p',auth:'a'}})});
   const db={from:()=>({delete:()=>({in:async(k,t)=>{assert.equal(k,'id');removed.push(...t);return {};}})})};
   const result=await module.exports.sendTokens(db,[token('ok'),token('expired')],{title:'🆘 Test'});

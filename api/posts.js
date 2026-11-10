@@ -22,6 +22,13 @@ module.exports = async (req, res) => {
     if (req.query?.rota === 'notificacoes-diarias') {
       return await require('../lib/notification-digest').handleDigest(req, res);
     }
+    // The worker has no login session. The server-signed receipt authorizes only this log,
+    // never a notification send, account mutation or access to private data.
+    if (req.method === 'POST' && req.body?.action === 'push-receipt') {
+      if (!enforceTrustedOrigin(req, res) || !enforceBodyLimit(req, res, 2048)) return;
+      if (!enforceRateLimit(req, res, 'push-receipt', { limit: 120, windowMs: 60_000 })) return;
+      return require('../lib/push-receipt').handleReceipt(req, res);
+    }
     const sb = serviceClient();
     const auth = await authenticate(req, res, sb);
     if (!auth) return;

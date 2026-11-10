@@ -1,5 +1,5 @@
 // Vizinho Certo — Service Worker
-const CACHE_NAME = 'vizinho-certo-static-v15';
+const CACHE_NAME = 'vizinho-certo-static-v16';
 const STATIC_ASSETS = [
   '/offline.html',
   '/app-runtime.js',
@@ -78,10 +78,23 @@ self.addEventListener('push', e => {
     ]
   };
 
-  if (data.expiresAt && Date.now() > data.expiresAt) return;
+  const report = (status, error) => {
+    if (!data.receipt) return Promise.resolve();
+    return fetch('/api/posts', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'push-receipt', receipt: data.receipt, status,
+        permission: typeof Notification === 'undefined' ? 'unknown' : Notification.permission,
+        error_name: error?.name, client_time: Date.now() }) }).catch(() => {});
+  };
+  if (data.expiresAt && Date.now() > data.expiresAt) {
+    e.waitUntil(report('expired')); return;
+  }
 
   e.waitUntil(
-    self.registration.showNotification(data.title || 'Vizinho Certo 🏘️', options)
+    Promise.all([
+      report('received'),
+      Promise.resolve().then(() => self.registration.showNotification(data.title || 'Vizinho Certo 🏘️', options))
+        .then(() => report('display_requested'), error => report('display_failed', error))
+    ])
   );
 });
 
