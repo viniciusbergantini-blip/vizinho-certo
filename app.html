@@ -3414,6 +3414,15 @@ async function carregarDetalhesProdutoPlay(){
 
 async function finalizarCompraGooglePlay(accessToken){
   const {service}=await carregarDetalhesProdutoPlay();
+  const preflight=await fetch(apiUrl('/api/checkout'),{
+    method:'POST',
+    headers:{'Content-Type':'application/json',Authorization:`Bearer ${accessToken}`},
+    body:JSON.stringify({provider:'google_play',action:'preflight',product_id:anunState.play_product_id})
+  });
+  const disponibilidade=await preflight.json();
+  if(!preflight.ok||!disponibilidade.ready){
+    throw new Error(disponibilidade.error||'O pagamento pela Google Play está temporariamente indisponível.');
+  }
   const paymentMethods=[{supportedMethods:'https://play.google.com/billing',data:{sku:anunState.play_product_id}}];
   const paymentDetails={total:{label:'Total',amount:{currency:'BRL',value:'0'}}};
   const request=new PaymentRequest(paymentMethods,paymentDetails);
@@ -3439,6 +3448,7 @@ async function finalizarCompraGooglePlay(accessToken){
   }catch(error){
     if(paymentResponse){
       try{await paymentResponse.complete('fail');}catch(_){}
+      throw new Error('Não foi possível confirmar a publicação. Se a compra aparece no histórico da Google Play, não pague novamente.');
     }
     if(error?.name==='AbortError') throw new Error('Compra cancelada. Nenhum valor foi cobrado.');
     throw error;

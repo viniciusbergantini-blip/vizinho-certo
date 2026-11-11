@@ -1,6 +1,6 @@
 const Stripe = require('stripe');
 const { publicarAnuncioGooglePlay } = require('../lib/anuncios');
-const { consumirCompra, hashToken, verificarCompra } = require('../lib/google-play-billing');
+const { consumirCompra, hashToken, verificarCompra, verificarProdutoGooglePlay } = require('../lib/google-play-billing');
 const { coordenadasValidas } = require('../lib/localizacao');
 const { ICONES_ANUNCIO, TIPOS_ANUNCIO, obterPlano, obterPlanoPorProdutoPlay } = require('../lib/planos-anuncios');
 const { normalizarTelefoneBrasil } = require('../lib/contato');
@@ -32,7 +32,18 @@ module.exports = async (req, res) => {
     if (!auth) return;
     if (!enforceRateLimit(req, res, 'checkout', { limit: 10, windowMs: 10 * 60_000 }, auth.user.id)) return;
     if (req.body?.provider === 'google_play') {
-      return processarCompraGooglePlay(req, res, sb, auth);
+      if (req.body.action === 'preflight') {
+        const plano = obterPlanoPorProdutoPlay(req.body.product_id);
+        if (!plano) return res.status(400).json({ error: 'Plano inválido.' });
+        try {
+          await verificarProdutoGooglePlay(plano.play_product_id);
+        } catch (error) {
+          console.error('Google Play checkout unavailable:', error);
+          return res.status(503).json({ error: 'O pagamento pela Google Play está temporariamente indisponível.' });
+        }
+        return res.json({ ready: true });
+      }
+      return await processarCompraGooglePlay(req, res, sb, auth);
     }
     if (!process.env.STRIPE_SECRET_KEY) throw new Error('STRIPE_SECRET_KEY nao configurada');
 
