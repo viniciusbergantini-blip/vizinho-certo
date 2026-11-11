@@ -770,6 +770,13 @@
       <div class="anun-field"><label>Telefone / WhatsApp</label><input type="tel" id="edit-anun-tel"/></div>
       <div class="anun-nav"><button class="anun-back" onclick="fecharEditarAnuncio()">Cancelar</button><button class="anun-next" id="edit-anun-btn" onclick="salvarEditarAnuncio()">Salvar alterações</button></div>
       <button id="delete-anun-btn" onclick="excluirEditarAnuncio()" style="width:100%;margin-top:10px;padding:12px;background:transparent;border:1.5px solid #E24B4A;border-radius:10px;color:#A32D2D;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">Excluir anúncio</button>
+      <div id="anun-refund-help">
+        <details class="activity-empty" style="margin-top:10px;">
+          <summary style="cursor:pointer;font-weight:600;">Como solicitar reembolso</summary>
+          <p style="margin-top:8px;">Comprou pelo Google Play? Use a mesma conta Google da compra para <a href="https://support.google.com/googleplay/workflow/9813244?hl=pt-BR" target="_blank" rel="noopener noreferrer" style="color:var(--verde);text-decoration:underline;">solicitar reembolso no Google Play</a>.</p>
+          <p style="margin-top:6px;">Comprou pelo site ou precisa de ajuda com um pedido? <a href="mailto:vizinhocerto1@gmail.com?subject=Reembolso%20de%20an%C3%BAncio" style="color:var(--verde);text-decoration:underline;">Fale com o suporte do Vizinho Certo</a> e informe o número do pedido ou do comprovante.</p>
+        </details>
+      </div>
     </div>
   </div>
 </div>
@@ -2974,7 +2981,7 @@ function renderMinhaAtividade(){
   const resumo=window.VizinhoCertoEngagement?.summarizeActivity({posts:E.posts,userId:E.userId,ads:meusAnunciosCache})||{posts:meusPosts.length,ads:meusAnunciosCache.length};
   const postsHtml=meusPosts.length?meusPosts.map(post=>`<div class="activity-item"><div class="activity-item-main"><div class="activity-item-title">${htmlSeguro(post.txt||TL[post.tipo]||'Publicação')}</div><div class="activity-item-meta">${htmlSeguro(TL[post.tipo]||'Publicação')}${post.tempo?` · ${htmlSeguro(post.tempo)}`:''}</div></div><button onclick="abrirMeuPost('${htmlSeguro(post.id)}')">Abrir</button></div>`).join(''):'<div class="activity-empty">Você ainda não publicou no feed. Conte algo útil, peça ajuda ou avise seus vizinhos.</div>';
   const anunciosHtml=meusAnunciosCache.length?meusAnunciosCache.map(anuncio=>`<div class="activity-item"><div class="activity-item-main"><div class="activity-item-title">${htmlSeguro(anuncio.nome)}</div><div class="activity-item-meta">${htmlSeguro(anuncio.tipo)} · ${anuncio.status==='expirado'?'Expirado':`ativo até ${formatarDataCurta(anuncio.expira_em)}`}</div></div><button onclick="abrirMeusServicos()">Gerenciar</button></div>`).join(''):'<div class="activity-empty">Nenhum anúncio publicado. Quando você anunciar um serviço, poderá gerenciá-lo aqui.</div>';
-  el.innerHTML=`<div class="activity-shell" id="minha-atividade"><div class="activity-head"><button class="activity-back" onclick="navTab('perfil',document.getElementById('nav-perfil'))" aria-label="Voltar ao perfil">←</button><div><h2>Minha atividade</h2><p>Tudo o que você movimentou na comunidade.</p></div></div><div class="activity-metrics"><div class="activity-metric"><strong>${resumo.posts}</strong><span>publicações</span></div><div class="activity-metric"><strong>${resumo.ads}</strong><span>anúncios</span></div></div><section class="activity-section"><h3>Publicações</h3>${postsHtml}</section><section class="activity-section"><h3>Anúncios</h3>${anunciosHtml}</section></div>`;
+  el.innerHTML=`<div class="activity-shell" id="minha-atividade"><div class="activity-head"><button class="activity-back" onclick="navTab('perfil',document.getElementById('nav-perfil'))" aria-label="Voltar ao perfil">←</button><div><h2>Minha atividade</h2><p>Tudo o que você movimentou na comunidade.</p></div></div><div class="activity-metrics"><div class="activity-metric"><strong>${resumo.posts}</strong><span>publicações</span></div><div class="activity-metric"><strong>${resumo.ads}</strong><span>anúncios</span></div></div><section class="activity-section"><h3>Publicações</h3>${postsHtml}</section><section class="activity-section"><h3>Anúncios</h3>${anunciosHtml}${document.getElementById("anun-refund-help").innerHTML}</section></div>`;
 }
 
 function abrirMeuPost(id){
@@ -3284,7 +3291,7 @@ async function excluirEditarAnuncio(){
 async function excluirAnuncio(id,fecharModal=false){
   const anuncio=anunciosVisiveisCache.find(a=>String(a.id)===String(id));
   if(!anuncio||!anuncio.pode_gerenciar){ toast('Você só pode excluir seus próprios anúncios.'); return; }
-  if(!confirm('Tem certeza que deseja excluir este anúncio? Ele deixará de aparecer para os vizinhos.')) return;
+  if(!confirm('Excluir este anúncio? Ele deixará de aparecer para os vizinhos. A exclusão não gera reembolso automático.')) return;
   const btn=fecharModal?document.getElementById('delete-anun-btn'):document.querySelector(`[data-delete-id="${id}"]`);
   if(btn){ btn.disabled=true; btn.textContent='Excluindo...'; }
   try{
@@ -3393,7 +3400,8 @@ async function anunFinalizar(){
     }
     else{ throw new Error(data.error||'sem link de pagamento'); }
   } catch(e){
-    btn.disabled=false; btn.textContent='Pagar e publicar →';
+    btn.disabled=false;
+    btn.textContent=preparoGooglePlay?.purchaseToken?'Recuperar compra':'Pagar e publicar →';
     toast(e.message||'Erro ao conectar com pagamento. Tente novamente.');
   }
 }
@@ -3451,15 +3459,17 @@ async function prepararCompraGooglePlay(){
         controller.abort();
       },10000);
     });
-    const [produto,accessToken]=await Promise.race([prazo,Promise.all([
+    const [produto,accessToken,purchaseToken]=await Promise.race([prazo,Promise.all([
       carregarDetalhesProdutoPlay(preparo.productId),
-      verificarDisponibilidadeGooglePlay(preparo.productId,controller.signal)
+      verificarDisponibilidadeGooglePlay(preparo.productId,controller.signal),
+      localizarCompraGooglePlay(preparo.productId)
     ])]);
     if(preparoGooglePlay!==preparo) return;
     preparo.accessToken=accessToken;
+    preparo.purchaseToken=purchaseToken;
     const valor=new Intl.NumberFormat(navigator.language||'pt-BR',{style:'currency',currency:produto.price.currency}).format(produto.price.value);
     preco.textContent=`Valor na Google Play: ${valor}`;
-    btn.textContent='Pagar e publicar →';
+    btn.textContent=purchaseToken?'Recuperar compra':'Pagar e publicar →';
   }catch(error){
     if(preparoGooglePlay!==preparo) return;
     preco.textContent=error.message||'Não foi possível verificar o pagamento.';
@@ -3471,38 +3481,58 @@ async function prepararCompraGooglePlay(){
   }
 }
 
-async function finalizarCompraGooglePlay({accessToken,productId}){
+async function localizarCompraGooglePlay(productId){
+  const service=await obterServicoGooglePlay();
+  const compras=await service.listPurchases();
+  return compras.find(compra=>compra.itemId===productId && compra.purchaseToken)?.purchaseToken || null;
+}
+
+async function confirmarCompraGooglePlay({accessToken,productId,purchaseToken},anuncio){
+  const resp=await fetch(apiUrl('/api/checkout'),{
+    method:'POST',
+    headers:{'Content-Type':'application/json',Authorization:`Bearer ${accessToken}`},
+    body:JSON.stringify({
+      provider:'google_play',
+      product_id:productId,
+      purchase_token:purchaseToken,
+      anuncio
+    })
+  });
+  const resultado=await resp.json();
+  if(!resp.ok||!resultado.published) throw new Error(resultado.error||'Não foi possível confirmar a compra.');
+  return resultado;
+}
+
+async function finalizarCompraGooglePlay(preparo){
   const anuncio={nome:anunState.nome,tipo:anunState.tipo,desc:anunState.desc,tel:anunState.tel};
-  const paymentMethods=[{supportedMethods:'https://play.google.com/billing',data:{sku:productId}}];
+  if(preparo.purchaseToken) return confirmarCompraGooglePlay(preparo,anuncio);
+
+  const paymentMethods=[{supportedMethods:'https://play.google.com/billing',data:{sku:preparo.productId}}];
   const paymentDetails={total:{label:'Total',amount:{currency:'BRL',value:'0'}}};
   const request=new PaymentRequest(paymentMethods,paymentDetails);
-  let paymentResponse=null;
+  let paymentResponse;
   try{
     paymentResponse=await request.show();
-    const purchaseToken=String(paymentResponse.details?.purchaseToken||'').trim();
-    if(!purchaseToken) throw new Error('A Google Play não retornou o comprovante da compra.');
-    const resp=await fetch(apiUrl('/api/checkout'),{
-      method:'POST',
-      headers:{'Content-Type':'application/json',Authorization:`Bearer ${accessToken}`},
-      body:JSON.stringify({
-        provider:'google_play',
-        product_id:productId,
-        purchase_token:purchaseToken,
-        anuncio
-      })
-    });
-    const resultado=await resp.json();
-    if(!resp.ok||!resultado.published) throw new Error(resultado.error||'Não foi possível confirmar a compra.');
-    await paymentResponse.complete('success');
-    return resultado;
   }catch(error){
-    if(paymentResponse){
-      try{await paymentResponse.complete('fail');}catch(_){}
-      throw new Error('Não foi possível confirmar a publicação. Se a compra aparece no histórico da Google Play, não pague novamente.');
-    }
-    if(error?.name==='AbortError') throw new Error('Compra cancelada. Nenhum valor foi cobrado.');
+    preparo.purchaseToken=await localizarCompraGooglePlay(preparo.productId);
+    if(preparo.purchaseToken) return confirmarCompraGooglePlay(preparo,anuncio);
+    if(error?.name==='AbortError') throw new Error('A compra não foi concluída. Você pode tentar novamente.');
     throw error;
   }
+
+  let resultado;
+  try{
+    preparo.purchaseToken=String(paymentResponse.details?.purchaseToken||'').trim()
+      || await localizarCompraGooglePlay(preparo.productId);
+    if(!preparo.purchaseToken) throw new Error('A Google Play não retornou o comprovante da compra.');
+    resultado=await confirmarCompraGooglePlay(preparo,anuncio);
+  }catch(error){
+    try{await paymentResponse.complete('fail');}catch(_){}
+    if(!preparo.purchaseToken && preparoGooglePlay===preparo) preparoGooglePlay=null;
+    throw error;
+  }
+  try{await paymentResponse.complete('success');}catch(_){}
+  return resultado;
 }
 
 function abrirPanico(){
