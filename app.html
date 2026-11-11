@@ -3306,11 +3306,13 @@ async function excluirAnuncio(id,fecharModal=false){
 }
 
 const anunState={tipo:'',icon:'',nome:'',desc:'',tel:'',plano_id:'',plano_nome:'',beneficios:'',dias:0,preco:0,play_product_id:'',play_preco:'',pgto:'cartao'};
+let preparoGooglePlay=null;
 function abrirAnun(){
   document.getElementById('manun').classList.add('ab');anunStep(1);
 }
-function fecharAnun(){document.getElementById('manun').classList.remove('ab');}
+function fecharAnun(){preparoGooglePlay=null;document.getElementById('manun').classList.remove('ab');}
 function anunStep(n){
+  if(n!==4) preparoGooglePlay=null;
   document.querySelectorAll('.anun-step').forEach(s=>s.classList.remove('ab'));
   document.getElementById('as'+n).classList.add('ab');
   for(let i=1;i<=4;i++){const d=document.getElementById('ap'+i);if(d)d.classList.toggle('done',i<=n);}
@@ -3352,27 +3354,29 @@ function renderPgto(){
   const area=document.getElementById('pgto-area');
   if(VC_PLAY_STORE_MODE){
     area.innerHTML=`<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">▶️</div><div id="preco-play-store" style="font-weight:500;color:var(--texto);font-size:14px;">Consultando preço na Google Play...</div><div style="font-size:12px;color:var(--texto-muted);margin-top:8px;">A compra será processada com segurança pela Google Play. O anúncio será publicado somente após a confirmação.</div></div>`;
-    carregarDetalhesProdutoPlay().catch(()=>{
-      const el=document.getElementById('preco-play-store');
-      if(el) el.textContent=`Valor previsto: R$ ${preco} · preço final exibido pela Google Play`;
-    });
+    prepararCompraGooglePlay();
     return;
   }
   area.innerHTML=`<div class="pix-box"><div style="font-size:32px;margin-bottom:10px;">💳</div><div style="font-weight:500;color:var(--texto);font-size:14px;">Valor: R$ ${preco}</div><div style="font-size:12px;color:var(--texto-muted);margin-top:8px;">Ao clicar em Pagar, você será redirecionado para o checkout seguro da Stripe. Aceitamos cartão de crédito e débito.</div></div>`;
 }
 async function anunFinalizar(){
   const btn=document.querySelector('#as4 .anun-next');
+  if(btn.disabled) return;
+  if(VC_PLAY_STORE_MODE&&!preparoGooglePlay?.accessToken){
+    prepararCompraGooglePlay();
+    return;
+  }
   btn.textContent=VC_PLAY_STORE_MODE?'Abrindo Google Play...':'Abrindo pagamento...';btn.disabled=true;
   try{
-    const { data: { session } } = await sb.auth.getSession();
-    if(!session?.access_token) throw new Error('Entre na sua conta novamente.');
     if(VC_PLAY_STORE_MODE){
-      const resultado=await finalizarCompraGooglePlay(session.access_token);
+      const resultado=await finalizarCompraGooglePlay(preparoGooglePlay);
       fecharAnun();
       abrirComprovanteAnuncio(resultado);
       if(resultado.published) renderServicos();
       return;
     }
+    const { data: { session } } = await sb.auth.getSession();
+    if(!session?.access_token) throw new Error('Entre na sua conta novamente.');
     const resp=await fetch(apiUrl('/api/checkout'),{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},body:JSON.stringify({
       nome:anunState.nome, tipo:anunState.tipo, plano_id:anunState.plano_id, dias:anunState.dias,
       icon:anunState.icon, desc:anunState.desc, tel:anunState.tel
@@ -3400,30 +3404,71 @@ async function obterServicoGooglePlay(){
   return googlePlayServicePromise;
 }
 
-async function carregarDetalhesProdutoPlay(){
-  if(!anunState.play_product_id) throw new Error('Selecione um plano novamente.');
+async function carregarDetalhesProdutoPlay(productId){
+  if(!productId) throw new Error('Selecione um plano novamente.');
   const service=await obterServicoGooglePlay();
-  const detalhes=await service.getDetails([anunState.play_product_id]);
-  const produto=detalhes.find(item=>item.itemId===anunState.play_product_id);
+  const detalhes=await service.getDetails([productId]);
+  const produto=detalhes.find(item=>item.itemId===productId);
   if(!produto) throw new Error('Este plano ainda não está disponível na Google Play.');
-  anunState.play_preco=new Intl.NumberFormat(navigator.language||'pt-BR',{style:'currency',currency:produto.price.currency}).format(produto.price.value);
-  const el=document.getElementById('preco-play-store');
-  if(el) el.textContent=`Valor na Google Play: ${anunState.play_preco}`;
-  return {service,produto};
+  return produto;
 }
 
-async function finalizarCompraGooglePlay(accessToken){
-  const {service}=await carregarDetalhesProdutoPlay();
+async function verificarDisponibilidadeGooglePlay(productId, signal){
+  const {data:{session}}=await sb.auth.getSession();
+  if(!session?.access_token) throw new Error('Entre na sua conta novamente.');
   const preflight=await fetch(apiUrl('/api/checkout'),{
     method:'POST',
-    headers:{'Content-Type':'application/json',Authorization:`Bearer ${accessToken}`},
-    body:JSON.stringify({provider:'google_play',action:'preflight',product_id:anunState.play_product_id})
+    signal,
+    headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},
+    body:JSON.stringify({provider:'google_play',action:'preflight',product_id:productId})
   });
   const disponibilidade=await preflight.json();
   if(!preflight.ok||!disponibilidade.ready){
     throw new Error(disponibilidade.error||'O pagamento pela Google Play está temporariamente indisponível.');
   }
-  const paymentMethods=[{supportedMethods:'https://play.google.com/billing',data:{sku:anunState.play_product_id}}];
+  return session.access_token;
+}
+
+async function prepararCompraGooglePlay(){
+  const preparo={productId:anunState.play_product_id};
+  preparoGooglePlay=preparo;
+  const btn=document.querySelector('#as4 .anun-next');
+  const preco=document.getElementById('preco-play-store');
+  btn.disabled=true;
+  btn.textContent='Verificando pagamento...';
+  preco.textContent='Consultando preço na Google Play...';
+  const controller=new AbortController();
+  let timer;
+  try{
+    const prazo=new Promise((_,reject)=>{
+      timer=setTimeout(()=>{
+        reject(new Error('A verificação demorou. Tente novamente.'));
+        controller.abort();
+      },10000);
+    });
+    const [produto,accessToken]=await Promise.race([prazo,Promise.all([
+      carregarDetalhesProdutoPlay(preparo.productId),
+      verificarDisponibilidadeGooglePlay(preparo.productId,controller.signal)
+    ])]);
+    if(preparoGooglePlay!==preparo) return;
+    preparo.accessToken=accessToken;
+    const valor=new Intl.NumberFormat(navigator.language||'pt-BR',{style:'currency',currency:produto.price.currency}).format(produto.price.value);
+    preco.textContent=`Valor na Google Play: ${valor}`;
+    btn.textContent='Pagar e publicar →';
+  }catch(error){
+    if(preparoGooglePlay!==preparo) return;
+    preco.textContent=error.message||'Não foi possível verificar o pagamento.';
+    btn.textContent='Tentar novamente';
+  }finally{
+    clearTimeout(timer);
+    controller.abort();
+    if(preparoGooglePlay===preparo) btn.disabled=false;
+  }
+}
+
+async function finalizarCompraGooglePlay({accessToken,productId}){
+  const anuncio={nome:anunState.nome,tipo:anunState.tipo,desc:anunState.desc,tel:anunState.tel};
+  const paymentMethods=[{supportedMethods:'https://play.google.com/billing',data:{sku:productId}}];
   const paymentDetails={total:{label:'Total',amount:{currency:'BRL',value:'0'}}};
   const request=new PaymentRequest(paymentMethods,paymentDetails);
   let paymentResponse=null;
@@ -3436,9 +3481,9 @@ async function finalizarCompraGooglePlay(accessToken){
       headers:{'Content-Type':'application/json',Authorization:`Bearer ${accessToken}`},
       body:JSON.stringify({
         provider:'google_play',
-        product_id:anunState.play_product_id,
+        product_id:productId,
         purchase_token:purchaseToken,
-        anuncio:{nome:anunState.nome,tipo:anunState.tipo,desc:anunState.desc,tel:anunState.tel}
+        anuncio
       })
     });
     const resultado=await resp.json();
