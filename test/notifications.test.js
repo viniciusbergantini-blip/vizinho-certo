@@ -32,12 +32,12 @@ function digestDb() {
   return {db,deliveries,updates,filters};
 }
 
-test('resumo exige opt-in Android e não repete após execuções concorrentes', async () => {
+test('resumo exige opt-in do aparelho e não repete após execuções concorrentes', async () => {
   const {db,deliveries,filters} = digestDb(); let sends=0;
   const deliver = async()=>{sends++;return {sent:1};};
   await Promise.all([runDigest(db,{now,deliver}),runDigest(db,{now,deliver})]);
   assert.equal(sends,1); assert.equal(deliveries.size,1);
-  assert.ok(filters.some(([k,v])=>k==='plataforma'&&v==='android'));
+  assert.ok(filters.every(([key]) => key !== 'plataforma'));
   assert.ok(filters.some(([k,v])=>k==='automaticas'&&v===true));
 });
 

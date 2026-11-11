@@ -1170,6 +1170,11 @@ function lembrarCadastroNotificacoes(enabled){
   if(enabled===true){const offer=document.getElementById('notification-welcome');if(offer)offer.hidden=true;}
 }
 function notificacoesAndroid(){return VC_PLAY_STORE_MODE&&/Android/i.test(navigator.userAgent||'');}
+function resumoDisponivel(){
+  const ios = /iPhone|iPad|iPod/i.test(navigator.userAgent||'')
+    || (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+  return notificacoesAndroid() || (ios && appEstaInstalado());
+}
 function idInstalacaoNotificacoes(){
   const key='vc_push_installation_v1';
   let id=localStorage.getItem(key);
@@ -2925,7 +2930,7 @@ function navTab(tab,el){
         <button id="push-reconnect" type="button" class="vc-install-button vc-install-profile" onclick="reconectarAvisosPerfil()" hidden>Reconectar notificações</button>
         <p id="push-status" class="vc-install-profile-copy">Conferindo o cadastro deste aparelho…</p>
         ${notificacoesAndroid()?`<p class="vc-install-profile-copy">Permissão do celular: Configurações → Aplicativos → Vizinho Certo → Notificações.</p>`:''}
-        ${notificacoesAndroid()?`<label style="display:flex;gap:10px;align-items:center;margin-top:16px;font-size:14px;"><input type="checkbox" id="push-daily-enabled" ${resumoAutomaticoAtivo?'checked':''} onchange="alterarResumoAutomatico(this)"> Receber resumo diário da vizinhança</label><p class="vc-install-profile-copy">Por volta das 19h, quando houver novas publicações no seu raio. No máximo um resumo por dia. Você pode desativar aqui.</p>`:''}
+        ${resumoDisponivel()?`<label style="display:flex;gap:10px;align-items:center;margin-top:16px;font-size:14px;"><input type="checkbox" id="push-daily-enabled" ${resumoAutomaticoAtivo?'checked':''} onchange="alterarResumoAutomatico(this)"> Receber resumo diário da vizinhança</label><p class="vc-install-profile-copy">Por volta das 19h, quando houver novas publicações no seu raio. No máximo um resumo por dia. Você pode desativar aqui.</p>`:''}
       </div>
       <div class="profile-help-card">
         <div class="vc-install-profile-title">Convide quem mora perto</div>
